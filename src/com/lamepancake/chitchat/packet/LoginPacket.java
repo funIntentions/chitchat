@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.lamepancake.chitchat;
+package com.lamepancake.chitchat.packet;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

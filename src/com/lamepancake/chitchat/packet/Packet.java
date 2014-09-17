@@ -1,4 +1,4 @@
-package com.lamepancake.chitchat;
+package com.lamepancake.chitchat.packet;
 import java.nio.ByteBuffer;
 
 /**

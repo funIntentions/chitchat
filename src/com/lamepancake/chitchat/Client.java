@@ -1,6 +1,10 @@
 package com.lamepancake.chitchat;
 
 
+import com.lamepancake.chitchat.packet.LogoutPacket;
+import com.lamepancake.chitchat.packet.WhoIsInPacket;
+import com.lamepancake.chitchat.packet.Packet;
+import com.lamepancake.chitchat.packet.ChatPacket;
 import java.net.*;
 import java.io.*;
 import java.nio.ByteBuffer;

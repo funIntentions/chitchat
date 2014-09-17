@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.lamepancake.chitchat;
+package com.lamepancake.chitchat.packet;
 
 import java.nio.ByteBuffer;
 
@@ -11,16 +11,17 @@ import java.nio.ByteBuffer;
  *
  * @author shane
  */
-public class WhoIsInPacket extends Packet {
+public class LogoutPacket extends Packet{
     
-    public WhoIsInPacket()
+    public LogoutPacket()
     {
-        super(WHOISIN, 0);
+        super(LOGOUT, 0);
     }
-        
+    
     @Override
     public ByteBuffer serialise()
     {
         return super.serialise();
     }
+    
 }

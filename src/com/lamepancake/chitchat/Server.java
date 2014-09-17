@@ -1,5 +1,7 @@
 package com.lamepancake.chitchat;
 
+import com.lamepancake.chitchat.packet.LoginPacket;
+import com.lamepancake.chitchat.packet.Packet;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -19,7 +21,7 @@ public class Server {
      * The number of simultaneous connections that the server can accept.
      */
     public static final int BACKLOG = 5;
-
+    
     /**
      * A selector to multiplex data in the sockets.
      */
