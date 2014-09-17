@@ -3,3 +3,5 @@ build.xml
 manifest.mf
 *.*~
 *.class
+/build/
+/dist/

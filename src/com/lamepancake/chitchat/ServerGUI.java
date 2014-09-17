@@ -1,6 +1,9 @@
+package com.lamepancake.chitchat;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 
 /*
  * The server as a GUI
@@ -83,7 +86,7 @@ public class ServerGUI extends JFrame implements ActionListener, WindowListener 
 			return;
 		}
 		// ceate a new Server
-		server = new Server(port, this);
+		server = new Server(port);
 		// and start it as a thread
 		new ServerRunning().start();
 		stopStart.setText("Stop");
@@ -127,7 +130,12 @@ public class ServerGUI extends JFrame implements ActionListener, WindowListener 
 	 */
 	class ServerRunning extends Thread {
 		public void run() {
-			server.start();         // should execute until if fails
+			
+                    try{
+                        server.start(); // should execute until if fails
+                    }  catch (IOException e) {
+                        System.out.println("Noooooo: " + e.getMessage());
+                    }
 			// the server failed
 			stopStart.setText("Start");
 			tPortNumber.setEditable(true);

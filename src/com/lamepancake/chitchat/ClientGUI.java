@@ -1,3 +1,5 @@
+package com.lamepancake.chitchat;
+
 
 import javax.swing.*;
 import java.awt.*;

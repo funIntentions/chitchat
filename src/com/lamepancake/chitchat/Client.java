@@ -1,6 +1,9 @@
+package com.lamepancake.chitchat;
+
 
 import java.net.*;
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 /*
@@ -101,7 +104,7 @@ public class Client  {
 	/*
 	 * To send a message to the server
 	 */
-	void sendMessage(ChatMessage msg) {
+	void sendMessage(Packet msg) {
 		try {
 			sOutput.writeObject(msg);
 		}
@@ -153,11 +156,12 @@ public class Client  {
 	 */
 	public static void main(String[] args) {
 		// default values
-		int portNumber = 1500;
-		String serverAddress = "localhost";
-		String userName = "Anonymous";
+		int         portNumber      = 1500;
+		String      serverAddress   = "localhost";
+		String      username        = "Anonymous";
+                String      password        = "Anon";
 
-		// depending of the number of arguments provided we fall through
+                // depending of the number of arguments provided we fall through
 		switch(args.length) {
 			// > javac Client username portNumber serverAddr
 			case 3:
@@ -174,7 +178,7 @@ public class Client  {
 				}
 			// > javac Client username
 			case 1: 
-				userName = args[0];
+				username = args[0];
 			// > java Client
 			case 0:
 				break;
@@ -184,7 +188,7 @@ public class Client  {
 			return;
 		}
 		// create the Client object
-		Client client = new Client(serverAddress, portNumber, userName);
+		Client client = new Client(serverAddress, portNumber, username);
 		// test if we can start the connection to the Server
 		// if it failed nothing we can do
 		if(!client.start())
@@ -199,20 +203,20 @@ public class Client  {
 			String msg = scan.nextLine();
 			// logout if message is LOGOUT
 			if(msg.equalsIgnoreCase("LOGOUT")) {
-				client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
+				client.sendMessage(new LogoutPacket());
 				// break to do the disconnect
 				break;
 			}
 			// message WhoIsIn
 			else if(msg.equalsIgnoreCase("WHOISIN")) {
-				client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));				
+				client.sendMessage(new WhoIsInPacket());				
 			}
 			else {				// default to ordinary message
-				client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
+				client.sendMessage(new ChatPacket(msg));
 			}
 		}
 		// done disconnect
-		client.disconnect();	
+		client.disconnect();
 	}
 
 	/*
