@@ -59,12 +59,12 @@ public class Client  {
 		} 
 		// if it failed not much I can so
 		catch(Exception ec) {
-			//display("Error connectiong to server:" + ec);
+			display("Error connectiong to server:" + ec);
 			return false;
 		}
 		
 		String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
-		//display(msg);
+		display(msg);
 	
 		/* Creating both Data Stream */
 		try
@@ -73,7 +73,7 @@ public class Client  {
 			sOutput = new ObjectOutputStream(socket.getOutputStream());
 		}
 		catch (IOException eIO) {
-			//display("Exception creating new Input/output Streams: " + eIO);
+			display("Exception creating new Input/output Streams: " + eIO);
 			return false;
 		}
 
@@ -86,7 +86,7 @@ public class Client  {
 			sOutput.writeObject(username);
 		}
 		catch (IOException eIO) {
-			//display("Exception doing login : " + eIO);
+			display("Exception doing login : " + eIO);
 			disconnect();
 			return false;
 		}
@@ -97,12 +97,12 @@ public class Client  {
 	/*
 	 * To send a message to the console or the GUI
 	 */
-	/*private void display(String msg) {
-		if(cg == null)
+	private void display(String msg) {
+		//if(cg == null)
 			System.out.println(msg);      // println in console mode
-		else
-			cg.append(msg + "\n");		// append to the ClientGUI JTextArea (or whatever)
-	}*/
+		//else
+			//cg.append(msg + "\n");		// append to the ClientGUI JTextArea (or whatever)
+	}
 	
 	/*
 	 * To send a message to the server
@@ -112,7 +112,7 @@ public class Client  {
 			sOutput.writeObject(msg);
 		}
 		catch(IOException e) {
-			//display("Exception writing to server: " + e);
+			display("Exception writing to server: " + e);
 		}
 	}
 
@@ -242,8 +242,8 @@ public class Client  {
 					}*/
 				}
 				catch(IOException e) {
-					/*display("Server has close the connection: " + e);
-					if(cg != null) 
+                                        display("Server has close the connection: " + e);
+					/*if(cg != null) 
 						cg.connectionFailed();*/
 					break;
 				}
