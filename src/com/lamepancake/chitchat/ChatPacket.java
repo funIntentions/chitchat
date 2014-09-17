@@ -11,11 +11,11 @@ import java.nio.charset.StandardCharsets;
  */
 public class ChatPacket extends Packet {
 
-	private String message;
+	public String message;
 	
 	// constructor
-	ChatPacket(String message) {
-            super(Packet.CHAT, message.length() * 2);
+	public ChatPacket(String message) {
+            super(Packet.MESSAGE, message.length() * 2);
             this.message = message;
 	}
 

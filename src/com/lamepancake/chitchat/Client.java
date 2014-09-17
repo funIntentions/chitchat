@@ -17,7 +17,7 @@ public class Client  {
 	private Socket socket;
 
 	// if I use a GUI or not
-	private ClientGUI cg;
+	//private ClientGUI cg;
 	
 	// the server, the port and the username
 	private String server, username;
@@ -29,22 +29,25 @@ public class Client  {
 	 *  port: the port number
 	 *  username: the username
 	 */
-	Client(String server, int port, String username) {
+	public Client(String server, int port, String username) {
 		// which calls the common constructor with the GUI set to null
-		this(server, port, username, null);
+		//this(server, port, username, null);
+                this.server = server;
+                this.port = port;
+                this.username = username;
 	}
 
 	/*
 	 * Constructor call when used from a GUI
 	 * in console mode the ClienGUI parameter is null
 	 */
-	Client(String server, int port, String username, ClientGUI cg) {
+	/**Client(String server, int port, String username, ClientGUI cg) {
 		this.server = server;
 		this.port = port;
 		this.username = username;
 		// save if we are in GUI mode or not
 		this.cg = cg;
-	}
+	}*/
 	
 	/*
 	 * To start the dialog
@@ -56,12 +59,12 @@ public class Client  {
 		} 
 		// if it failed not much I can so
 		catch(Exception ec) {
-			display("Error connectiong to server:" + ec);
+			//display("Error connectiong to server:" + ec);
 			return false;
 		}
 		
 		String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
-		display(msg);
+		//display(msg);
 	
 		/* Creating both Data Stream */
 		try
@@ -70,7 +73,7 @@ public class Client  {
 			sOutput = new ObjectOutputStream(socket.getOutputStream());
 		}
 		catch (IOException eIO) {
-			display("Exception creating new Input/output Streams: " + eIO);
+			//display("Exception creating new Input/output Streams: " + eIO);
 			return false;
 		}
 
@@ -83,7 +86,7 @@ public class Client  {
 			sOutput.writeObject(username);
 		}
 		catch (IOException eIO) {
-			display("Exception doing login : " + eIO);
+			//display("Exception doing login : " + eIO);
 			disconnect();
 			return false;
 		}
@@ -94,12 +97,12 @@ public class Client  {
 	/*
 	 * To send a message to the console or the GUI
 	 */
-	private void display(String msg) {
+	/*private void display(String msg) {
 		if(cg == null)
 			System.out.println(msg);      // println in console mode
 		else
 			cg.append(msg + "\n");		// append to the ClientGUI JTextArea (or whatever)
-	}
+	}*/
 	
 	/*
 	 * To send a message to the server
@@ -109,7 +112,7 @@ public class Client  {
 			sOutput.writeObject(msg);
 		}
 		catch(IOException e) {
-			display("Exception writing to server: " + e);
+			//display("Exception writing to server: " + e);
 		}
 	}
 
@@ -132,8 +135,8 @@ public class Client  {
 		catch(Exception e) {} // not much else I can do
 		
 		// inform the GUI
-		if(cg != null)
-			cg.connectionFailed();
+		/*if(cg != null)
+			cg.connectionFailed();*/
 			
 	}
 	/*
@@ -230,18 +233,18 @@ public class Client  {
 				try {
 					String msg = (String) sInput.readObject();
 					// if console mode print the message and add back the prompt
-					if(cg == null) {
+					/*if(cg == null) {
 						System.out.println(msg);
 						System.out.print("> ");
 					}
 					else {
 						cg.append(msg);
-					}
+					}*/
 				}
 				catch(IOException e) {
-					display("Server has close the connection: " + e);
+					/*display("Server has close the connection: " + e);
 					if(cg != null) 
-						cg.connectionFailed();
+						cg.connectionFailed();*/
 					break;
 				}
 				// can't happen with a String object but need the catch anyhow
