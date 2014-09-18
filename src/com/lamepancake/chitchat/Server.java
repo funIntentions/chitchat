@@ -181,6 +181,8 @@ public class Server {
                     // send user list
                     break;
             }
+            
+            packetBuf.clearState();
         }
     }
 
