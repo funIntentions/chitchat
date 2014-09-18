@@ -2,6 +2,8 @@ package com.lamepancake.chitchat;
 
 import com.lamepancake.chitchat.packet.LoginPacket;
 import com.lamepancake.chitchat.packet.Packet;
+import com.lamepancake.chitchat.packet.PacketBuffer;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -9,7 +11,9 @@ import java.nio.channels.Selector;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.ServerSocketChannel;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 /*
@@ -41,6 +45,11 @@ public class Server {
     private ServerSocketChannel listenChannel;
 
     /**
+     * A map relating users to sockets.
+     */
+    private Map<SelectionKey, User> users;
+    
+    /**
      * The server will continue until this variable becomes false.
      */
     private boolean keepGoing;
@@ -54,20 +63,28 @@ public class Server {
 
         this.listenPort = port;
 
-        try {
+        try
+        {
             this.selector = Selector.open();
             this.listenChannel = ServerSocketChannel.open();
             this.listenChannel.socket().bind(new InetSocketAddress(this.listenPort), BACKLOG);
-            this.listenChannel.register(this.selector, SelectionKey.OP_ACCEPT);
             this.listenChannel.configureBlocking(false);
-        } catch (IOException e) {
+            this.listenChannel.register(this.selector, SelectionKey.OP_ACCEPT);
+        } 
+        catch (IOException e)
+        {
             System.out.println("Server could not initialise: " + e.getMessage());
         }
+        
+        this.users = new HashMap<>();
     }
 
     /**
      * Tells the server to listen for and handles connections and chat messages.
      *
+     * This is the main server loop. It waits for the selector find sockets with
+     * operations ready and calls the appropriate handler methods.
+     * 
      * @throws IOException Thrown on selection set failure.
      */
     public void start() throws IOException {
@@ -77,35 +94,58 @@ public class Server {
 
         while (keepGoing) {
             int readyChannels = this.selector.select();
-            if (readyChannels == 0) {
+            
+            if (readyChannels == 0) 
+            {
                 continue;
             }
 
-            keys        = this.selector.keys();
+            keys        = this.selector.selectedKeys();
             keyIterator = keys.iterator();
 
-            while (keyIterator.hasNext()) {
+            while (keyIterator.hasNext())
+            {
                 SelectionKey currentKey = keyIterator.next();
-                if (currentKey.isAcceptable()) {
+               
+                if (currentKey.isAcceptable())
+                {
                     addClient(currentKey);
-                } else if (currentKey.isReadable()) {
+                }
+                if (currentKey.isReadable())
+                {
                     readSock(currentKey);
                 }
+                if (currentKey.isWritable())
+                {
+                    // write data to the buffer and remove OP_WRITE
+                }
+                
+                keyIterator.remove();
             }
         }
 
     }
 
     /**
-     * Accepts a connection from a new client and reads their name.
+     * Accepts a connection from a new client and adds them to the list of users.
      *
      * @param key
      * @throws IOException
      */
     private void addClient(SelectionKey key) throws IOException {
-        ServerSocketChannel acceptSocket = (ServerSocketChannel) key.channel();
-        SocketChannel newClient = acceptSocket.accept();
-        newClient.register(this.selector, SelectionKey.OP_READ);
+        ServerSocketChannel acceptSocket    = (ServerSocketChannel) key.channel();
+        SocketChannel       newClient       = acceptSocket.accept();
+        SelectionKey        clientKey;
+                
+        // Set the new client to non-blocking mode and add to the selector
+        newClient.configureBlocking(false);
+        clientKey = newClient.register(this.selector, SelectionKey.OP_READ);
+        
+        // Add a new key-user pair to the user list
+        this.users.put(clientKey, new User());
+
+        // Attach a buffer for reading the packets
+        clientKey.attach(new PacketBuffer(newClient));
     }
 
     /**
@@ -113,59 +153,45 @@ public class Server {
      * @param key
      * @throws IOException 
      */
-    private void readSock(SelectionKey key) throws IOException {
-        SocketChannel   readSock    = (SocketChannel) key.channel();
-        ByteBuffer      typeAndLen  = ByteBuffer.allocate(Packet.BUF_OFFSET);
-        ByteBuffer      data;
+    private void readSock(SelectionKey key) throws IOException 
+    {
+        PacketBuffer    packetBuf = (PacketBuffer)key.attachment();
         Packet          received;
-        int             type;
-        int             len;
 
-        if(readSock.read(typeAndLen) != Packet.BUF_OFFSET) {
-            // fuck
-        }
-
-        type = typeAndLen.getInt();
-        len = typeAndLen.getInt();
-
-        data = ByteBuffer.allocate(len);
-        readSock.read(data);
-
-        switch (type) {
-            case Packet.LOGIN:
-                received = new LoginPacket(data);
-
-                break;
-
-            case Packet.LOGOUT:
-                // clean up the user
-                break;
-
-            case Packet.MESSAGE:
-                // send the messsage to the other users
-                break;
-
-            case Packet.WHOISIN:
-                // send a list of connected clients to the requester
-                break;
+        // Read from the stream and check whether we've finished reading
+        if(packetBuf.read() == PacketBuffer.FINISHED)
+        {
+            int type;
+            received = packetBuf.getPacket();
+            type = received.getType();
+            
+            switch(type)
+            {
+                case Packet.LOGIN:
+                    System.out.println("Hello world! Username " + ((LoginPacket)received).getUsername()
+                            + ", Password " + ((LoginPacket)received).getPassword());
+                    break;
+                case Packet.MESSAGE:
+                    // hanlde message
+                    break;
+                case Packet.LOGOUT:
+                    // remove the user
+                    break;
+                case Packet.WHOISIN:
+                    // send user list
+                    break;
+            }
         }
     }
 
-    /*
-     * For the GUI to stop the server
+    
+    /**
+     * Removes a user from the user list.
+     * @param sel The selection key identifying the user.
      */
-    protected void stop() {
-    }
-
-    /*
-     * Display an event (not a message) to the console or the GUI
-     */
-    private void display(String msg) {
-    }
-
-    // for a client who logoff using the LOGOUT message
-    public void remove(int id) {
-
+    private void remove(SelectionKey sel)
+    {
+        users.remove(sel);
     }
 
     /*

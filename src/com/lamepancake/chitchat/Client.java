@@ -4,7 +4,8 @@ package com.lamepancake.chitchat;
 import com.lamepancake.chitchat.packet.LogoutPacket;
 import com.lamepancake.chitchat.packet.WhoIsInPacket;
 import com.lamepancake.chitchat.packet.Packet;
-import com.lamepancake.chitchat.packet.ChatPacket;
+import com.lamepancake.chitchat.packet.MessagePacket;
+import com.lamepancake.chitchat.packet.LoginPacket;
 import java.net.*;
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -15,16 +16,13 @@ import java.util.*;
  */
 public class Client  {
 
-	// for I/O
-	private ObjectInputStream sInput;		// to read from the socket
-	private ObjectOutputStream sOutput;		// to write on the socket
 	private Socket socket;
 
 	// if I use a GUI or not
 	//private ClientGUI cg;
 	
 	// the server, the port and the username
-	private String server, username;
+	private String server, username, password;
 	private int port;
 
 	/*
@@ -33,25 +31,14 @@ public class Client  {
 	 *  port: the port number
 	 *  username: the username
 	 */
-	public Client(String server, int port, String username) {
+	public Client(String server, int port, String username, String password) {
 		// which calls the common constructor with the GUI set to null
 		//this(server, port, username, null);
                 this.server = server;
                 this.port = port;
                 this.username = username;
+                this.password = password;
 	}
-
-	/*
-	 * Constructor call when used from a GUI
-	 * in console mode the ClienGUI parameter is null
-	 */
-	/**Client(String server, int port, String username, ClientGUI cg) {
-		this.server = server;
-		this.port = port;
-		this.username = username;
-		// save if we are in GUI mode or not
-		this.cg = cg;
-	}*/
 	
 	/*
 	 * To start the dialog
@@ -59,7 +46,7 @@ public class Client  {
 	public boolean start() {
 		// try to connect to the server
 		try {
-			socket = new Socket(server, port);
+                    socket = new Socket(server, port);
 		} 
 		// if it failed not much I can so
 		catch(Exception ec) {
@@ -69,31 +56,17 @@ public class Client  {
 		
 		String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
 		display(msg);
-	
-		/* Creating both Data Stream */
-		try
-		{
-			sInput  = new ObjectInputStream(socket.getInputStream());
-			sOutput = new ObjectOutputStream(socket.getOutputStream());
-		}
-		catch (IOException eIO) {
-			display("Exception creating new Input/output Streams: " + eIO);
-			return false;
-		}
 
 		// creates the Thread to listen from the server 
 		new ListenFromServer().start();
 		// Send our username to the server this is the only message that we
 		// will send as a String. All other messages will be ChatMessage objects
-		try
-		{
-			sOutput.writeObject(username);
-		}
-		catch (IOException eIO) {
-			display("Exception doing login : " + eIO);
-			disconnect();
-			return false;
-		}
+                try{
+                    ByteBuffer login = new LoginPacket(this.username, this.password).serialise();
+                    socket.getOutputStream().write(login.array());
+                } catch (IOException e) {
+                    System.out.println("Shit");
+                }
 		// success we inform the caller that it worked
 		return true;
 	}
@@ -112,12 +85,7 @@ public class Client  {
 	 * To send a message to the server
 	 */
 	void sendMessage(Packet msg) {
-		try {
-			sOutput.writeObject(msg);
-		}
-		catch(IOException e) {
-			display("Exception writing to server: " + e);
-		}
+
 	}
 
 	/*
@@ -125,18 +93,7 @@ public class Client  {
 	 * Close the Input/Output streams and disconnect not much to do in the catch clause
 	 */
 	private void disconnect() {
-		try { 
-			if(sInput != null) sInput.close();
-		}
-		catch(Exception e) {} // not much else I can do
-		try {
-			if(sOutput != null) sOutput.close();
-		}
-		catch(Exception e) {} // not much else I can do
-        try{
-			if(socket != null) socket.close();
-		}
-		catch(Exception e) {} // not much else I can do
+
 		
 		// inform the GUI
 		/*if(cg != null)
@@ -195,7 +152,7 @@ public class Client  {
 			return;
 		}
 		// create the Client object
-		Client client = new Client(serverAddress, portNumber, username);
+		Client client = new Client(serverAddress, portNumber, username, password);
 		// test if we can start the connection to the Server
 		// if it failed nothing we can do
 		if(!client.start())
@@ -219,7 +176,7 @@ public class Client  {
 				client.sendMessage(new WhoIsInPacket());				
 			}
 			else {				// default to ordinary message
-				client.sendMessage(new ChatPacket(msg));
+				client.sendMessage(new MessagePacket(msg));
 			}
 		}
 		// done disconnect
@@ -233,28 +190,7 @@ public class Client  {
 	class ListenFromServer extends Thread {
 
 		public void run() {
-			while(true) {
-				try {
-					String msg = (String) sInput.readObject();
-					// if console mode print the message and add back the prompt
-					/*if(cg == null) {
-						System.out.println(msg);
-						System.out.print("> ");
-					}
-					else {
-						cg.append(msg);
-					}*/
-				}
-				catch(IOException e) {
-                                        display("Server has close the connection: " + e);
-					/*if(cg != null) 
-						cg.connectionFailed();*/
-					break;
-				}
-				// can't happen with a String object but need the catch anyhow
-				catch(ClassNotFoundException e2) {
-				}
-			}
+                    while(true);
 		}
 	}
 }

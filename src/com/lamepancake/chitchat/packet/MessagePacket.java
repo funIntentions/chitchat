@@ -9,16 +9,27 @@ import java.nio.charset.StandardCharsets;
  * @author shane
  */
 
-public class ChatPacket extends Packet {
+public class MessagePacket extends Packet {
 
 	public String message;
 	
 	// constructor
-	public ChatPacket(String message) {
+	public MessagePacket(String message) {
             super(Packet.MESSAGE, message.length() * 2);
             this.message = message;
 	}
 
+        /**
+         * Constructor for data received over the wire.
+         * 
+         * @param data A ByteBuffer containing data sent over the wire.
+         */
+        public MessagePacket(ByteBuffer data)
+        {
+            super(Packet.MESSAGE, data.capacity());
+            this.message = new String(data.array(), StandardCharsets.UTF_16LE);
+        }
+        
         @Override
         public ByteBuffer serialise()
         {
