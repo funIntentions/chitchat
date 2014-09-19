@@ -186,7 +186,15 @@ public class Client  {
                     }
                     // message WhoIsIn
                     else if(msg.equalsIgnoreCase("WHOISIN")) {
-                            client.sendMessage(new WhoIsInPacket());				
+                            System.out.println("[CURRENT USER LIST]");
+
+                            for(User u: client.users)
+                            {
+                                System.out.print('\t');
+                                System.out.println(u);
+                            }
+
+                            System.out.println("[END]");
                     }
                     else {				// default to ordinary message
                             client.sendMessage(new MessagePacket(msg, client.userID));

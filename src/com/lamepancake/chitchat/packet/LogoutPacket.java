@@ -21,7 +21,9 @@ public class LogoutPacket extends Packet{
     @Override
     public ByteBuffer serialise()
     {
-        return super.serialise();
+        ByteBuffer buf = super.serialise();
+        buf.rewind();
+        return buf;
     }
     
 }
