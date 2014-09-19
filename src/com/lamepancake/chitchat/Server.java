@@ -58,6 +58,11 @@ public class Server {
      * The server will continue until this variable becomes false.
      */
     private boolean keepGoing;
+    
+    /**
+     * The id for the next user.
+     */
+    private int nextId = 0;
 
     /**
      * Initialise the server's selector object and listening socket.
@@ -221,7 +226,7 @@ public class Server {
             // The client sent another login packet; ignore it.
             return;
 
-        newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), User.UNSPEC, this.users.size());
+        newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), User.UNSPEC, this.nextId++);
         this.users.put(key, newUser);
         
         // Send a list of connected clients immediately after login

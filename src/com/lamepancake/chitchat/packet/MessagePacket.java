@@ -77,8 +77,8 @@ public class MessagePacket extends Packet {
          */
         public void setUserID(int newID)
         {
-            if(newID < 1)
-                throw new IllegalArgumentException("MessagePacket.setUserID: newID must be >= 1, was " + newID);
+            if(newID < 0)
+                throw new IllegalArgumentException("MessagePacket.setUserID: newID must be >= 0, was " + newID);
             
             this.userID = newID;
         }
