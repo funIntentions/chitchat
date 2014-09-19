@@ -30,7 +30,7 @@ public abstract class Packet {
      * The offset from which the inheriting packet classes must interpret data in
      * the buffer.
      */
-    public static final int HEADER_OFFSET     = 8;
+    public static final int HEADER_SIZE = 8;
     
     private final int type;
     private final int length;
@@ -55,7 +55,7 @@ public abstract class Packet {
     public ByteBuffer serialise()
     {
         // Room for the packet type, length, and contents
-        ByteBuffer buf = ByteBuffer.allocate(HEADER_OFFSET + this.length);
+        ByteBuffer buf = ByteBuffer.allocate(HEADER_SIZE + this.length);
         
         buf.putInt(this.type);
         buf.putInt(this.length);        

@@ -16,26 +16,19 @@ public class User {
     /*
      * Included for NetBeans' happiness; this constructor does nothing.
      */
-    public User()
-    {
-    }
-    
-    /**
-     * 
-     * @param name
-     * @param password 
-     */
-    public void setCredentials(String name, String password)
+    public User(String name, String password)
     {
         this.name       = name;
         this.password   = password;
-        
-        // Determine the user's role
     }
     
-    
+    /**
+     * Returns the user's name.
+     * 
+     * @return The user's name.
+     */
     public String getName()
     {
-        return name;
+        return this.name;
     }
 }

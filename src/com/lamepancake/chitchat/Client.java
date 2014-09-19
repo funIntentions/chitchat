@@ -6,9 +6,11 @@ import com.lamepancake.chitchat.packet.WhoIsInPacket;
 import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.LoginPacket;
+import com.lamepancake.chitchat.packet.PacketBuffer;
 import java.net.*;
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.util.*;
 
 /*
@@ -16,7 +18,7 @@ import java.util.*;
  */
 public class Client  {
 
-	private Socket socket;
+	private SocketChannel socket;
 
 	// if I use a GUI or not
 	//private ClientGUI cg;
@@ -45,8 +47,10 @@ public class Client  {
 	 */
 	public boolean start() {
 		// try to connect to the server
+            
+                InetSocketAddress addr = new InetSocketAddress(server, port);
 		try {
-                    socket = new Socket(server, port);
+                    socket = SocketChannel.open(addr);
 		} 
 		// if it failed not much I can so
 		catch(Exception ec) {
@@ -54,7 +58,7 @@ public class Client  {
 			return false;
 		}
 		
-		String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
+		String msg = "Connection accepted " + addr.toString();
 		display(msg);
 
 		// creates the Thread to listen from the server 
@@ -63,9 +67,9 @@ public class Client  {
 		// will send as a String. All other messages will be ChatMessage objects
                 try{
                     ByteBuffer login = new LoginPacket(this.username, this.password).serialise();
-                    socket.getOutputStream().write(login.array());
+                    socket.write(login);
                 } catch (IOException e) {
-                    System.out.println("Shit");
+                    System.out.println("Failure while sending login packet: " + e.getMessage());
                 }
 		// success we inform the caller that it worked
 		return true;
@@ -85,7 +89,11 @@ public class Client  {
 	 * To send a message to the server
 	 */
 	void sendMessage(Packet msg) {
-
+            try {
+                socket.write(msg.serialise());
+            } catch(IOException e) {
+                System.out.println("Could not send message: " + e.getMessage());
+            }
 	}
 
 	/*
@@ -189,8 +197,36 @@ public class Client  {
 	 */
 	class ListenFromServer extends Thread {
 
+            private PacketBuffer packetBuf;
+            
+                public ListenFromServer()
+                {
+                    packetBuf = new PacketBuffer(socket);
+                }
+
 		public void run() {
-                    while(true);
+                    int     type;
+                    Packet  p;
+                    while(true)
+                    {
+                        // This should actually never happen since we're in blocking mode
+                        // But you never know
+                        if(packetBuf.read() != PacketBuffer.FINISHED)
+                            continue;
+                        
+                        p = packetBuf.getPacket();
+                        type = p.getType();
+                        
+                        switch(type)
+                        {
+                            case Packet.MESSAGE:
+                                display(((MessagePacket)p).getMessage());
+                                break;
+                        }
+                        
+                        packetBuf.clearState();
+                    }
+                    
 		}
 	}
 }

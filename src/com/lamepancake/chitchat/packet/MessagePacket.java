@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 
 public class MessagePacket extends Packet {
 
-	public String message;
+	private String message;
 	
 	// constructor
 	public MessagePacket(String message) {
@@ -34,12 +34,18 @@ public class MessagePacket extends Packet {
         public ByteBuffer serialise()
         {
             ByteBuffer buf = super.serialise();
-            buf.put(this.message.getBytes(StandardCharsets.UTF_16), 0, this.message.length() * 2);
+            buf.put(this.message.getBytes(StandardCharsets.UTF_16LE), 0, this.message.length() * 2);
+            
+            buf.rewind();
             
             return buf;
         }
         
-	String getMessage() {
+        /**
+         * Get the message contained in this packet.
+         * @return The message contained in this packet.
+         */
+	public String getMessage() {
 		return message;
 	}
 }

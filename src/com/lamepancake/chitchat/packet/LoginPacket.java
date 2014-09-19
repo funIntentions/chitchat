@@ -82,6 +82,9 @@ public class LoginPacket extends Packet {
 
             // Put the password into the buffer following the same process
             serialised.put(this.password.getBytes(StandardCharsets.UTF_16LE), 0, this.password.length() * 2);
+            
+            // Rewind the buffer for writing
+            serialised.rewind();
         
         return serialised;
     }

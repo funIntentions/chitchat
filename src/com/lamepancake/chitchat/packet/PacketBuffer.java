@@ -33,8 +33,14 @@ public class PacketBuffer {
      * A FINISHED state indicates that getPacket can be safely called.
      */
     public static final int FINISHED = 3;
+    
+    /**
+     * The remote peer closed their socket.
+     */
+    public static final int DISCONNECTED = 4;
+    
 
-    private       ByteBuffer    packetHeader;
+    private final ByteBuffer    packetHeader;
     private       ByteBuffer    packetData;
     private final SocketChannel socket;
     
@@ -43,7 +49,7 @@ public class PacketBuffer {
 
     public PacketBuffer(SocketChannel socket)
     {
-        this.packetHeader   = ByteBuffer.allocate(Packet.HEADER_OFFSET);
+        this.packetHeader   = ByteBuffer.allocate(Packet.HEADER_SIZE);
         this.socket         = socket;
 	this.state          = NO_DATA;
     }
@@ -51,16 +57,19 @@ public class PacketBuffer {
     /**
      * Reads as much of the packet data as possible.
      * 
-     * @return  The PacketBuffer's state (NO_DATA, READING_TYPE, READING_DATA, or
-     *          FINISHED).
+     * @return  The PacketBuffer's state.
      */
     public int read()
     {
         switch(this.state)
         {
-            // NO_DATA only informs the user that read hasn't started
+            // If the socket is disconnected, this PacketBuffer is no longer useful.
+            case DISCONNECTED:
+                break;
+            // NO_DATA only informs the user that reading hasn't started
             // NO_DATA and READING_TYPE should do the same thing
             case NO_DATA:
+                this.state = READING_TYPE;
             case READING_TYPE:
                 // If the type wasn't read, break; otherwise change state and continue
                 if(!readType())
@@ -127,7 +136,8 @@ public class PacketBuffer {
     private boolean readType()
     {
         try {
-            this.socket.read(this.packetHeader);
+            if(this.socket.read(this.packetHeader) == -1)
+                this.state = DISCONNECTED;
         } catch (IOException e) {
             System.out.println("Problem during reading: " + e.getMessage());
         }
@@ -143,7 +153,8 @@ public class PacketBuffer {
     private boolean readData()
     {
         try {
-            this.socket.read(this.packetData);
+            if(this.socket.read(this.packetData) == -1)
+                this.state = DISCONNECTED;
         } catch (IOException e) {
             System.out.println("Problem during reading: " + e.getMessage());
         }

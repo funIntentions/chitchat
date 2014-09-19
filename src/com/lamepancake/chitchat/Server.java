@@ -1,6 +1,7 @@
 package com.lamepancake.chitchat;
 
 import com.lamepancake.chitchat.packet.LoginPacket;
+import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.PacketBuffer;
 
@@ -47,7 +48,7 @@ public class Server {
     /**
      * A map relating users to sockets.
      */
-    private Map<SelectionKey, User> users;
+    private final Map<SelectionKey, User> users;
     
     /**
      * The server will continue until this variable becomes false.
@@ -107,19 +108,18 @@ public class Server {
             {
                 SelectionKey currentKey = keyIterator.next();
                
-                if (currentKey.isAcceptable())
+                if (currentKey.isValid() && currentKey.isAcceptable())
                 {
                     addClient(currentKey);
                 }
-                if (currentKey.isReadable())
+                if (currentKey.isValid() && currentKey.isReadable())
                 {
-                    readSock(currentKey);
+                    receivePacket(currentKey);
                 }
-                if (currentKey.isWritable())
+                if (currentKey.isValid() && currentKey.isWritable())
                 {
                     // write data to the buffer and remove OP_WRITE
                 }
-                
                 keyIterator.remove();
             }
         }
@@ -142,7 +142,7 @@ public class Server {
         clientKey = newClient.register(this.selector, SelectionKey.OP_READ);
         
         // Add a new key-user pair to the user list
-        this.users.put(clientKey, new User());
+        this.users.put(clientKey, null);
 
         // Attach a buffer for reading the packets
         clientKey.attach(new PacketBuffer(newClient));
@@ -152,14 +152,19 @@ public class Server {
      * 
      * @param key
      * @throws IOException 
+     * @todo Deal with the exception.
      */
-    private void readSock(SelectionKey key) throws IOException 
+    private void receivePacket(SelectionKey key) throws IOException 
     {
-        PacketBuffer    packetBuf = (PacketBuffer)key.attachment();
+        PacketBuffer    packetBuf   = (PacketBuffer)key.attachment();
         Packet          received;
+        int             state       = packetBuf.read();
+        
+        if(state == PacketBuffer.DISCONNECTED)
+            remove(key);
 
         // Read from the stream and check whether we've finished reading
-        if(packetBuf.read() == PacketBuffer.FINISHED)
+        else if(state == PacketBuffer.FINISHED)
         {
             int type;
             received = packetBuf.getPacket();
@@ -168,32 +173,93 @@ public class Server {
             switch(type)
             {
                 case Packet.LOGIN:
-                    System.out.println("Hello world! Username " + ((LoginPacket)received).getUsername()
-                            + ", Password " + ((LoginPacket)received).getPassword());
+                    login(key, (LoginPacket)received);
                     break;
                 case Packet.MESSAGE:
-                    // hanlde message
+                    sendMessage(key, (MessagePacket)received);
                     break;
                 case Packet.LOGOUT:
-                    // remove the user
+                    remove(key);
                     break;
                 case Packet.WHOISIN:
                     // send user list
                     break;
             }
-            
             packetBuf.clearState();
         }
     }
 
+    /**
+     * Associates the new user with the selection key.
+     * 
+     * @param key       The SelectionKey with which to associate the user.
+     * @param loginInfo The LoginPacket containing the user's information.
+     */
+    private void login(SelectionKey key, LoginPacket loginInfo)
+    {
+        User newUser;
+        if(this.users.get(key) != null)
+            // The client sent another login packet; ignore it.
+            return;
+
+        // Some kind of validation needs to happen here (check password and username)
+        // Might need to be in separate method, since reading from a file/database
+        // could cause exception to be thrown in the constructor
+        newUser = new User(loginInfo.getUsername(), loginInfo.getPassword());
+        this.users.put(key, newUser);
+    }
     
     /**
-     * Removes a user from the user list.
+     * Sends a chat message to all other users in the chat.
+     * 
+     * @param key     The SelectionKey associated with the sender.
+     * @param message The message to be sent.
+     * 
+     * @todo Handle case where packet doesn't send completely
+     */
+    private void sendMessage(SelectionKey key, MessagePacket message)
+    {
+        Set<SelectionKey>       userChannels    = this.users.keySet();
+        Iterator<SelectionKey>  it;
+        
+        // If they're the only person in the chat, don't bother sending the message
+        if(userChannels.size() <= 1)
+            return;
+        
+        it = userChannels.iterator();
+        
+        while(it.hasNext())
+        {
+            SelectionKey currentKey = it.next();
+            
+            if(currentKey.equals(key))
+                continue;
+            
+            try {
+                SocketChannel channel = (SocketChannel)currentKey.channel();
+                channel.write(message.serialise());              
+            } catch (IOException e) {
+                System.err.println("sendMessage: Could not send message: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Removes a user from the user list, removes its SelectionKey from the Selector's
+     * key set, and closes its associated socket.
+     * 
      * @param sel The selection key identifying the user.
      */
     private void remove(SelectionKey sel)
     {
-        users.remove(sel);
+        this.users.remove(sel);
+        sel.cancel();
+        
+        try{
+            sel.channel().close();
+        } catch(IOException e) {
+            System.err.println("remove: Error closing channel: " + e.getMessage());
+        }
     }
 
     /*
