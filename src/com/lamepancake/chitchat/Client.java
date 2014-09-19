@@ -45,6 +45,7 @@ public class Client  {
                 this.port = port;
                 this.username = username;
                 this.password = password;
+                this.userID   = -1;
 	}
 	
 	/*
@@ -280,7 +281,7 @@ public class Client  {
 
             // If we haven't yet been assigned a user ID, find it this way
             // May remove later if JOINED and LEFT packets are implemented
-            if(userID == 0)
+            if(userID == -1)
             {
                 for(User u : users)
                 {
@@ -291,7 +292,7 @@ public class Client  {
         }
         
         /**
-         * Displays the message, its sender and its senders role.
+         * Displays the message, its sender and its sender's role.
          * 
          * @param message A MessagePacket containing the message.
          */
