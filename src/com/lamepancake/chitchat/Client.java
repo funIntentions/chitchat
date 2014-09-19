@@ -29,6 +29,7 @@ public class Client  {
 	private final String server, username, password;
 	private final int    port;
         private int          userID;
+        private int          userRole;
         private List<User>   users;
 
 	/**
@@ -238,12 +239,10 @@ public class Client  {
                         displayMessage((MessagePacket)p);
                         break;
                     case Packet.WHOISIN:
-                        readUsers((WhoIsInPacket)p);
+                        users = ((WhoIsInPacket)p).getUsers();
                         break;
                     case Packet.JOINED:
-                        User u = ((JoinedPacket)p).getUser();
-                        display("[ " + u + " has joined the chat ]");
-                        users.add(u);
+                        addUser((JoinedPacket)p);
                         break;
                     case Packet.LEFT:
                         removeUser((LeftPacket)p);
@@ -251,6 +250,29 @@ public class Client  {
                 }
                 this.packetBuf.clearState();
             }
+        }
+        
+        /**
+         * Adds a new user to the user list or sets this client's userID.
+         * 
+         * If the JoinedPacket contains an empty username field, then it designates
+         * this user's ID and role.
+         * 
+         * @param joined The JoinedPacket containing the new user's information.
+         */
+        private void addUser(JoinedPacket joined)
+        {
+            User u = joined.getUser();
+            // This is our information
+            if(u.getName().equals(""))
+            {
+                userID = u.getID();
+                userRole = u.getRole();
+                return;
+            }
+
+            display("[ " + u + " has joined the chat ]");
+            users.add(u);
         }
         
         /**
@@ -266,27 +288,6 @@ public class Client  {
                 {
                     display("[ " + u + " has left the chat ]");
                     users.remove(i);
-                }
-            }
-        }
-        
-        /**
-         * Read in the list of users and set our user ID.
-         * 
-         * @param userList The WhoIsInPacket containing a list of users.
-         */
-        private void readUsers(WhoIsInPacket userList)
-        {
-            users = userList.getUsers();
-
-            // If we haven't yet been assigned a user ID, find it this way
-            // May remove later if JOINED and LEFT packets are implemented
-            if(userID == -1)
-            {
-                for(User u : users)
-                {
-                    if(u.getName().equals(username))
-                        userID = u.getID();
                 }
             }
         }

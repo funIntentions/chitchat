@@ -222,16 +222,28 @@ public class Server {
     private void login(SelectionKey key, LoginPacket loginInfo)
     {
         User newUser;
+        int newId = this.nextId++;
+
         if(this.users.get(key) != null)
             // The client sent another login packet; ignore it.
             return;
 
-        newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), User.UNSPEC, this.nextId++);
+        newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), User.UNSPEC, newId);
         this.users.put(key, newUser);
         
         // Send a list of connected clients immediately after login
         sendUserList(key);
         
+        // Send the new user a JoinedPacket with an empty username to give them their info
+        try {
+            SocketChannel clientChannel = (SocketChannel)key.channel();
+            JoinedPacket j = new JoinedPacket("", User.UNSPEC, newId);
+            clientChannel.write(j.serialise());
+        } catch (IOException e) {
+            System.err.println("Server.login: Could not send JoinedPacket to user: " + e.getMessage());
+        }
+        
+        // Announce the user joining to everyone else
         announceJoin(key, newUser);
     }
     
@@ -368,9 +380,9 @@ public class Server {
         
         for(SelectionKey curKey : userChannels)
         {          
-            // Don't announce user joining to themselves
             if(curKey.equals(key))
                 continue;
+
             try {
                 SocketChannel channel = (SocketChannel)curKey.channel();
                 channel.write(join.serialise());              
