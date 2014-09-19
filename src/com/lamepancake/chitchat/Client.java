@@ -1,6 +1,8 @@
 package com.lamepancake.chitchat;
 
 
+import com.lamepancake.chitchat.packet.JoinedPacket;
+import com.lamepancake.chitchat.packet.LeftPacket;
 import com.lamepancake.chitchat.packet.LogoutPacket;
 import com.lamepancake.chitchat.packet.WhoIsInPacket;
 import com.lamepancake.chitchat.packet.Packet;
@@ -24,14 +26,17 @@ public class Client  {
 	//private ClientGUI cg;
 	
 	// the server, the port and the username
-	private String server, username, password;
-	private int port;
+	private final String server, username, password;
+	private final int    port;
+        private int          userID;
+        private List<User>   users;
 
-	/*
-	 *  Constructor called by console mode
-	 *  server: the server address
-	 *  port: the port number
-	 *  username: the username
+	/**
+	 * Constructor called by console mode
+	 * @param server    The server address.
+	 * @param port      The port number.
+	 * @param username  The username.
+         * @param password  The password.
 	 */
 	public Client(String server, int port, String username, String password) {
 		// which calls the common constructor with the GUI set to null
@@ -126,108 +131,170 @@ public class Client  {
 	 * In console mode, if an error occurs the program simply stops
 	 * when a GUI id used, the GUI is informed of the disconnection
 	 */
-	public static void main(String[] args) {
-		// default values
-		int         portNumber      = 1500;
-		String      serverAddress   = "localhost";
-		String      username        = "Anonymous";
-                String      password        = "Anon";
+    public static void main(String[] args) {
+            // default values
+            int         portNumber      = 1500;
+            String      serverAddress   = "localhost";
+            String      username        = "Anonymous";
+            String      password        = "Anon";
 
-                // depending of the number of arguments provided we fall through
-		switch(args.length) {
-			// > javac Client username portNumber serverAddr
-			case 3:
-				serverAddress = args[2];
-			// > javac Client username portNumber
-			case 2:
-				try {
-					portNumber = Integer.parseInt(args[1]);
-				}
-				catch(Exception e) {
-					System.out.println("Invalid port number.");
-					System.out.println("Usage is: > java Client [username] [portNumber] [serverAddress]");
-					return;
-				}
-			// > javac Client username
-			case 1: 
-				username = args[0];
-			// > java Client
-			case 0:
-				break;
-			// invalid number of arguments
-			default:
-				System.out.println("Usage is: > java Client [username] [portNumber] {serverAddress]");
-			return;
-		}
-		// create the Client object
-		Client client = new Client(serverAddress, portNumber, username, password);
-		// test if we can start the connection to the Server
-		// if it failed nothing we can do
-		if(!client.start())
-			return;
-		
-		// wait for messages from user
-		Scanner scan = new Scanner(System.in);
-		// loop forever for message from the user
-		while(true) {
-			System.out.print("> ");
-			// read message from user
-			String msg = scan.nextLine();
-			// logout if message is LOGOUT
-			if(msg.equalsIgnoreCase("LOGOUT")) {
-				client.sendMessage(new LogoutPacket());
-				// break to do the disconnect
-				break;
-			}
-			// message WhoIsIn
-			else if(msg.equalsIgnoreCase("WHOISIN")) {
-				client.sendMessage(new WhoIsInPacket());				
-			}
-			else {				// default to ordinary message
-				client.sendMessage(new MessagePacket(msg));
-			}
-		}
-		// done disconnect
-		client.disconnect();
-	}
+            // depending of the number of arguments provided we fall through
+            switch(args.length) {
+                    // > javac Client username portNumber serverAddr
+                    case 3:
+                            serverAddress = args[2];
+                    // > javac Client username portNumber
+                    case 2:
+                        try {
+                                portNumber = Integer.parseInt(args[1]);
+                        }
+                        catch(Exception e) {
+                                System.out.println("Invalid port number.");
+                                System.out.println("Usage is: > java Client [username] [portNumber] [serverAddress]");
+                                return;
+                        }
+                    // > javac Client username
+                    case 1: 
+                        username = args[0];
+                    // > java Client
+                    case 0:
+                        break;
+                    // invalid number of arguments
+                    default:
+                        System.out.println("Usage is: > java Client [username] [portNumber] {serverAddress]");
+                    return;
+            }
+            // create the Client object
+            Client client = new Client(serverAddress, portNumber, username, password);
+            // test if we can start the connection to the Server
+            // if it failed nothing we can do
+            if(!client.start())
+                    return;
+
+            // wait for messages from user
+            Scanner scan = new Scanner(System.in);
+            // loop forever for message from the user
+            while(true) {
+                    System.out.print("> ");
+                    // read message from user
+                    String msg = scan.nextLine();
+                    // logout if message is LOGOUT
+                    if(msg.equalsIgnoreCase("LOGOUT")) {
+                            client.sendMessage(new LogoutPacket());
+                            // break to do the disconnect
+                            break;
+                    }
+                    // message WhoIsIn
+                    else if(msg.equalsIgnoreCase("WHOISIN")) {
+                            client.sendMessage(new WhoIsInPacket());				
+                    }
+                    else {				// default to ordinary message
+                            client.sendMessage(new MessagePacket(msg, client.userID));
+                    }
+            }
+            // done disconnect
+            client.disconnect();
+    }
 
 	/*
 	 * a class that waits for the message from the server and append them to the JTextArea
 	 * if we have a GUI or simply System.out.println() it in console mode
 	 */
-	class ListenFromServer extends Thread {
+    class ListenFromServer extends Thread {
 
-            private PacketBuffer packetBuf;
+        private final PacketBuffer packetBuf;
             
-                public ListenFromServer()
-                {
-                    packetBuf = new PacketBuffer(socket);
-                }
+            public ListenFromServer()
+            {
+                packetBuf = new PacketBuffer(socket);
+            }
+            
+        @Override
+        public void run() {
+            int     type;
+            Packet  p;
+            while(true)
+            {
+                // This should actually never happen since we're in blocking mode
+                // But you never know
+                if(this.packetBuf.read() != PacketBuffer.FINISHED)
+                        continue;
 
-		public void run() {
-                    int     type;
-                    Packet  p;
-                    while(true)
-                    {
-                        // This should actually never happen since we're in blocking mode
-                        // But you never know
-                        if(packetBuf.read() != PacketBuffer.FINISHED)
-                            continue;
+                p = this.packetBuf.getPacket();
+                type = p.getType();
                         
-                        p = packetBuf.getPacket();
-                        type = p.getType();
-                        
-                        switch(type)
-                        {
-                            case Packet.MESSAGE:
-                                display(((MessagePacket)p).getMessage());
-                                break;
-                        }
-                        
-                        packetBuf.clearState();
-                    }
-                    
-		}
-	}
+                switch(type)
+                {
+                    case Packet.MESSAGE:
+                        displayMessage((MessagePacket)p);
+                        break;
+                    case Packet.WHOISIN:
+                        readUsers((WhoIsInPacket)p);
+                        break;
+                    case Packet.JOINED:
+                        User u = ((JoinedPacket)p).getUser();
+                        display("[ " + u + " has joined the chat ]");
+                        users.add(u);
+                        break;
+                    case Packet.LEFT:
+                        removeUser((LeftPacket)p);
+                        break;
+                }
+                this.packetBuf.clearState();
+            }
+        }
+        
+        /**
+         * Removes from the list the user who left the chat.
+         * @param left The LeftPacket containing the user's ID.
+         */
+        private void removeUser(LeftPacket left)
+        {
+            for(int i = 0; i < users.size(); i++)
+            {
+                User u = users.get(i);
+                if(u.getID() == left.getUserID())
+                {
+                    display("[ " + u + " has left the chat ]");
+                    users.remove(i);
+                }
+            }
+        }
+        
+        /**
+         * Read in the list of users and set our user ID.
+         * 
+         * @param userList The WhoIsInPacket containing a list of users.
+         */
+        private void readUsers(WhoIsInPacket userList)
+        {
+            users = userList.getUsers();
+
+            // If we haven't yet been assigned a user ID, find it this way
+            // May remove later if JOINED and LEFT packets are implemented
+            if(userID == 0)
+            {
+                for(User u : users)
+                {
+                    if(u.getName().equals(username))
+                        userID = u.getID();
+                }
+            }
+        }
+        
+        /**
+         * Displays the message, its sender and its senders role.
+         * 
+         * @param message A MessagePacket containing the message.
+         */
+        private void displayMessage(MessagePacket message)
+        {
+            for(User u : users)
+            {
+                if(u.getID() == message.getUserID())
+                    display(u + ": " + message.getMessage());
+            }
+        }
+    }
 }
 

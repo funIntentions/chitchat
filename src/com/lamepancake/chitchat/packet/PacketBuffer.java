@@ -72,7 +72,7 @@ public class PacketBuffer {
                 this.state = READING_TYPE;
             case READING_TYPE:
                 // If the type wasn't read, break; otherwise change state and continue
-                if(!readType())
+                if(!readHeader())
                     break;
                 
                 // Allocate the packetData buffer to the correct size
@@ -133,13 +133,13 @@ public class PacketBuffer {
      * 
      * @return True if all type information has been read; false otherwise.
      */
-    private boolean readType()
+    private boolean readHeader()
     {
         try {
             if(this.socket.read(this.packetHeader) == -1)
                 this.state = DISCONNECTED;
         } catch (IOException e) {
-            System.out.println("Problem during reading: " + e.getMessage());
+            System.out.println("PacketBuffer.readType: Problem during reading: " + e.getMessage());
         }
 
         return this.packetHeader.remaining() == 0;
@@ -156,7 +156,7 @@ public class PacketBuffer {
             if(this.socket.read(this.packetData) == -1)
                 this.state = DISCONNECTED;
         } catch (IOException e) {
-            System.out.println("Problem during reading: " + e.getMessage());
+            System.out.println("PacketBuffer.readData: Problem during reading: " + e.getMessage());
         }
         
         return this.packetData.remaining() == 0;
@@ -185,7 +185,13 @@ public class PacketBuffer {
                 this.packet = new MessagePacket(this.packetData);
                 break;
             case Packet.WHOISIN:
-                // To be implemented
+                this.packet = new WhoIsInPacket(this.packetData);
+                break;
+            case Packet.JOINED:
+                this.packet = new JoinedPacket(this.packetData);
+                break;
+            case Packet.LEFT:
+                this.packet = new LeftPacket(this.packetData);
                 break;
         }
     }

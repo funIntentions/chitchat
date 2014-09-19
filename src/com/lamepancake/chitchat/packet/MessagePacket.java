@@ -11,12 +11,20 @@ import java.nio.charset.StandardCharsets;
 
 public class MessagePacket extends Packet {
 
-	private String message;
+	private final String message;
+        private int          userID;
 	
+        
+        public MessagePacket(String message)
+        {
+            this(message, -1);
+        }
+
 	// constructor
-	public MessagePacket(String message) {
-            super(Packet.MESSAGE, message.length() * 2);
+	public MessagePacket(String message, int userID) {
+            super(Packet.MESSAGE, 4 + message.length() * 2);
             this.message = message;
+            this.userID = userID;
 	}
 
         /**
@@ -27,15 +35,18 @@ public class MessagePacket extends Packet {
         public MessagePacket(ByteBuffer data)
         {
             super(Packet.MESSAGE, data.capacity());
-            this.message = new String(data.array(), StandardCharsets.UTF_16LE);
+            byte[] rawMessage = new byte[data.capacity() - 4];
+            this.userID = data.getInt();
+            data.get(rawMessage);
+            this.message = new String(rawMessage, StandardCharsets.UTF_16LE);
         }
         
         @Override
         public ByteBuffer serialise()
         {
             ByteBuffer buf = super.serialise();
-            buf.put(this.message.getBytes(StandardCharsets.UTF_16LE), 0, this.message.length() * 2);
-            
+            buf.putInt(this.userID);
+            buf.put(this.message.getBytes(StandardCharsets.UTF_16LE));
             buf.rewind();
             
             return buf;
@@ -48,5 +59,28 @@ public class MessagePacket extends Packet {
 	public String getMessage() {
 		return message;
 	}
+        
+        /**
+         * Returns the ID of the user sending the message.
+         * 
+         * @return The ID of the user sending the message.
+         */
+        public int getUserID()
+        {
+            return this.userID;
+        }
+        
+        /**
+         * Set the user ID in case it's not set.
+         * 
+         * @param newID The new user ID to assign to this message.
+         */
+        public void setUserID(int newID)
+        {
+            if(newID < 1)
+                throw new IllegalArgumentException("MessagePacket.setUserID: newID must be >= 1, was " + newID);
+            
+            this.userID = newID;
+        }
 }
 

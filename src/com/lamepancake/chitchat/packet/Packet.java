@@ -22,9 +22,19 @@ public abstract class Packet {
     public static final int MESSAGE  = 2;
     
     /**
-     * Asks the server for a list of clients in this chat.
+     * Requests or sends a list of users in the chat.
      */
     public static final int WHOISIN  = 3;
+    
+    /**
+     * Sent to all connected clients when a new user joins the chat.
+     */
+    public static final int JOINED   = 4;
+    
+    /**
+     * Sent to all connected clients when a new user leaves the chat.
+     */
+    public static final int LEFT     = 5;
     
     /**
      * The offset from which the inheriting packet classes must interpret data in
