@@ -45,11 +45,12 @@ public class JoinedPacket extends Packet {
     /**
      * Construct a JoinedPacket from a serialised one.
      * 
-     * @param data The serialised JoinedPacket.
+     * @param header The serialised header.
+     * @param data   The serialised JoinedPacket.
      */
-    public JoinedPacket(ByteBuffer data)
+    public JoinedPacket(ByteBuffer header, ByteBuffer data)
     {
-        super(Packet.JOINED, data.capacity());
+        super(header);
         int     nameLen = data.getInt();
         byte[]  rawName = new byte[nameLen];
         data.get(rawName);

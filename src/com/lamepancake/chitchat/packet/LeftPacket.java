@@ -28,11 +28,12 @@ public class LeftPacket extends Packet {
     /**
      * Construct a LeftPacket from a serialised one.
      * 
-     * @param data The serialised LeftPacket.
+     * @param header The serialised header.
+     * @param data   The serialised LeftPacket.
      */
-    public LeftPacket(ByteBuffer data)
+    public LeftPacket(ByteBuffer header, ByteBuffer data)
     {
-        super(LEFT, 4);
+        super(header);
         this.userID = data.getInt();
     }
     

@@ -53,7 +53,7 @@ public class WhoIsInPacket extends Packet {
      * the requesting client.
      * 
      * @param users     The list of currently connected users.
-     * @param length    The length, in bytes, of the packet.
+     * @param length    The length, in bytes, of the data portion of the packet.
      * @param whichList The list being requested.
      */
     public WhoIsInPacket(List<User> users, int length, int whichList)
@@ -66,17 +66,18 @@ public class WhoIsInPacket extends Packet {
     /**
      * Construct a WhoIsInPacket a serialised WhoIsInPacket.
      * 
-     * @param data The serialised data.
+     * @param header The serialised packet header.
+     * @param data   The serialised data.
      */
-    public WhoIsInPacket(ByteBuffer data)
+    public WhoIsInPacket(ByteBuffer header, ByteBuffer data)
     {
-        super(WHOISIN, data.capacity());
+        super(header);
 
         this.whichList = data.getInt();
         
-        // If the data capacity is only enough for the packet header and whichList,
-        // then it doesn't contain any users
-        if(data.capacity() > HEADER_SIZE + 4)
+        // If the data capacity is only enough for whichList, then it doesn't
+        // contain any users
+        if(this.getLength() != HEADER_SIZE + 4)
         {
             int numUsers = data.getInt();
         

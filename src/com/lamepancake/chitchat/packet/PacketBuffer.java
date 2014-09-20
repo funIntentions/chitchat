@@ -76,7 +76,7 @@ public class PacketBuffer {
                     break;
                 
                 // Allocate the packetData buffer to the correct size
-                this.packetData = ByteBuffer.allocate(this.packetHeader.getInt(4));
+                this.packetData = ByteBuffer.allocate(this.packetHeader.getInt(4) - Packet.HEADER_SIZE);
                 this.state = READING_DATA;
 
             case READING_DATA:
@@ -171,30 +171,30 @@ public class PacketBuffer {
         
         this.packetHeader.rewind();
         this.packetData.rewind();
-        type = this.packetHeader.getInt();
+        type = this.packetHeader.getInt(0);
         
         switch(type)
         {
             case Packet.LOGIN:
-                this.packet = new LoginPacket(this.packetData);
+                this.packet = new LoginPacket(this.packetHeader, this.packetData);
                 break;
             case Packet.LOGOUT:
                 this.packet = new LogoutPacket();
                 break;
             case Packet.MESSAGE:
-                this.packet = new MessagePacket(this.packetData);
+                this.packet = new MessagePacket(this.packetHeader, this.packetData);
                 break;
             case Packet.WHOISIN:
-                this.packet = new WhoIsInPacket(this.packetData);
+                this.packet = new WhoIsInPacket(this.packetHeader, this.packetData);
                 break;
             case Packet.JOINED:
-                this.packet = new JoinedPacket(this.packetData);
+                this.packet = new JoinedPacket(this.packetHeader, this.packetData);
                 break;
             case Packet.LEFT:
-                this.packet = new LeftPacket(this.packetData);
+                this.packet = new LeftPacket(this.packetHeader, this.packetData);
                 break;
             case Packet.GRANTACCESS:
-                this.packet = new GrantAccessPacket(this.packetData);
+                this.packet = new GrantAccessPacket(this.packetHeader, this.packetData);
                 break;
         }
     }

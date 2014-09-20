@@ -34,11 +34,12 @@ public class LoginPacket extends Packet {
     /**
      * Construct a login packet from data sent over the network.
      * 
-     * @param data A ByteBuffer containing the transferred data.
+     * @param header The serialised packet header.
+     * @param data   A ByteBuffer containing the transferred data.
      */
-    public LoginPacket(ByteBuffer data)
+    public LoginPacket(ByteBuffer header, ByteBuffer data)
     {
-        super(Packet.LOGIN, data.capacity());
+        super(header);
         
         byte[]  rawUsername;
         byte[]  rawPassword;

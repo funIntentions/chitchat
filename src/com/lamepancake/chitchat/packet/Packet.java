@@ -53,13 +53,19 @@ public abstract class Packet {
     /**
      * Creates a packet of the specified type.
      * 
-     * @param packetType    The type of packet to be created.
-     * @param packetLength  
+     * @param packetType The type of packet to be created.
+     * @param dataLength The length of data (without header) in this packet. 
      */
-    public Packet(int packetType, int packetLength)
+    public Packet(int packetType, int dataLength)
     {
-        this.length = packetLength;
+        this.length = HEADER_SIZE + dataLength;
         this.type   = packetType;
+    }
+    
+    public Packet(ByteBuffer header)
+    {
+        this.type   = header.getInt();
+        this.length = header.getInt();
     }
     
     /**
@@ -70,7 +76,7 @@ public abstract class Packet {
     public ByteBuffer serialise()
     {
         // Room for the packet type, length, and contents
-        ByteBuffer buf = ByteBuffer.allocate(HEADER_SIZE + this.length);
+        ByteBuffer buf = ByteBuffer.allocate(this.length);
         
         buf.putInt(this.type);
         buf.putInt(this.length);        
@@ -85,5 +91,15 @@ public abstract class Packet {
     public int getType()
     {
         return this.type;
+    }
+    
+    /**
+     * Get the total length of this packet.
+     * 
+     * @return The total length of this packet.
+     */
+    public int getLength()
+    {
+        return this.length;
     }
 }

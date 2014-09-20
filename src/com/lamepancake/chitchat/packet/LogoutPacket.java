@@ -13,6 +13,9 @@ import java.nio.ByteBuffer;
  */
 public class LogoutPacket extends Packet{
     
+    /**
+     * Constructs a new LogoutPacket.
+     */
     public LogoutPacket()
     {
         super(LOGOUT, 0);

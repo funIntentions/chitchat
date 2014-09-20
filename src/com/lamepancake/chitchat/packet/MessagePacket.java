@@ -30,11 +30,12 @@ public class MessagePacket extends Packet {
         /**
          * Construct a MessagePacket from a serialised one.
          * 
-         * @param data A ByteBuffer containing the serialised packet.
+         * @param header The serialised header.
+         * @param data   A ByteBuffer containing the serialised packet.
          */
-        public MessagePacket(ByteBuffer data)
+        public MessagePacket(ByteBuffer header, ByteBuffer data)
         {
-            super(Packet.MESSAGE, data.capacity());
+            super(header);
             byte[] rawMessage = new byte[data.capacity() - 4];
             this.userID = data.getInt();
             data.get(rawMessage);

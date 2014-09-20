@@ -23,11 +23,12 @@ public class GrantAccessPacket extends Packet {
     /**
      * Construct a GrantAccessPacket from a serialised one.
      * 
-     * @param data The serialised GrantAccessPacket.
+     * @param header The serialised packet header.
+     * @param data   The serialised GrantAccessPacket.
      */
-    public GrantAccessPacket(ByteBuffer data)
+    public GrantAccessPacket(ByteBuffer header, ByteBuffer data)
     {
-        super(Packet.GRANTACCESS, 4);
+        super(header);
         this.userID = data.getInt();
     }
     
