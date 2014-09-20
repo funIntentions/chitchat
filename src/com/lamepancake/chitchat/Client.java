@@ -231,6 +231,12 @@ public class Client  {
 
                 System.out.println("[END]");
             }
+            
+            else if(msg.equalsIgnoreCase("WAITINGLIST"))
+            {
+                client.sendMessage(new WhoIsInPacket(WhoIsInPacket.WAITING));
+            }
+
             else if (msg.equalsIgnoreCase("ADD"))
             {
                 String userID = scan.nextLine();
@@ -340,7 +346,20 @@ public class Client  {
                         displayMessage((MessagePacket)p);
                         break;
                     case Packet.WHOISIN:
-                        users = ((WhoIsInPacket)p).getUsers();
+                        WhoIsInPacket userList = (WhoIsInPacket)p;
+                        if(userList.whichList() == WhoIsInPacket.WAITING)
+                        {
+                            System.out.println("[WAITING USERS]");
+                            List<User> waitingUsers = userList.getUsers();
+                            for(User u : waitingUsers)
+                            {
+                                System.out.print('\t');
+                                System.out.println("Name: " + u.getName() + "; ID: " + u.getID());
+                            }
+                            System.out.println("[END]");
+                        }
+                        else
+                            users = userList.getUsers();
                         break;
                     case Packet.JOINED:
                         addUser((JoinedPacket)p);

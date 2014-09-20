@@ -17,27 +17,50 @@ import java.util.List;
  */
 public class WhoIsInPacket extends Packet {
     
+    /**
+     * See who is in the list of users connected to the chat.
+     */
+    public static final int CONNECTED = 0;
+        
+    /**
+     * See who is in the list of users waiting to be added to the chat.
+     */
+    public static final int WAITING = 1;
+    
+    /**
+     * The list of users in the requested list.
+     */
     private List<User> users;
     
     /**
-     * Construct a WhoIsInPacket to be sent to the server.
+     * The list being requested or sent.
      */
-    public WhoIsInPacket()
+    private final int whichList;
+    
+    /**
+     * Construct a WhoIsInPacket to be sent to the server.
+     * 
+     * @param whichList The list of users to see.
+     */
+    public WhoIsInPacket(int whichList)
     {
-        this(null, 0);
+        // The 4 is already added in the other constructor, so don't repeat it here
+        this(null, 0, whichList);
     }
     
     /**
      * Construct a WhoIsIn packet containing a list of users to be sent to
      * the requesting client.
      * 
-     * @param users  The list of currently connected users.
-     * @param length The length, in bytes, of the packet.
+     * @param users     The list of currently connected users.
+     * @param length    The length, in bytes, of the packet.
+     * @param whichList The list being requested.
      */
-    public WhoIsInPacket(List<User> users, int length)
+    public WhoIsInPacket(List<User> users, int length, int whichList)
     {
-        super(WHOISIN, length);
+        super(WHOISIN, length + 4);
         this.users = users;
+        this.whichList = whichList;
     }
     
     /**
@@ -48,24 +71,32 @@ public class WhoIsInPacket extends Packet {
     public WhoIsInPacket(ByteBuffer data)
     {
         super(WHOISIN, data.capacity());
+
+        this.whichList = data.getInt();
         
-        int numUsers = data.getInt();
-        this.users = new ArrayList<>(numUsers);
-        
-        for(int i = 0; i < numUsers; i++)
+        // If the data capacity is only enough for the packet header and whichList,
+        // then it doesn't contain any users
+        if(data.capacity() > HEADER_SIZE + 4)
         {
-            int     nameLen  = data.getInt();
-            int     role;
-            int     id;
-            byte[]  rawName  = new byte[nameLen];
-            String  username;
-            
-            data.get(rawName);
-            username = new String(rawName, StandardCharsets.UTF_16LE);
-            role = data.getInt();
-            id = data.getInt();
-            
-            users.add(new User(username, role, id));            
+            int numUsers = data.getInt();
+        
+            this.users = new ArrayList<>(numUsers);
+
+            for(int i = 0; i < numUsers; i++)
+            {
+                int     nameLen  = data.getInt();
+                int     role;
+                int     id;
+                byte[]  rawName  = new byte[nameLen];
+                String  username;
+
+                data.get(rawName);
+                username = new String(rawName, StandardCharsets.UTF_16LE);
+                role = data.getInt();
+                id = data.getInt();
+
+                users.add(new User(username, role, id));            
+            }
         }
     }
     
@@ -79,10 +110,22 @@ public class WhoIsInPacket extends Packet {
         return this.users;
     }
     
+    /**
+     * Returns the type of list being requested/sent.
+     * 
+     * @return The type of list being requested/sent.
+     */
+    public int whichList()
+    {
+        return this.whichList;
+    }
+    
     @Override
     public ByteBuffer serialise()
     {
         ByteBuffer buf = super.serialise();
+        buf.putInt(this.whichList);
+
         if(this.users == null)
         {
             buf.rewind();

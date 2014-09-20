@@ -201,7 +201,7 @@ public class Server {
                     remove(clientKey);
                     break;
                 case Packet.WHOISIN:
-                    sendUserList(clientKey, 0);
+                    sendUserList(clientKey, ((WhoIsInPacket)received).whichList());
                     break;
                 case Packet.GRANTACCESS:
                     if(this.users.get(clientKey).getRole() == User.ADMIN )
@@ -406,7 +406,7 @@ public class Server {
      * Creates a WhoIsInPacket and sends it to the requesting client.
      * 
      * @param clientKey The SelectionKey associated with this client.
-     * @param list      The user list to send. 0 is the list of connected users, 1 the waiting users.
+     * @param list      The user list to send (WhoIsInPacket.CONNECTED or WhoIsInPacket.WAITING).
      */
     private void sendUserList(SelectionKey clientKey, int list)
     {
@@ -416,13 +416,13 @@ public class Server {
         Map<SelectionKey, User>     userMap;
         int                size = 4; // One extra int for the number of users
         
-        if(list == 0)
+        if(list == WhoIsInPacket.CONNECTED)
         {
             userList = new ArrayList<>(this.users.size());
             keys = this.users.keySet();
             userMap = this.users;
         }
-        else if(list == 1)
+        else if(list == WhoIsInPacket.WAITING)
         {
             userList = new ArrayList<>(this.waitingUsers.size());
             keys = this.waitingUsers.keySet();
@@ -442,7 +442,7 @@ public class Server {
             userList.add(u);
         }
         
-        packet = new WhoIsInPacket(userList, size);
+        packet = new WhoIsInPacket(userList, size, list);
         try {
             ((SocketChannel)clientKey.channel()).write(packet.serialise());
         } catch (IOException e) {
