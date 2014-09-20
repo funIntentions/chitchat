@@ -11,7 +11,6 @@ import com.lamepancake.chitchat.packet.WhoIsInPacket;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -22,8 +21,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-/*
- * The server that can be run both as a console application or a GUI
+/**
+ * Coordinates user authentication and transmission of chat messages.
+ * 
+ * Loosely Based upon the work of Paul-Benoit Larochelle (see link below).
+ * @see http://www.dreamincode.net/forums/topic/259777-a-simple-chat-program-with-clientserver-gui-optional/
  */
 public class Server {
 
@@ -41,14 +43,6 @@ public class Server {
      * The port on which to listen for connections.
      */
     private final int listenPort;
-
-    /**
-     * The socket on which to accept new clients.
-     *
-     * Note: may be removed later since it is obtainable via the key in the
-     * selector set.
-     */
-    private ServerSocketChannel listenChannel;
 
     /**
      * A map relating users to sockets who are in the chat.
@@ -74,22 +68,25 @@ public class Server {
      * Initialise the server's selector object and listening socket.
      *
      * @param port The port on which to listen for connections.
+     * @throws IOException When the server couldn't be initialised.
      */
-    public Server(int port) {
+    public Server(int port) throws IOException {
 
         this.listenPort = port;
 
         try
         {
+            ServerSocketChannel listenChannel;
             this.selector = Selector.open();
-            this.listenChannel = ServerSocketChannel.open();
-            this.listenChannel.socket().bind(new InetSocketAddress(this.listenPort), BACKLOG);
-            this.listenChannel.configureBlocking(false);
-            this.listenChannel.register(this.selector, SelectionKey.OP_ACCEPT);
+            listenChannel = ServerSocketChannel.open();
+            listenChannel.socket().bind(new InetSocketAddress(this.listenPort), BACKLOG);
+            listenChannel.configureBlocking(false);
+            listenChannel.register(this.selector, SelectionKey.OP_ACCEPT);
         } 
         catch (IOException e)
         {
             System.out.println("Server could not initialise: " + e.getMessage());
+            throw(e);
         }
         
         this.users = new HashMap<>();
@@ -112,10 +109,7 @@ public class Server {
         while (keepGoing) {
             int readyChannels = this.selector.select();
             
-            if (readyChannels == 0) 
-            {
-                continue;
-            }
+            if (readyChannels == 0) continue;
 
             keys        = this.selector.selectedKeys();
             keyIterator = keys.iterator();
@@ -125,17 +119,17 @@ public class Server {
                 SelectionKey currentKey = keyIterator.next();
                
                 if (currentKey.isValid() && currentKey.isAcceptable())
-                {
                     addClient(currentKey);
-                }
+
                 if (currentKey.isValid() && currentKey.isReadable())
-                {
                     receivePacket(currentKey);
-                }
+
                 if (currentKey.isValid() && currentKey.isWritable())
                 {
                     // write data to the buffer and remove OP_WRITE
                 }
+                
+                // Remove the key from the selected-set
                 keyIterator.remove();
             }
         }
@@ -143,17 +137,17 @@ public class Server {
     }
 
     /**
-     * Accepts a connection from a new client and adds them to the list of users.
+     * Accepts a connection from a new client.
      *
-     * @param key
+     * @param key The SelectionKey associated with the ServerSocketChannel.
      */
     private void addClient(SelectionKey key) {
         ServerSocketChannel acceptSocket    = (ServerSocketChannel) key.channel();
         SocketChannel       newClient;
         SelectionKey        clientKey;
-          
+        
+        // Set the new client to non-blocking mode
         try {
-            // Set the new client to non-blocking mode and add to the selector
             newClient = acceptSocket.accept();
             newClient.configureBlocking(false);
         } catch (IOException e) {
@@ -161,6 +155,7 @@ public class Server {
             return;
         }
         
+        // Add the new client to the selector
         try {
             clientKey = newClient.register(this.selector, SelectionKey.OP_READ);
         } catch (IOException e){
@@ -169,9 +164,6 @@ public class Server {
             try{newClient.close();}catch(IOException i){}
             return;
         }
-        
-        // Add a new key to the waiting users list
-        this.waitingUsers.put(clientKey, null);
 
         // Attach a buffer for reading the packets
         clientKey.attach(new PacketBuffer(newClient));
@@ -184,20 +176,18 @@ public class Server {
      */
     private void receivePacket(SelectionKey clientKey)
     {
-        PacketBuffer    packetBuf   = (PacketBuffer)clientKey.attachment();
-        Packet          received;
-        int             state       = packetBuf.read();
+        PacketBuffer packetBuf   = (PacketBuffer)clientKey.attachment();
+        int          state       = packetBuf.read();
         
         // Remove the user if they've disconnected
         if(state == PacketBuffer.DISCONNECTED)
             remove(clientKey);
 
-        // Read from the stream and check whether we've finished reading
+        // Process the packet if we're finished reading
         else if(state == PacketBuffer.FINISHED)
         {
-            int type;
-            received = packetBuf.getPacket();
-            type = received.getType();
+            Packet  received = packetBuf.getPacket();
+            int     type     = received.getType();
             
             switch(type)
             {
@@ -211,10 +201,10 @@ public class Server {
                     remove(clientKey);
                     break;
                 case Packet.WHOISIN:
-                    sendUserList(clientKey);
+                    sendUserList(clientKey, 0);
                     break;
                 case Packet.GRANTACCESS:
-                    if(this.users.get(clientKey).getRole() == 0 )
+                    if(this.users.get(clientKey).getRole() == User.ADMIN )
                     {
                         addUserToChat(clientKey, (GrantAccessPacket)received);
                     }
@@ -240,19 +230,24 @@ public class Server {
     {
         User newUser;
         int newId = this.nextId++;
-
+        
+        // The client sent another login packet; ignore it.
         if(this.waitingUsers.get(key) != null || this.users.get(key) != null)
-            // The client sent another login packet; ignore it.
             return;
 
-        newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), User.UNSPEC, newId);
+        newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), newId);
         this.waitingUsers.put(key, newUser);
         
         // Send the new user a JoinedPacket with an empty username to give them their info
         try {
             SocketChannel clientChannel = (SocketChannel)key.channel();
-            JoinedPacket j = new JoinedPacket("", User.UNSPEC, newId);
+            JoinedPacket j = new JoinedPacket("", newUser.getRole(), newId);
             clientChannel.write(j.serialise());
+            
+            // Also grant the admin immediate access to the chat
+            if(newUser.getRole() == User.ADMIN)
+                addUserToChat(key, new GrantAccessPacket(newId));
+
         } catch (IOException e) {
             System.err.println("Server.login: Could not send JoinedPacket to user: " + e.getMessage());
         }
@@ -267,20 +262,15 @@ public class Server {
      */
     private void addUserToChat(SelectionKey key, GrantAccessPacket userInfo)
     {
-        Set<SelectionKey>       userChannels    = this.waitingUsers.keySet();
-        Iterator<SelectionKey>  it;
-        int userID = userInfo.getUserID();
-        GrantAccessPacket grantaccess = new GrantAccessPacket(userID);
-        
-        SelectionKey sel = null;
+        Set<SelectionKey>       userChannels = this.waitingUsers.keySet();
+        int                     userID       = userInfo.getUserID();
+        SelectionKey            sel          = null;
         
         if(userChannels.isEmpty()) // if the admin is trying to add users that dont exist
         {
             return;
         }
-        
-        it = userChannels.iterator();
-        
+       
         for(SelectionKey curKey : userChannels)
         {
             User user = waitingUsers.get(curKey);
@@ -288,6 +278,7 @@ public class Server {
             if (user.getID() == userID)
             {
                 sel = curKey;
+                break;
             }
         }
         
@@ -305,13 +296,13 @@ public class Server {
         // inform the user they are now in the chat.
         try {
             SocketChannel channel = (SocketChannel)sel.channel();
-            channel.write(grantaccess.serialise());              
+            channel.write(userInfo.serialise());              
         } catch (IOException e) {
             System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
         }
         
         // Send a list of connected clients immediately after being added to the chat.
-        sendUserList(key);
+        sendUserList(sel, 0);
         
         // Announce the user joining to everyone else
         announceJoin(sel, waitingUser);
@@ -348,6 +339,7 @@ public class Server {
         {
             SelectionKey currentKey = it.next();
             
+            // Don't send the message back to the sender
             if(currentKey.equals(key))
                 continue;
             
@@ -374,18 +366,17 @@ public class Server {
         if (this.users.containsKey(sel))
         {
             userChannels = this.users.keySet();
-            id          = this.users.get(sel).getID();
-            left = new LeftPacket(id);
+            id           = this.users.get(sel).getID();
             this.users.remove(sel);
         }
         else 
         {
             userChannels = this.waitingUsers.keySet();
-            id          = this.waitingUsers.get(sel).getID();
-            left = new LeftPacket(id);
+            id           = this.waitingUsers.get(sel).getID();
             this.waitingUsers.remove(sel);
         }
         
+        left = new LeftPacket(id);
 
         sel.cancel();
         sel.attach(null);
@@ -415,20 +406,34 @@ public class Server {
      * Creates a WhoIsInPacket and sends it to the requesting client.
      * 
      * @param clientKey The SelectionKey associated with this client.
+     * @param list      The user list to send. 0 is the list of connected users, 1 the waiting users.
      */
-    private void sendUserList(SelectionKey clientKey)
+    private void sendUserList(SelectionKey clientKey, int list)
     {
-        ArrayList<User>         userList    = new ArrayList<>(this.users.size());
-        Set<SelectionKey>       keys        = this.users.keySet();
-        int                     size        = 4; // One extra int for the number of users
-        WhoIsInPacket           packet;
+        ArrayList<User>             userList;
+        Set<SelectionKey>           keys;
+        WhoIsInPacket               packet;
+        Map<SelectionKey, User>     userMap;
+        int                size = 4; // One extra int for the number of users
+        
+        if(list == 0)
+        {
+            userList = new ArrayList<>(this.users.size());
+            keys = this.users.keySet();
+            userMap = this.users;
+        }
+        else if(list == 1)
+        {
+            userList = new ArrayList<>(this.waitingUsers.size());
+            keys = this.waitingUsers.keySet();
+            userMap = this.waitingUsers;
+        }
+        else
+            throw new IllegalArgumentException("list must be 0 (users) or 1 (pending users), was " + list);
         
         for (SelectionKey key : keys)
         {
-            User u = this.users.get(key);
-
-            if(u == null)
-                continue;
+            User u = userMap.get(key);
 
             // Add space for the user's name and three ints (name length, role, id)
             size += u.getName().length() * 2;
@@ -453,8 +458,7 @@ public class Server {
      */
     private void announceJoin(SelectionKey key, User u)
     {
-         Set<SelectionKey> userChannels = this.users.keySet();
-        User              client       = this.users.get(key);
+        Set<SelectionKey> userChannels = this.users.keySet();
         JoinedPacket      join         = new JoinedPacket(u);   
                
         // If they're the only person in the chat, don't bother sending the message
@@ -462,7 +466,8 @@ public class Server {
             return;
         
         for(SelectionKey curKey : userChannels)
-        {          
+        {
+            // Don't notify the joining user that they've joined
             if(curKey.equals(key))
                 continue;
 

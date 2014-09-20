@@ -5,7 +5,8 @@ import java.nio.charset.StandardCharsets;
 
 
 /**
- *
+ * Contains a message to be sent to other users in the chat.
+ * 
  * @author shane
  */
 
@@ -14,13 +15,12 @@ public class MessagePacket extends Packet {
 	private final String message;
         private int          userID;
 	
-        
-        public MessagePacket(String message)
-        {
-            this(message, -1);
-        }
-
-	// constructor
+	/**
+         * Constructs a MessagePacket with the given message and userID.
+         * 
+         * @param message The message to send.
+         * @param userID  The ID of the user sending the message.
+         */
 	public MessagePacket(String message, int userID) {
             super(Packet.MESSAGE, 4 + message.length() * 2);
             this.message = message;
@@ -28,9 +28,9 @@ public class MessagePacket extends Packet {
 	}
 
         /**
-         * Constructor for data received over the wire.
+         * Construct a MessagePacket from a serialised one.
          * 
-         * @param data A ByteBuffer containing data sent over the wire.
+         * @param data A ByteBuffer containing the serialised packet.
          */
         public MessagePacket(ByteBuffer data)
         {
@@ -57,7 +57,7 @@ public class MessagePacket extends Packet {
          * @return The message contained in this packet.
          */
 	public String getMessage() {
-		return message;
+            return message;
 	}
         
         /**
@@ -73,6 +73,9 @@ public class MessagePacket extends Packet {
         /**
          * Set the user ID in case it's not set.
          * 
+         * The user ID must be >= 0. The method will throw an IllegalArgumentException
+         * if this rule is not followed.
+         *
          * @param newID The new user ID to assign to this message.
          */
         public void setUserID(int newID)

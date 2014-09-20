@@ -36,7 +36,7 @@ public class User {
      */
     public User(String name, String password, int userID)
     {
-        this(name, password, -1, userID);
+        this(name, password, UNSPEC, userID);
     }
     
     public User(String name, String password, int role, int userID)
@@ -46,13 +46,13 @@ public class User {
         this.id         = userID;
         
         //validating admin role to username
-        if(name.compareToIgnoreCase("Admin") == 0)
+        if(name.equalsIgnoreCase("Admin"))
         {
-            this.role   = 0;
+            this.role   = ADMIN;
         }
         else
         {
-            this.role   = role;
+            this.role   = USER;
         }
     }
     
