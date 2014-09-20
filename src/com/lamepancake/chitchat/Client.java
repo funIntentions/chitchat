@@ -210,12 +210,25 @@ public class Client  {
             
             // read message from user
             String msg = scan.nextLine();
-
-            if(msg.equalsIgnoreCase("LOGOUT")) {
+            
+            String[] splitmsg = msg.split("\\s+");
+            
+            if ((splitmsg.length > 1) && splitmsg[0].equalsIgnoreCase("ADD"))
+            {
+                String userID = splitmsg[1];
+                int id;
+                try {
+                    id = Integer.parseInt(userID);
+                } catch(Exception e) {
+                    System.out.println("Not a valid user ID: " + userID);
+                    continue;
+                }
+                client.sendMessage(new GrantAccessPacket(id));
+            }
+            else if(msg.equalsIgnoreCase("LOGOUT")) {
                 client.sendMessage(new LogoutPacket());
                 break;
             }
-
             else if(msg.equalsIgnoreCase("WHOISIN")) {     
                 /* 
                  * WHOISIN doesn't actually send anything to the server; it just
@@ -231,23 +244,9 @@ public class Client  {
 
                 System.out.println("[END]");
             }
-            
             else if(msg.equalsIgnoreCase("WAITINGLIST"))
             {
                 client.sendMessage(new WhoIsInPacket(WhoIsInPacket.WAITING));
-            }
-
-            else if (msg.equalsIgnoreCase("ADD"))
-            {
-                String userID = scan.nextLine();
-                int id;
-                try {
-                    id = Integer.parseInt(userID);
-                } catch(Exception e) {
-                    System.out.println("Not a valid user ID: " + userID);
-                    continue;
-                }
-                client.sendMessage(new GrantAccessPacket(id));
             }
             else
             {	
