@@ -214,7 +214,14 @@ public class Server {
                     sendUserList(clientKey);
                     break;
                 case Packet.GRANTACCESS:
-                    addUserToChat(clientKey, (GrantAccessPacket)received);
+                    if(this.users.get(clientKey).getRole() == 0 )
+                    {
+                        addUserToChat(clientKey, (GrantAccessPacket)received);
+                    }
+                    else
+                    {
+                        System.err.println("Access requirement not met for this command.");
+                    }
                     break;
             }
             packetBuf.clearState();

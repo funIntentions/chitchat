@@ -44,7 +44,16 @@ public class User {
         this.name       = name;
         this.password   = password;
         this.id         = userID;
-        this.role       = role;
+        
+        //validating admin role to username
+        if(name.compareToIgnoreCase("Admin") == 0)
+        {
+            this.role   = 0;
+        }
+        else
+        {
+            this.role   = role;
+        }
     }
     
     /**
