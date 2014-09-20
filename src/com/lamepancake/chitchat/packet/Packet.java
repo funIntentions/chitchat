@@ -37,6 +37,11 @@ public abstract class Packet {
     public static final int LEFT     = 5;
     
     /**
+     * Sent by an admin to grant a waiting user access to the chat.
+     */
+    public static final int GRANTACCESS     = 6;
+    
+    /**
      * The offset from which the inheriting packet classes must interpret data in
      * the buffer.
      */

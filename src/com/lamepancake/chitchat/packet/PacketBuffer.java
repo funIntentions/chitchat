@@ -193,6 +193,9 @@ public class PacketBuffer {
             case Packet.LEFT:
                 this.packet = new LeftPacket(this.packetData);
                 break;
+            case Packet.GRANTACCESS:
+                this.packet = new GrantAccessPacket(this.packetData);
+                break;
         }
     }
 }

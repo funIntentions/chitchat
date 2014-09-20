@@ -1,5 +1,6 @@
 package com.lamepancake.chitchat;
 
+import com.lamepancake.chitchat.packet.GrantAccessPacket;
 import com.lamepancake.chitchat.packet.JoinedPacket;
 import com.lamepancake.chitchat.packet.LeftPacket;
 import com.lamepancake.chitchat.packet.LoginPacket;
@@ -50,9 +51,14 @@ public class Server {
     private ServerSocketChannel listenChannel;
 
     /**
-     * A map relating users to sockets.
+     * A map relating users to sockets who are in the chat.
      */
     private final Map<SelectionKey, User> users;
+    
+    /**
+     * A map relating users to sockets who are waiting to enter the chat.
+     */
+    private final Map<SelectionKey, User> waitingUsers;
     
     /**
      * The server will continue until this variable becomes false.
@@ -87,12 +93,13 @@ public class Server {
         }
         
         this.users = new HashMap<>();
+        this.waitingUsers = new HashMap<>();
     }
 
     /**
      * Tells the server to listen for and handles connections and chat messages.
      *
-     * This is the main server loop. It waits for the selector find sockets with
+     * This is the main server loop. It waits for the selector to find sockets with
      * operations ready and calls the appropriate handler methods.
      * 
      * @throws IOException Thrown on selection set failure.
@@ -163,8 +170,8 @@ public class Server {
             return;
         }
         
-        // Add a new key to the user list
-        this.users.put(clientKey, null);
+        // Add a new key to the waiting users list
+        this.waitingUsers.put(clientKey, null);
 
         // Attach a buffer for reading the packets
         clientKey.attach(new PacketBuffer(newClient));
@@ -206,6 +213,9 @@ public class Server {
                 case Packet.WHOISIN:
                     sendUserList(clientKey);
                     break;
+                case Packet.GRANTACCESS:
+                    addUserToChat(clientKey, (GrantAccessPacket)received);
+                    break;
             }
             packetBuf.clearState();
         }
@@ -224,15 +234,12 @@ public class Server {
         User newUser;
         int newId = this.nextId++;
 
-        if(this.users.get(key) != null)
+        if(this.waitingUsers.get(key) != null || this.users.get(key) != null)
             // The client sent another login packet; ignore it.
             return;
 
         newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), User.UNSPEC, newId);
-        this.users.put(key, newUser);
-        
-        // Send a list of connected clients immediately after login
-        sendUserList(key);
+        this.waitingUsers.put(key, newUser);
         
         // Send the new user a JoinedPacket with an empty username to give them their info
         try {
@@ -242,9 +249,65 @@ public class Server {
         } catch (IOException e) {
             System.err.println("Server.login: Could not send JoinedPacket to user: " + e.getMessage());
         }
+    }
+    
+    /**
+     * Adds a user to the chat.
+     * 
+     * @param key       The SelectionKey of the admin who added the user.
+     * @param userInfo  Contains the id of the user that's being added.
+     * @todo Send the admin's name to the user letting them know who added them.
+     */
+    private void addUserToChat(SelectionKey key, GrantAccessPacket userInfo)
+    {
+        Set<SelectionKey>       userChannels    = this.waitingUsers.keySet();
+        Iterator<SelectionKey>  it;
+        int userID = userInfo.getUserID();
+        GrantAccessPacket grantaccess = new GrantAccessPacket(userID);
+        
+        SelectionKey sel = null;
+        
+        if(userChannels.isEmpty()) // if the admin is trying to add users that dont exist
+        {
+            return;
+        }
+        
+        it = userChannels.iterator();
+        
+        for(SelectionKey curKey : userChannels)
+        {
+            User user = waitingUsers.get(curKey);
+            
+            if (user.getID() == userID)
+            {
+                sel = curKey;
+            }
+        }
+        
+        if (sel == null) // if the admin is trying to add users that dont exist
+        {
+            return;
+        }
+        
+        // Swap the user from the waiting list to the in chat list.
+        User waitingUser = this.waitingUsers.get(sel);
+        
+        this.waitingUsers.remove(sel);
+        this.users.put(sel, waitingUser);
+        
+        // inform the user they are now in the chat.
+        try {
+            SocketChannel channel = (SocketChannel)sel.channel();
+            channel.write(grantaccess.serialise());              
+        } catch (IOException e) {
+            System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
+        }
+        
+        // Send a list of connected clients immediately after being added to the chat.
+        sendUserList(key);
         
         // Announce the user joining to everyone else
-        announceJoin(key, newUser);
+        announceJoin(sel, waitingUser);
     }
     
     /**
@@ -298,10 +361,25 @@ public class Server {
     private void remove(SelectionKey sel)
     {
         Set<SelectionKey> userChannels;
-        int id          = this.users.get(sel).getID();
-        LeftPacket left = new LeftPacket(id);
+        int id;
+        LeftPacket left;
+        
+        if (this.users.containsKey(sel))
+        {
+            userChannels = this.users.keySet();
+            id          = this.users.get(sel).getID();
+            left = new LeftPacket(id);
+            this.users.remove(sel);
+        }
+        else 
+        {
+            userChannels = this.waitingUsers.keySet();
+            id          = this.waitingUsers.get(sel).getID();
+            left = new LeftPacket(id);
+            this.waitingUsers.remove(sel);
+        }
+        
 
-        this.users.remove(sel);
         sel.cancel();
         sel.attach(null);
 
@@ -310,8 +388,6 @@ public class Server {
         } catch(IOException e) {
             System.err.println("Server.remove: Could not close channel: " + e.getMessage());
         }
-        
-        userChannels = this.users.keySet();
                
         // No one left in the chat; no one to notify
         if(userChannels.isEmpty())
@@ -363,14 +439,14 @@ public class Server {
     }
     
     /**
-     * Announces to all connected users that a user has joined.
+     * Announces to all connected users in chat that a user has joined.
      * 
      * @param key The key associated with the joining user.
      * @param u   A User object containing the user's information.
      */
     private void announceJoin(SelectionKey key, User u)
     {
-        Set<SelectionKey> userChannels = this.users.keySet();
+         Set<SelectionKey> userChannels = this.users.keySet();
         User              client       = this.users.get(key);
         JoinedPacket      join         = new JoinedPacket(u);   
                

@@ -1,6 +1,7 @@
 package com.lamepancake.chitchat;
 
 
+import com.lamepancake.chitchat.packet.GrantAccessPacket;
 import com.lamepancake.chitchat.packet.JoinedPacket;
 import com.lamepancake.chitchat.packet.LeftPacket;
 import com.lamepancake.chitchat.packet.LogoutPacket;
@@ -31,6 +32,9 @@ public class Client  {
         private int          userID;
         private int          userRole;
         private List<User>   users;
+        
+        // if the user is in chat or waiting for access
+        private boolean      isWaiting;
 
 	/**
 	 * Constructor called by console mode
@@ -47,6 +51,9 @@ public class Client  {
                 this.username = username;
                 this.password = password;
                 this.userID   = -1;
+                this.isWaiting = true;
+                
+                users = new ArrayList<>();
 	}
 	
 	/*
@@ -67,6 +74,8 @@ public class Client  {
 		
 		String msg = "Connection accepted " + addr.toString();
 		display(msg);
+                msg = "Status Update : Waiting to be added to chat.";
+                display(msg);
 
 		// creates the Thread to listen from the server 
 		new ListenFromServer().start();
@@ -81,6 +90,17 @@ public class Client  {
 		// success we inform the caller that it worked
 		return true;
 	}
+        
+        public boolean waiting()
+        {
+            return isWaiting;
+        }
+        
+        public void enterChat()
+        {
+            isWaiting = false;
+            System.out.println("Status Update : You've been added to the chat.");
+        }
 
 	/*
 	 * To send a message to the console or the GUI
@@ -186,6 +206,8 @@ public class Client  {
                             // break to do the disconnect
                             break;
                     }
+                    
+                    
                     // message WhoIsIn
                     else if(msg.equalsIgnoreCase("WHOISIN")) {
                             System.out.println("[CURRENT USER LIST]");
@@ -198,9 +220,23 @@ public class Client  {
 
                             System.out.println("[END]");
                     }
-                    else {				// default to ordinary message
-                            client.sendMessage(new MessagePacket(msg, client.userID));
+                    else if (msg.equalsIgnoreCase("ADD"))
+                    {
+                        client.sendMessage(new GrantAccessPacket(client.userID));
                     }
+                    else // default to ordinary message
+                    {	
+                        if (!client.waiting())
+                        {
+                            client.sendMessage(new MessagePacket(msg, client.userID));
+                        }
+                        else
+                        {
+                            System.out.println("You'll need to be in the chat before you can send messages. ;)");
+                        }
+                        
+                    }
+                    
             }
             // done disconnect
             client.disconnect();
@@ -246,6 +282,9 @@ public class Client  {
                         break;
                     case Packet.LEFT:
                         removeUser((LeftPacket)p);
+                        break;
+                    case Packet.GRANTACCESS:
+                        enterChat();
                         break;
                 }
                 this.packetBuf.clearState();
