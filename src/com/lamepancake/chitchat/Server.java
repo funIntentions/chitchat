@@ -230,6 +230,7 @@ public class Server {
     {
         User newUser;
         int newId = this.nextId++;
+        int userRole = User.UNSPEC;
         
         // The client sent another login packet; ignore it.
         if(this.waitingUsers.get(key) != null || this.users.get(key) != null)

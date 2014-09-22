@@ -87,6 +87,16 @@ public class Client  {
             this.password = password;
             this.userID = -1;
             this.isWaiting = true;
+            
+            
+            if (username.equalsIgnoreCase("admin")) // only method to determine admins atm
+            {
+                this.userRole = User.ADMIN;
+            }
+            else
+            {
+                this.userRole = User.USER;
+            }
 
             users = new ArrayList<>();
     }
@@ -206,23 +216,26 @@ public class Client  {
         Scanner scan = new Scanner(System.in);
         // loop forever for message from the user
         while(true) {
-            System.out.print("> ");
+            System.out.print(">> ");
             
             // read message from user
             String msg = scan.nextLine();
             
             String[] splitmsg = msg.split("\\s+");
             
-            if ((splitmsg.length > 1) && splitmsg[0].equalsIgnoreCase("ADD"))
+            if ((client.userRole == User.ADMIN) &&
+                    (splitmsg.length > 1) && 
+                    splitmsg[0].equalsIgnoreCase("ADD"))
             {
-                String userID = splitmsg[1];
+                String recievingUserID = splitmsg[1];
                 int id;
                 try {
-                    id = Integer.parseInt(userID);
+                    id = Integer.parseInt(recievingUserID);
                 } catch(Exception e) {
-                    System.out.println("Not a valid user ID: " + userID);
+                    System.out.println("Not a valid user ID: " + recievingUserID);
                     continue;
                 }
+                
                 client.sendMessage(new GrantAccessPacket(id));
             }
             else if(msg.equalsIgnoreCase("LOGOUT")) {
@@ -249,7 +262,7 @@ public class Client  {
                 client.sendMessage(new WhoIsInPacket(WhoIsInPacket.WAITING));
             }
             else
-            {	
+            {
                 if (!client.waiting())
                 {
                     client.sendMessage(new MessagePacket(msg, client.userID));
@@ -390,7 +403,7 @@ public class Client  {
             if(u.getName().equals(""))
             {
                 userID = u.getID();
-                userRole = u.getRole();
+                //userRole = u.getRole(); this is always User? Why?
                 return;
             }
 
