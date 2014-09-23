@@ -8,16 +8,19 @@ import java.nio.ByteBuffer;
  */
 public class GrantAccessPacket extends Packet {
     private final int userID;
+    private final int userRole;
     
     /**
      * Constructs a GrantAccessPacket with the ID of the user being granted access.
      *
-     * @param userID The ID of the user being granted access.
+     * @param userID   The ID of the user being granted access.
+     * @param userRole The role of the user being granted access.
      */
-    public GrantAccessPacket(int userID)
+    public GrantAccessPacket(final int userID, final int userRole)
     {
-        super(Packet.GRANTACCESS, 4);
+        super(Packet.GRANTACCESS, 8);
         this.userID = userID;
+        this.userRole = userRole;
     }
     
     /**
@@ -30,6 +33,7 @@ public class GrantAccessPacket extends Packet {
     {
         super(header);
         this.userID = data.getInt();
+        this.userRole = data.getInt();
     }
     
     @Override
@@ -37,6 +41,7 @@ public class GrantAccessPacket extends Packet {
     {
         ByteBuffer buf = super.serialise();
         buf.putInt(this.userID);
+        buf.putInt(this.userRole);
         
         buf.rewind();
         return buf;
@@ -52,4 +57,13 @@ public class GrantAccessPacket extends Packet {
         return this.userID;
     }
     
+    /**
+     * Gets the role of the user being granted access.
+     * 
+     * @return The role of the user being granted access.
+     */
+    public int getUserRole()
+    {
+        return this.userRole;
+    }
 }

@@ -87,17 +87,6 @@ public class Client  {
             this.password = password;
             this.userID = -1;
             this.isWaiting = true;
-            
-            
-            if (username.equalsIgnoreCase("admin")) // only method to determine admins atm
-            {
-                this.userRole = User.ADMIN;
-            }
-            else
-            {
-                this.userRole = User.USER;
-            }
-
             users = new ArrayList<>();
     }
 
@@ -151,9 +140,11 @@ public class Client  {
     /**
      * Allows the user to send messages and notifies them that they've been accepted.
      */
-    private void enterChat()
+    private void enterChat(GrantAccessPacket packet)
     {
         isWaiting = false;
+        userRole = packet.getUserRole();
+        userID = packet.getUserID();
         System.out.println("Status Update : You've been added to the chat.");
     }
 
@@ -229,14 +220,19 @@ public class Client  {
             {
                 String recievingUserID = splitmsg[1];
                 int id;
+                int role;
+                
                 try {
                     id = Integer.parseInt(recievingUserID);
+                    
+                    role = (splitmsg.length > 2) ? Integer.parseInt(splitmsg[2]) : User.USER;
+                    
                 } catch(Exception e) {
                     System.out.println("Not a valid user ID: " + recievingUserID);
                     continue;
                 }
                 
-                client.sendMessage(new GrantAccessPacket(id));
+                client.sendMessage(new GrantAccessPacket(id, role));
             }
             else if(msg.equalsIgnoreCase("LOGOUT")) {
                 client.sendMessage(new LogoutPacket());
@@ -380,7 +376,7 @@ public class Client  {
                         removeUser((LeftPacket)p);
                         break;
                     case Packet.GRANTACCESS:
-                        enterChat();
+                        enterChat((GrantAccessPacket)p);
                         break;
                 }
                 this.packetBuf.clearState();
@@ -398,15 +394,7 @@ public class Client  {
         private void addUser(JoinedPacket joined)
         {
             User u = joined.getUser();
-            
-            // Blank username means that this is our information
-            if(u.getName().equals(""))
-            {
-                userID = u.getID();
-                //userRole = u.getRole(); this is always User? Why?
-                return;
-            }
-
+            System.out.println(u.getRole());
             display("[ " + u + " has joined the chat ]");
             users.add(u);
         }
