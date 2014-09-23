@@ -44,7 +44,7 @@ public class User {
         this.name       = name;
         this.password   = password;
         this.id         = userID;
-        this.role = name.equalsIgnoreCase("Admin") ? ADMIN: USER;
+        this.role       = role;
     }
     
     /**

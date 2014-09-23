@@ -1,5 +1,7 @@
 package com.lamepancake.chitchat;
 
+import static com.lamepancake.chitchat.User.ADMIN;
+import static com.lamepancake.chitchat.User.USER;
 import com.lamepancake.chitchat.packet.GrantAccessPacket;
 import com.lamepancake.chitchat.packet.JoinedPacket;
 import com.lamepancake.chitchat.packet.LeftPacket;
@@ -236,8 +238,11 @@ public class Server {
         // The client sent another login packet; ignore it.
         if(this.waitingUsers.get(key) != null || this.users.get(key) != null)
             return;
-
-        newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), newId);
+        
+        int role = loginInfo.getUsername().equalsIgnoreCase("Admin") ? ADMIN: USER;
+        
+        newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), role, newId);
+        
         this.waitingUsers.put(key, newUser);
 
         if(newUser.getRole() == User.ADMIN)
