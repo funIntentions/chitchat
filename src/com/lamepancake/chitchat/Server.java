@@ -209,7 +209,12 @@ public class Server {
                     User sender = this.users.get(clientKey);
                     if(sender != null && sender.getRole() == User.ADMIN)
                     {
-                        addUserToChat(clientKey, (GrantAccessPacket)received);
+                        if(userCheck(clientKey, (GrantAccessPacket)received) != null)
+                        {
+                            setUserRole((userCheck(clientKey, (GrantAccessPacket)received)), (GrantAccessPacket)received);
+                            addUserToChat((userCheck(clientKey, (GrantAccessPacket)received)), (GrantAccessPacket)received);
+                        }
+                        
                     }
                     else
                     {
@@ -250,22 +255,20 @@ public class Server {
     }
     
     /**
-     * Adds a user to the chat.
-     * 
-     * @param key       The SelectionKey of the admin who added the user.
-     * @param userInfo  Contains the id of the user that's being added.
-     * @todo Send the admin's name to the user letting them know who added them.
+     * Check user presence
+     * @param key
+     * @param userInfo 
      */
-    private void addUserToChat(SelectionKey key, GrantAccessPacket userInfo)
+    private SelectionKey userCheck(SelectionKey key, GrantAccessPacket userInfo)
     {
         Set<SelectionKey>       userChannels = this.waitingUsers.keySet();
         int                     userID       = userInfo.getUserID();
         SelectionKey            sel          = null;
         
-        if(userChannels.isEmpty()) // if the admin is trying to add users that dont exist
+        /*if(userChannels.isEmpty()) // if the admin is trying to add users that dont exist
         {
             return;
-        }
+        }*/
        
         for(SelectionKey curKey : userChannels)
         {
@@ -278,33 +281,65 @@ public class Server {
             }
         }
         
-        if (sel == null) // if the admin is trying to add users that dont exist
+        /*if (sel == null) // if the admin is trying to add users that dont exist
         {
             return;
-        }
+        }  */    
         
-        // Swap the user from the waiting list to the in chat list.
-        User waitingUser = this.waitingUsers.get(sel);
-        
-        this.waitingUsers.remove(sel);
+        return sel;
+    }
+    
+    /**
+     * Sets user role.
+     * @param key
+     * @param userInfo 
+     */
+    private void setUserRole(SelectionKey key, GrantAccessPacket userInfo)
+    {
+        User waitingUser = this.waitingUsers.get(key);
         waitingUser.setRole(userInfo.getUserRole());
-        this.users.put(sel, waitingUser);
+    }
+    
+    /**
+     * Adds a user to the chat.
+     * 
+     * @param key       The SelectionKey of the admin who added the user.
+     * @param userInfo  Contains the id of the user that's being added.
+     * @todo Send the admin's name to the user letting them know who added them.
+     */
+    private void addUserToChat(SelectionKey key, GrantAccessPacket userInfo)
+    {
+        Set<SelectionKey>       userChannels = this.waitingUsers.keySet();
+        int                     userID       = userInfo.getUserID();
+        //SelectionKey            sel          = null;
+               
+        // Swap the user from the waiting list to the in chat list.
+        User waitingUser = this.waitingUsers.get(key);
+        
+        this.waitingUsers.remove(key);
+
+        this.users.put(key, waitingUser);
         
         
         // inform the user they are now in the chat.
         try {
-            SocketChannel channel = (SocketChannel)sel.channel();
+            SocketChannel channel = (SocketChannel)key.channel();
             channel.write(userInfo.serialise());              
         } catch (IOException e) {
             System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
         }
         
         // Send a list of connected clients immediately after being added to the chat.
-        sendUserList(sel, WhoIsInPacket.CONNECTED);
+        sendUserList(key, WhoIsInPacket.CONNECTED);
         
+        announceJoin(key, waitingUser);
+    }
+    
+    /*private void announceJoin(SelectionKey sel, User waitingUser)
+    {
         // Announce the user joining to everyone else
         announceJoin(sel, waitingUser);
-    }
+    }*/
     
     /**
      * Sends a chat message to all other users in the chat.
