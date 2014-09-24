@@ -93,10 +93,10 @@ public class User {
         switch(this.role)
         {
             case ADMIN:
-                roleString = "[admin]";
+                roleString = "[scrum master]";
                 break;
             case USER:
-                roleString = "[user]";
+                roleString = "[developer]";
                 break;
             case UNSPEC:
             default:
