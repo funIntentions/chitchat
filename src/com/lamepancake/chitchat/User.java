@@ -44,16 +44,7 @@ public class User {
         this.name       = name;
         this.password   = password;
         this.id         = userID;
-        
-        //validating admin role to username
-        if(name.equalsIgnoreCase("Admin"))
-        {
-            this.role   = ADMIN;
-        }
-        else
-        {
-            this.role   = USER;
-        }
+        this.role       = role;
     }
     
     /**
@@ -74,6 +65,18 @@ public class User {
     public int getRole()
     {
         return this.role;
+    }
+    
+    /**
+     * 
+     * @param newRole 
+     */
+    public void setRole(int newRole)
+    {
+        if(newRole > USER)
+                throw new IllegalArgumentException("role must be -1 <= role <= 1, was " + role);
+        
+        this.role = newRole;
     }
     
     /**

@@ -1,5 +1,7 @@
 package com.lamepancake.chitchat;
 
+import static com.lamepancake.chitchat.User.ADMIN;
+import static com.lamepancake.chitchat.User.USER;
 import com.lamepancake.chitchat.packet.GrantAccessPacket;
 import com.lamepancake.chitchat.packet.JoinedPacket;
 import com.lamepancake.chitchat.packet.LeftPacket;
@@ -45,12 +47,12 @@ public class Server {
     private final int listenPort;
 
     /**
-     * A map relating users to sockets who are in the chat.
+     * A map relating sockets to users who are in the chat.
      */
     private final Map<SelectionKey, User> users;
     
     /**
-     * A map relating users to sockets who are waiting to enter the chat.
+     * A map relating sockets to users who are waiting to enter the chat.
      */
     private final Map<SelectionKey, User> waitingUsers;
     
@@ -204,7 +206,8 @@ public class Server {
                     sendUserList(clientKey, ((WhoIsInPacket)received).whichList());
                     break;
                 case Packet.GRANTACCESS:
-                    if(this.users.get(clientKey).getRole() == User.ADMIN )
+                    User sender = this.users.get(clientKey);
+                    if(sender != null && sender.getRole() == User.ADMIN)
                     {
                         addUserToChat(clientKey, (GrantAccessPacket)received);
                     }
@@ -235,23 +238,15 @@ public class Server {
         // The client sent another login packet; ignore it.
         if(this.waitingUsers.get(key) != null || this.users.get(key) != null)
             return;
-
-        newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), newId);
-        this.waitingUsers.put(key, newUser);
         
-        // Send the new user a JoinedPacket with an empty username to give them their info
-        try {
-            SocketChannel clientChannel = (SocketChannel)key.channel();
-            JoinedPacket j = new JoinedPacket("", newUser.getRole(), newId);
-            clientChannel.write(j.serialise());
-            
-            // Also grant the admin immediate access to the chat
-            if(newUser.getRole() == User.ADMIN)
-                addUserToChat(key, new GrantAccessPacket(newId));
+        int role = loginInfo.getUsername().equalsIgnoreCase("Admin") ? ADMIN: USER;
+        
+        newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), role, newId);
+        
+        this.waitingUsers.put(key, newUser);
 
-        } catch (IOException e) {
-            System.err.println("Server.login: Could not send JoinedPacket to user: " + e.getMessage());
-        }
+        if(newUser.getRole() == User.ADMIN)
+            addUserToChat(key, new GrantAccessPacket(newId, User.ADMIN));
     }
     
     /**
@@ -292,7 +287,9 @@ public class Server {
         User waitingUser = this.waitingUsers.get(sel);
         
         this.waitingUsers.remove(sel);
+        waitingUser.setRole(userInfo.getUserRole());
         this.users.put(sel, waitingUser);
+        
         
         // inform the user they are now in the chat.
         try {
@@ -303,7 +300,7 @@ public class Server {
         }
         
         // Send a list of connected clients immediately after being added to the chat.
-        sendUserList(sel, 0);
+        sendUserList(sel, WhoIsInPacket.CONNECTED);
         
         // Announce the user joining to everyone else
         announceJoin(sel, waitingUser);
