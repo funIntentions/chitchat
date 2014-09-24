@@ -332,22 +332,8 @@ public class Server {
             message.setUserID(client.getID());
         
         it = userChannels.iterator();
-        
-        while(it.hasNext())
-        {
-            SelectionKey currentKey = it.next();
-            
-            // Don't send the message back to the sender
-            if(currentKey.equals(key))
-                continue;
-            
-            try {
-                SocketChannel channel = (SocketChannel)currentKey.channel();
-                channel.write(message.serialise());              
-            } catch (IOException e) {
-                System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
-            }
-        }
+         
+        brodcast(key, message, false);
     }
     
     /**
@@ -463,15 +449,22 @@ public class Server {
         if(userChannels.size() <= 1)
             return;
         
+        brodcast(key, join, false);
+    }
+    
+    private void brodcast(SelectionKey user, Packet p, Boolean brodcast)
+    {
+        Set<SelectionKey> userChannels = this.users.keySet();
+        
         for(SelectionKey curKey : userChannels)
         {
-            // Don't notify the joining user that they've joined
-            if(curKey.equals(key))
+             // Don't notify the joining user that they've joined
+            if(curKey.equals(user)&& !brodcast)
                 continue;
 
             try {
                 SocketChannel channel = (SocketChannel)curKey.channel();
-                channel.write(join.serialise());              
+                channel.write(p.serialise());              
             } catch (IOException e) {
                 System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
             }
