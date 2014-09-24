@@ -317,7 +317,6 @@ public class Server {
     private void sendMessage(SelectionKey key, MessagePacket message)
     {
         Set<SelectionKey>       userChannels    = this.users.keySet();
-        Iterator<SelectionKey>  it;
         User                    client          = this.users.get(key);
                
         // If they're the only person in the chat, don't bother sending the message
@@ -330,10 +329,8 @@ public class Server {
         // Pretending to be someone else? Also nope
         else if(client.getID() != message.getUserID())
             message.setUserID(client.getID());
-        
-        it = userChannels.iterator();
          
-        brodcast(key, message, false);
+        broadcast(key, message, false);
     }
     
     /**
@@ -449,18 +446,26 @@ public class Server {
         if(userChannels.size() <= 1)
             return;
         
-        brodcast(key, join, false);
+        broadcast(key, join, false);
     }
     
-    private void brodcast(SelectionKey user, Packet p, Boolean brodcast)
+    /**
+     * Broadcasts the passed in message to all connected users.
+     * 
+     * @param key The key associated with the sending user.
+     * @param p The packet to be broadcasted.
+     * @param broadcast True if you want to include the sending user in the broadcast, false otherwise.
+     */
+    private void broadcast(SelectionKey key, Packet p, Boolean broadcast)
     {
         Set<SelectionKey> userChannels = this.users.keySet();
         
         for(SelectionKey curKey : userChannels)
         {
-             // Don't notify the joining user that they've joined
-            if(curKey.equals(user)&& !brodcast)
-                continue;
+             // Don't notify the message sending user what they have sent
+            if(curKey.equals(key))
+                if(!broadcast)
+                    continue;
 
             try {
                 SocketChannel channel = (SocketChannel)curKey.channel();

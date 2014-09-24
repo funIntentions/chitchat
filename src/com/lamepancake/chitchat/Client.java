@@ -394,7 +394,6 @@ public class Client  {
         private void addUser(JoinedPacket joined)
         {
             User u = joined.getUser();
-            System.out.println(u.getRole());
             display("[ " + u + " has joined the chat ]");
             users.add(u);
         }
