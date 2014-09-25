@@ -328,6 +328,8 @@ public class Server {
     {
         User waitingUser = map.get(key);
         waitingUser.setRole(userInfo.getUserRole());
+        
+        announceJoin(key, waitingUser);
     }
     
     /**
