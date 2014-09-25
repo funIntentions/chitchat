@@ -234,6 +234,23 @@ public class Client  {
                 
                 client.sendMessage(new GrantAccessPacket(id, role));
             }
+            else if((client.userRole == User.ADMIN) &&
+                    (splitmsg.length > 1) && 
+                    splitmsg[0].equalsIgnoreCase("BOOT"))
+            {
+                String recievingUserID = splitmsg[1];
+                int id;
+                
+                try {
+                    id = Integer.parseInt(recievingUserID);
+                    
+                } catch(Exception e) {
+                    System.out.println("Not a valid user ID: " + recievingUserID);
+                    continue;
+                }
+                
+                client.sendMessage(new GrantAccessPacket(id, User.UNSPEC));
+            }
             else if(msg.equalsIgnoreCase("LOGOUT")) {
                 client.sendMessage(new LogoutPacket());
                 break;

@@ -209,10 +209,25 @@ public class Server {
                     User sender = this.users.get(clientKey);
                     if(sender != null && sender.getRole() == User.ADMIN)
                     {
-                        if(userCheck(clientKey, (GrantAccessPacket)received) != null)
+                        SelectionKey selected = userCheck(clientKey, (GrantAccessPacket)received);
+                        
+                        if(selected != null)
                         {
-                            setUserRole((userCheck(clientKey, (GrantAccessPacket)received)), (GrantAccessPacket)received);
-                            addUserToChat((userCheck(clientKey, (GrantAccessPacket)received)), (GrantAccessPacket)received);
+                            User user = this.users.get(selected);
+                            
+                            if (((GrantAccessPacket)received).getUserRole() == User.UNSPEC)
+                            {
+                                remove(selected);
+                            }
+                            else if (user == null)
+                            {
+                                setUserRole(this.waitingUsers, selected, (GrantAccessPacket)received);
+                                addUserToChat(selected, (GrantAccessPacket)received);
+                            }
+                            else
+                            {
+                                setUserRole(this.users, selected, (GrantAccessPacket)received);
+                            }
                         }
                         
                     }
@@ -269,11 +284,26 @@ public class Server {
         {
             return;
         }*/
-       
+        
+        userChannels = this.waitingUsers.keySet();
+        
         for(SelectionKey curKey : userChannels)
         {
             User user = waitingUsers.get(curKey);
             
+            if (user.getID() == userID)
+            {
+                sel = curKey;
+                break;
+            }
+        }
+        
+        userChannels = this.users.keySet();
+        
+        for(SelectionKey curKey : userChannels)
+        {
+            User user = users.get(curKey);
+
             if (user.getID() == userID)
             {
                 sel = curKey;
@@ -294,9 +324,9 @@ public class Server {
      * @param key
      * @param userInfo 
      */
-    private void setUserRole(SelectionKey key, GrantAccessPacket userInfo)
+    private void setUserRole(Map<SelectionKey, User> map, SelectionKey key, GrantAccessPacket userInfo)
     {
-        User waitingUser = this.waitingUsers.get(key);
+        User waitingUser = map.get(key);
         waitingUser.setRole(userInfo.getUserRole());
     }
     
