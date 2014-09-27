@@ -68,8 +68,14 @@ public class Client  {
      */
     private boolean isWaiting;
 
+    /**
+     * Whether the user is still connected to the server.
+     */
     private volatile boolean connected;
     
+    /**
+     * Whether the user has logged out or not.
+     */
     private volatile boolean logout;
     
     /**
@@ -184,6 +190,7 @@ public class Client  {
     private void sendMessage(Packet msg) {
         try {
             
+            //make sure the user is connected to the server
             if(!connected)
             {
                 return;
@@ -237,6 +244,7 @@ public class Client  {
             
             if(!client.connected)
             {
+                //Attempt to create a new connections
                 System.out.println("Status Update : Attempting to reconnect.");
                 client = parseCmdArgs(args);
                 
