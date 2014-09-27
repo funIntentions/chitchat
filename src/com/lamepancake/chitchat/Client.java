@@ -237,12 +237,12 @@ public class Client  {
             
             if(!client.connected)
             {
-                System.out.println("Attempting to reconnect.");
+                System.out.println("Status Update : Attempting to reconnect.");
                 client = parseCmdArgs(args);
                 
                 if(!client.start())
                 {
-                    System.out.println("Unable to reconnect. Quiting program.");
+                    System.out.println("Status Update : Unable to reconnect. Quiting program.");
                     break;
                 }
             }
@@ -407,7 +407,7 @@ public class Client  {
                     {
                         if(!logout)
                         {
-                            System.out.println("Disconnected from chat. Press Enter to continue.");
+                            System.out.println("Status Update : Disconnected from chat. Press Enter to continue.");
                             connected = false;
                         }
                         return;
