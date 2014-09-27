@@ -217,7 +217,7 @@ public class Server {
                             
                             if (((GrantAccessPacket)received).getUserRole() == User.UNSPEC)
                             {
-                                remove(selected);
+                                removeUserFromChat(selected, (GrantAccessPacket)received);
                             }
                             else if (user == null)
                             {
@@ -365,6 +365,25 @@ public class Server {
         sendUserList(key, WhoIsInPacket.CONNECTED);
         
         announceJoin(key, waitingUser);
+    }
+    
+    /**
+     * Removes a user from the chat.
+     * 
+     * @param selected The selected user to remove.
+     * @param userInfo The packet being sent to them.
+     */
+    private void removeUserFromChat(SelectionKey selected, GrantAccessPacket userInfo)
+    {
+        // inform the user they have been booted from the chat.
+        try {
+            SocketChannel channel = (SocketChannel)selected.channel();
+            channel.write(userInfo.serialise());              
+        } catch (IOException e) {
+            System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
+        }
+        
+        remove(selected);
     }
     
     /*private void announceJoin(SelectionKey sel, User waitingUser)

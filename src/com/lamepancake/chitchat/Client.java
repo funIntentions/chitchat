@@ -148,10 +148,24 @@ public class Client  {
      */
     private void enterChat(GrantAccessPacket packet)
     {
-        isWaiting = false;
-        userRole = packet.getUserRole();
-        userID = packet.getUserID();
-        System.out.println("Status Update : You've been added to the chat.");
+        switch(packet.getUserRole())
+        {
+            case User.ADMIN:
+            case User.USER:
+            {
+                isWaiting = false;
+                userRole = packet.getUserRole();
+                userID = packet.getUserID();
+                System.out.println("Status Update : You've been added to the chat.");
+                break;
+            }
+            case User.UNSPEC:
+            {
+                userRole = packet.getUserRole();
+                System.out.println("Status Update : An admin has booted you from the chat.");
+                break;
+            }
+        }
     }
 
     /**
