@@ -160,9 +160,23 @@ public class Client  {
             case User.USER:
             {
                 isWaiting = false;
+               
+                if(userRole != packet.getUserRole())
+                {
+                    switch(packet.getUserRole())
+                    {
+                        case User.ADMIN:
+                            System.out.println("Status Update : An admin has updated your role to Scrum Master. ");
+                            break;
+                        case User.USER:
+                            System.out.println("Status Update : An admin has updated your role to Developer.");
+                            break;
+                    }
+                }
+                
                 userRole = packet.getUserRole();
                 userID = packet.getUserID();
-                System.out.println("Status Update : You've been added to the chat.");
+                System.out.println(">> Status Update : You've been added to the chat.");
                 break;
             }
             case User.UNSPEC:
@@ -315,7 +329,7 @@ public class Client  {
                 for(User u: client.users)
                 {
                     System.out.print('\t');
-                    System.out.println(u);
+                    System.out.println(u + " ID: " + u.getID());
                 }
 
                 System.out.println("[END]");

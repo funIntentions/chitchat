@@ -227,6 +227,7 @@ public class Server {
                             else
                             {
                                 setUserRole(this.users, selected, (GrantAccessPacket)received);
+                                //announceJoin(selected, this.users.get(selected));
                             }
                         }
                         
