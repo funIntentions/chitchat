@@ -68,6 +68,10 @@ public class Client  {
      */
     private boolean isWaiting;
 
+    private volatile boolean connected;
+    
+    private volatile boolean logout;
+    
     /**
      * Constructs a new Client with the given server information and authentication
      * details.
@@ -88,6 +92,8 @@ public class Client  {
             this.userID = -1;
             this.isWaiting = true;
             users = new ArrayList<>();
+            connected = true;
+            logout = false;
     }
 
     /**
@@ -163,12 +169,18 @@ public class Client  {
      */
     private void sendMessage(Packet msg) {
         try {
+            
+            if(!connected)
+            {
+                return;
+            }
+            
             socket.write(msg.serialise());
         } catch(IOException e) {
             System.out.println("Could not send message: " + e.getMessage());
         }
     }
-
+    
     /**
      * Close socket, end listening thread, etc.
      * 
@@ -205,8 +217,22 @@ public class Client  {
 
         // wait for messages from user
         Scanner scan = new Scanner(System.in);
+        
         // loop forever for message from the user
         while(true) {
+            
+            if(!client.connected)
+            {
+                System.out.println("Attempting to reconnect.");
+                client = parseCmdArgs(args);
+                
+                if(!client.start())
+                {
+                    System.out.println("Unable to reconnect. Quiting program.");
+                    break;
+                }
+            }
+            
             System.out.print(">> ");
             
             // read message from user
@@ -252,6 +278,8 @@ public class Client  {
                 client.sendMessage(new GrantAccessPacket(id, User.UNSPEC));
             }
             else if(msg.equalsIgnoreCase("LOGOUT")) {
+                System.out.println("Logging out.");
+                client.logout = true;
                 client.sendMessage(new LogoutPacket());
                 break;
             }
@@ -355,13 +383,27 @@ public class Client  {
         public void run() {
             int     type;
             Packet  p;
-            while(true)
+            while(connected)
             {
                 // This should actually never happen since we're in blocking mode
                 // But you never know
                 if(this.packetBuf.read() != PacketBuffer.FINISHED)
+                {
+                    if(this.packetBuf.getState() == PacketBuffer.DISCONNECTED)
+                    {
+                        if(!logout)
+                        {
+                            System.out.println("Disconnected from chat. Press Enter to continue.");
+                            connected = false;
+                        }
+                        return;
+                    }
+                    else
+                    {
                         continue;
-
+                    }
+                }
+                
                 p = this.packetBuf.getPacket();
                 type = p.getType();
                         
