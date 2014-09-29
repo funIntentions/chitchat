@@ -226,8 +226,12 @@ public class Server {
                             }
                             else
                             {
+                                updateList(selected);
+                                
                                 setUserRole(this.users, selected, (GrantAccessPacket)received);
-                                //announceJoin(selected, this.users.get(selected));
+                                
+                                sendUserList(selected, WhoIsInPacket.CONNECTED);
+                                announceJoin(selected, this.users.get(selected));
                             }
                         }
                         
@@ -330,7 +334,7 @@ public class Server {
         User waitingUser = map.get(key);
         waitingUser.setRole(userInfo.getUserRole());
         
-        announceJoin(key, waitingUser);
+        //announceJoin(key, waitingUser);
     }
     
     /**
@@ -387,12 +391,6 @@ public class Server {
         remove(selected);
     }
     
-    /*private void announceJoin(SelectionKey sel, User waitingUser)
-    {
-        // Announce the user joining to everyone else
-        announceJoin(sel, waitingUser);
-    }*/
-    
     /**
      * Sends a chat message to all other users in the chat.
      * 
@@ -418,6 +416,42 @@ public class Server {
             message.setUserID(client.getID());
          
         broadcast(key, message, false);
+    }
+    
+     /**
+     * Updates a user from the list, cleans up its socket, and notifies other users.
+     * 
+     * @param sel The selection key identifying the user.
+     */
+    private void updateList(SelectionKey sel)
+    {
+        Set<SelectionKey> userChannels;
+        int id;
+        LeftPacket left;
+        
+        if (this.users.containsKey(sel))
+        {
+            userChannels = this.users.keySet();
+            id           = this.users.get(sel).getID();
+        }
+        else 
+        {
+            userChannels = this.waitingUsers.keySet();
+            id           = this.waitingUsers.get(sel).getID();
+        }
+        
+        left = new LeftPacket(id);
+
+        for(SelectionKey curKey : userChannels)
+        {
+            try {
+                SocketChannel channel = (SocketChannel)curKey.channel();
+                channel.write(left.serialise());              
+            } catch (IOException e) {
+                System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
+            }
+        }
+
     }
     
     /**
