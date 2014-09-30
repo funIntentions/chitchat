@@ -154,37 +154,26 @@ public class Client  {
      */
     private void updateStatus(GrantAccessPacket packet)
     {
-        switch(packet.getUserRole())
+        int role = packet.getUserRole();
+        
+        userRole = role;
+        switch(role)
         {
             case User.ADMIN:
             case User.USER:
             {
                 if (isWaiting)
                 {
-                    System.out.println(">> Status Update : You've been added to the chat.");
+                    System.out.println("Status Update : You've been added to the chat.");
                     isWaiting = false;
                 }
                
-                if(userRole != packet.getUserRole())
-                {
-                    switch(packet.getUserRole())
-                    {
-                        case User.ADMIN:
-                            System.out.println("Status Update : An admin has updated your role to Scrum Master. ");
-                            break;
-                        case User.USER:
-                            System.out.println("Status Update : An admin has updated your role to Developer.");
-                            break;
-                    }
-                }
-                
-                userRole = packet.getUserRole();
+                System.out.println("Status Update : An admin has updated your role to " + (role == User.ADMIN ? "Scrum Master." : "Developer."));
                 userID = packet.getUserID();
                 break;
             }
             case User.UNSPEC:
             {
-                userRole = packet.getUserRole();
                 System.out.println("Status Update : An admin has booted you from the chat.");
                 break;
             }
