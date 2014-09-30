@@ -206,41 +206,10 @@ public class Server {
                     sendUserList(clientKey, ((WhoIsInPacket)received).whichList());
                     break;
                 case Packet.GRANTACCESS:
-                    User sender = this.users.get(clientKey);
-                    System.out.println(sender.getRole());
-                    if(sender != null && sender.getRole() == User.ADMIN)
-                    {
-                        SelectionKey selected = userCheck(clientKey, (GrantAccessPacket)received);
-                        
-                        if(selected != null)
-                        {
-                            User user = this.users.get(selected);
-                            
-                            if (((GrantAccessPacket)received).getUserRole() == User.UNSPEC)
-                            {
-                                removeUserFromChat(selected, (GrantAccessPacket)received);
-                            }
-                            else if (user == null)
-                            {
-                                setUserRole(this.waitingUsers, selected, (GrantAccessPacket)received);
-                                addUserToChat(selected, (GrantAccessPacket)received);
-                            }
-                            else
-                            {
-                                updateList(selected);
-                                
-                                setUserRole(this.users, selected, (GrantAccessPacket)received);
-                                updateUserInChat(selected, (GrantAccessPacket)received);
-                            }
-                        }
-                        
-                    }
-                    else
-                    {
-                        System.err.println("Access requirement not met for this command.");
-                    }
+                    grantAccess(clientKey, (GrantAccessPacket)received);
                     break;
             }
+            // Reset the PacketBuffer to read the next packet
             packetBuf.clearState();
         }
     }
@@ -274,53 +243,77 @@ public class Server {
     }
     
     /**
+     * Grants access to the specified user if the sender has the required rights.
+     *
+     * @param clientKey The SelectionKey identifying the packet's sender.
+     * @param received  The GrantAccessPacket containing the user and role to grant access.
+     */
+    private void grantAccess(SelectionKey clientKey, GrantAccessPacket received)
+    {
+        User sender = this.users.get(clientKey);
+        
+        // If the sender isn't even in the list of users or they don't have 
+        // administrative priveleges, they can't change others' roles
+        if(sender == null || sender.getRole() != User.ADMIN)
+        {
+            System.err.println("Access requirement not met for this command.");
+            return;
+        }
+        
+        SelectionKey selected = userCheck(clientKey, received);
+        
+        if(selected != null)
+        {
+            User user = this.users.get(selected);
+            
+            if (received.getUserRole() == User.UNSPEC)
+            {
+                removeUserFromChat(selected, received);
+            }
+            else if (user == null)
+            {
+                setUserRole(this.waitingUsers, selected, received);
+                addUserToChat(selected, received);
+            }
+            else
+            {
+                updateList(selected);
+                
+                setUserRole(this.users, selected, received);
+                updateUserInChat(selected, received);
+            }
+        }
+    }
+    
+    /**
      * Check user presence
-     * @param key
-     * @param userInfo 
+     * @param key      
+     * @param userInfo The GrantAccesPacket containing the user info for which to search the lists.
      */
     private SelectionKey userCheck(SelectionKey key, GrantAccessPacket userInfo)
     {
         Set<SelectionKey>       userChannels = this.waitingUsers.keySet();
         int                     userID       = userInfo.getUserID();
-        SelectionKey            sel          = null;
-        
-        /*if(userChannels.isEmpty()) // if the admin is trying to add users that dont exist
-        {
-            return;
-        }*/
-        
-        userChannels = this.waitingUsers.keySet();
-        
+             
         for(SelectionKey curKey : userChannels)
         {
             User user = waitingUsers.get(curKey);
             
             if (user.getID() == userID)
-            {
-                sel = curKey;
-                break;
-            }
+                return curKey;
         }
-        
+       
+        // If they weren't in the waitingList, check the list of connected users
         userChannels = this.users.keySet();
-        
         for(SelectionKey curKey : userChannels)
         {
             User user = users.get(curKey);
 
             if (user.getID() == userID)
-            {
-                sel = curKey;
-                break;
-            }
+                return curKey;
         }
         
-        /*if (sel == null) // if the admin is trying to add users that dont exist
-        {
-            return;
-        }  */    
-        
-        return sel;
+        return null;
     }
     
     /**
