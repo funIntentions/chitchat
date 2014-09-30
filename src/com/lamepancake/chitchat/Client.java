@@ -152,14 +152,18 @@ public class Client  {
     /**
      * Allows the user to send messages and notifies them that they've been accepted.
      */
-    private void enterChat(GrantAccessPacket packet)
+    private void updateStatus(GrantAccessPacket packet)
     {
         switch(packet.getUserRole())
         {
             case User.ADMIN:
             case User.USER:
             {
-                isWaiting = false;
+                if (isWaiting)
+                {
+                    System.out.println(">> Status Update : You've been added to the chat.");
+                    isWaiting = false;
+                }
                
                 if(userRole != packet.getUserRole())
                 {
@@ -176,7 +180,6 @@ public class Client  {
                 
                 userRole = packet.getUserRole();
                 userID = packet.getUserID();
-                System.out.println(">> Status Update : You've been added to the chat.");
                 break;
             }
             case User.UNSPEC:
@@ -471,7 +474,7 @@ public class Client  {
                         removeUser((LeftPacket)p);
                         break;
                     case Packet.GRANTACCESS:
-                        enterChat((GrantAccessPacket)p);
+                        updateStatus((GrantAccessPacket)p);
                         break;
                 }
                 this.packetBuf.clearState();

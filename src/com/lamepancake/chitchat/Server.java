@@ -207,6 +207,7 @@ public class Server {
                     break;
                 case Packet.GRANTACCESS:
                     User sender = this.users.get(clientKey);
+                    System.out.println(sender.getRole());
                     if(sender != null && sender.getRole() == User.ADMIN)
                     {
                         SelectionKey selected = userCheck(clientKey, (GrantAccessPacket)received);
@@ -229,9 +230,7 @@ public class Server {
                                 updateList(selected);
                                 
                                 setUserRole(this.users, selected, (GrantAccessPacket)received);
-                                
-                                sendUserList(selected, WhoIsInPacket.CONNECTED);
-                                announceJoin(selected, this.users.get(selected));
+                                updateUserInChat(selected, (GrantAccessPacket)received);
                             }
                         }
                         
@@ -370,6 +369,30 @@ public class Server {
         sendUserList(key, WhoIsInPacket.CONNECTED);
         
         announceJoin(key, waitingUser);
+    }
+    
+    /**
+     * Updates a user that's already in the chat.
+     * 
+     * @param key The SelectionKey of the user being updated.
+     * @param userInfo The Packet that contains the updated info.
+     */
+    private void updateUserInChat(SelectionKey key, GrantAccessPacket userInfo)
+    {
+        User chattingUser = this.users.get(key);
+        
+        // inform the user they are now in the chat.
+        try {
+            SocketChannel channel = (SocketChannel)key.channel();
+            channel.write(userInfo.serialise());              
+        } catch (IOException e) {
+            System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
+        }
+        
+        // Send a list of connected clients immediately after being added to the chat.
+        sendUserList(key, WhoIsInPacket.CONNECTED);
+        
+        announceJoin(key, chattingUser);
     }
     
     /**
