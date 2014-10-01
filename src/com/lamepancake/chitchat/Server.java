@@ -253,22 +253,22 @@ public class Server {
     }
     
     
-//    private int getUniqueID()
-//    {
-//        int ID;
-//        
-//        if (!recycledIDs.isEmpty())
-//        {
-//            ID = recycledIDs.get(0);
-//            recycledIDs.remove(0);
-//        }
-//        else
-//        {
-//            ID = nextId++;
-//        }
-//        
-//        return ID;
-//    }
+    private int getUniqueID()
+    {
+        int ID;
+        
+        if (!recycledIDs.isEmpty())
+        {
+            ID = recycledIDs.get(0);
+            recycledIDs.remove(0);
+        }
+        else
+        {
+            ID = nextId++;
+        }
+        
+        return ID;
+    }
 
     /**
      * Associates the new user with the selection key.
