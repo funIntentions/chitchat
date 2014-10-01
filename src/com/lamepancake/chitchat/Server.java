@@ -673,7 +673,7 @@ public class Server {
 
         }
         // create a server object and start it
-        //Server server = new Server(portNumber);
+        Server server = new Server(portNumber);
         server.start();
     }
 }
