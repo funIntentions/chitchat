@@ -212,6 +212,9 @@ public class Server {
                 case Packet.WHOISIN:
                     sendUserList(clientKey, ((WhoIsInPacket)received).whichList());
                     break;
+                case Packet.CHATLIST:
+                    sendChatList(clientKey);
+                    break;
                 case Packet.GRANTACCESS:
                     User sender = this.users.get(clientKey);
                     System.out.println(sender.getRole());
@@ -554,6 +557,39 @@ public class Server {
         }
     }
 
+    /**
+     * Creates a ChatListPacket and sends it to the requesting client.
+     * 
+     * @param clientKey  The SelectionKey associated with this client.
+     */
+    private void sendChatList(SelectionKey clientKey)
+    {
+        ArrayList<Chat>         chatList;
+        Set<SelectionKey>       keys;
+        ChatListPacket          packet;
+        Map<SelectionKey, Chat> chatMap;
+        int                     size = 4;
+        
+        keys = this.users.keySet();
+        for (SelectionKey key : keys)
+        {
+            Chat c = chatMap.get(key);
+
+            // Add space for the user's name and three ints (name length, role, id)
+            size += c.getName().length() * 2;
+            size += 12;
+            
+            chatList.add(c);
+        }
+        
+        packet = new ChatListPacket(chatList, size);
+        try {
+            ((SocketChannel)clientKey.channel()).write(packet.serialise());
+        } catch (IOException e) {
+            System.err.println("Server.sendChatList: Could not send list: " + e.getMessage());
+        }
+    }
+    
     /**
      * Creates a WhoIsInPacket and sends it to the requesting client.
      * 

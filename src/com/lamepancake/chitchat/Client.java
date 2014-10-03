@@ -330,6 +330,11 @@ public class Client  {
             {
                 client.sendMessage(new WhoIsInPacket(WhoIsInPacket.WAITING));
             }
+            else if(msg.equalsIgnoreCase("CHATLIST"))
+            {
+                
+                
+            }
             else
             {
                 if (!client.waiting())
@@ -340,7 +345,8 @@ public class Client  {
                 {
                     System.out.println("You'll need to be in the chat before you can send messages. ;)");
                 }       
-            }            
+            }  
+            
         }
         // We're done here; disconnect
         client.disconnect();
