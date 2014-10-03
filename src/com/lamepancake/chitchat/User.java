@@ -102,6 +102,8 @@ public class User {
                 roleString = "[developer]";
                 break;
             case UNSPEC:
+                roleString = "[scoundrel]";
+                break;
             default:
                 roleString = null;
         }

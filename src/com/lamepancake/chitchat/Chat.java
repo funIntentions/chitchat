@@ -23,28 +23,17 @@ public class Chat
      */
     private final Map<SelectionKey, User> users;
     
-    /**
-     * A map relating sockets to users who are waiting to enter the chat.
-     */
-    private final Map<SelectionKey, User> waitingUsers;
-    
     public Chat(String name, int id)
     {
         this.chatName = name;
         this.chatID = id;
         this.users = new HashMap<>();
-        this.waitingUsers = new HashMap<>();
     }
     
     
     public Map<SelectionKey, User> getConnectedUsers()
     {
         return users;
-    }
-    
-    public Map<SelectionKey, User> getWaitingUsers()
-    {
-        return waitingUsers;
     }
     
     public String getName()
