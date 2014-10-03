@@ -378,6 +378,7 @@ public class Server {
         User waitingUser = this.lobby.get(key);
         
         waitingUser.setRole(userInfo.getUser().getRole());
+        //System.out.println(waitingUser.getRole());
         
         // inform the user they are now in the chat.
         try {

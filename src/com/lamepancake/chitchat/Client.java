@@ -318,7 +318,8 @@ public class Client  {
                     System.out.println("Not a valid chat ID: " + recievingChatID);
                     continue;
                 }
-                client.sendMessage(new JoinedPacket(client.username, client.userID, client.userRole, id));
+                client.sendMessage(new JoinedPacket(client.username, client.userRole, client.userID, id));
+                //System.out.println(client.userRole);
             }
             else if(msg.equalsIgnoreCase("LOGOUT")) {
                 System.out.println("Logging out.");
