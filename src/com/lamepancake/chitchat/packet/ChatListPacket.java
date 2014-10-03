@@ -26,7 +26,7 @@ public class ChatListPacket extends Packet
     
     public ChatListPacket(List<Chat> chats, int length)
     {
-        super(CHATLIST, length);
+        super(CHATLIST, length + 4);
         this.chats = chats;
     }
     
@@ -39,13 +39,10 @@ public class ChatListPacket extends Packet
     public ChatListPacket(ByteBuffer header, ByteBuffer data)
     {
         super(header);
-        
-        // If the data capacity is only enough for whichList, then it doesn't
-        // contain any users
-        if(this.getLength() != HEADER_SIZE + 4)
+        if(this.getLength() != HEADER_SIZE)
         {
             int numChats = data.getInt();
-        
+
             this.chats = new ArrayList<>(numChats);
 
             for(int i = 0; i < numChats; i++)
@@ -64,7 +61,7 @@ public class ChatListPacket extends Packet
         }
     }
     
-    public List<Chat> GetChats()
+    public List<Chat> getChats()
     {
         return this.chats;
     }

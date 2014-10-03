@@ -196,6 +196,9 @@ public class PacketBuffer {
             case Packet.GRANTACCESS:
                 this.packet = new GrantAccessPacket(this.packetHeader, this.packetData);
                 break;
+            case Packet.CHATLIST:
+                this.packet = new ChatListPacket(this.packetHeader, this.packetData);
+                break;
         }
     }
 }

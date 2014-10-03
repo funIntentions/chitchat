@@ -614,6 +614,7 @@ public class Server {
             chatList.add(c);
         }
         
+        System.out.println(size);
         packet = new ChatListPacket(chatList, size);
         try {
             ((SocketChannel)clientKey.channel()).write(packet.serialise());

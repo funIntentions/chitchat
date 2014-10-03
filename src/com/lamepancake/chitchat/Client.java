@@ -332,8 +332,7 @@ public class Client  {
             }
             else if(msg.equalsIgnoreCase("CHATLIST"))
             {
-                
-                
+                client.sendMessage(new ChatListPacket());
             }
             else
             {
@@ -470,6 +469,17 @@ public class Client  {
                         break;
                     case Packet.GRANTACCESS:
                         updateStatus((GrantAccessPacket)p);
+                        break;
+                    case Packet.CHATLIST:
+                        ChatListPacket chatList = (ChatListPacket)p;
+                        System.out.println("[OPEN CHATS]");
+                        List<Chat> openChats = chatList.getChats();
+                        for(Chat c : openChats)
+                        {
+                            System.out.print('\t');
+                            System.out.println("Name: " + c.getName() + "; ID: " + c.getID());
+                        }
+                        System.out.println("[END]");
                         break;
                 }
                 this.packetBuf.clearState();
