@@ -47,6 +47,11 @@ public abstract class Packet {
     public static final int CHATLIST     = 7;
         
     /**
+     * Creates, deletes, or changes a chats data
+     */
+    public static final int CHATSUPDATE     = 8;
+    
+    /**
      * The offset from which the inheriting packet classes must interpret data in
      * the buffer.
      */

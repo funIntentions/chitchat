@@ -305,6 +305,47 @@ public class Client  {
                 
                 client.sendMessage(new GrantAccessPacket(id, User.UNSPEC));
             }
+            else if((client.userRole == User.ADMIN) &&
+                    (splitmsg.length > 1) && 
+                    splitmsg[0].equalsIgnoreCase("UPDATECHAT"))
+            {
+                String updateCommand = splitmsg[1];
+                String name;
+                int id;
+                int update;
+                
+                try {
+                    if (updateCommand.equalsIgnoreCase("CREATE"))
+                    {
+                        name = splitmsg[2];
+                        id = -1;
+                        update = UpdateChatsPacket.CREATE;
+                    }
+                    else if (updateCommand.equalsIgnoreCase("UPDATE"))
+                    {
+                        id = Integer.parseInt(splitmsg[2]);
+                        name = splitmsg[3];
+                        update = UpdateChatsPacket.UPDATE;
+                    }
+                    else if (updateCommand.equalsIgnoreCase("REMOVE"))
+                    {
+                        id = Integer.parseInt(splitmsg[2]);
+                        name = "";
+                        update = UpdateChatsPacket.REMOVE;
+                    }
+                    else
+                    {
+                        System.out.println("Chat update command: " + updateCommand + " is not valid.");
+                        continue;
+                    }
+                    
+                } catch(Exception e) {
+                    System.out.println("Not a valid chat update.");
+                    continue;
+                }
+                
+                client.sendMessage(new UpdateChatsPacket(name, id, update));
+            }
             else if((splitmsg.length > 1) && 
                     splitmsg[0].equalsIgnoreCase("JOIN"))
             {
@@ -553,4 +594,3 @@ public class Client  {
         }
     }
 }
-

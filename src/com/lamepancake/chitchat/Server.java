@@ -11,6 +11,7 @@ import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.PacketBuffer;
 import com.lamepancake.chitchat.packet.WhoIsInPacket;
+import com.lamepancake.chitchat.packet.UpdateChatsPacket;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -64,9 +65,19 @@ public class Server {
     private List<Integer> recycledIDs;
     
     /**
+     * ChatIDs for chats that have been removed that have left.
+     */
+    private List<Integer> recycledChatIDs;
+    
+    /**
      * The id for the next user.
      */
     private int nextId = 0;
+    
+    /**
+     * The id for the next user.
+     */
+    private int nextChatId = 0;
 
     /**
      * Initialise the server's selector object and listening socket.
@@ -96,6 +107,7 @@ public class Server {
         this.lobby = new HashMap<>();
         this.chats = new HashMap<>();
         this.recycledIDs = new ArrayList<>();
+        this.recycledChatIDs = new ArrayList<>();
         
         // temp chat
         
@@ -197,7 +209,7 @@ public class Server {
         {
             Packet  received = packetBuf.getPacket();
             int     type     = received.getType();
-            
+                      
             switch(type)
             {
                 case Packet.LOGIN:
@@ -217,6 +229,19 @@ public class Server {
                     break;
                 case Packet.JOINED:
                     addUserToChat(clientKey, (JoinedPacket)received); 
+                    break;
+                case Packet.CHATSUPDATE:
+                    switch(((UpdateChatsPacket)received).getUpdate())
+                    {
+                        case UpdateChatsPacket.CREATE:
+                            createNewChat(clientKey, (UpdateChatsPacket)received);
+                            break;
+                        case UpdateChatsPacket.REMOVE:
+                            break;
+                        case UpdateChatsPacket.UPDATE:
+                            updateChat(clientKey, (UpdateChatsPacket)received);
+                            break;
+                    }
                     break;
                 case Packet.GRANTACCESS:
                     Chat chat = this.chats.get(1); // the 1 is just temporary.
@@ -258,6 +283,46 @@ public class Server {
             }
             packetBuf.clearState();
         }
+    }
+    
+    private void createNewChat(SelectionKey key, UpdateChatsPacket chatInfo)
+    {
+        Chat newChat;
+        
+        String name = chatInfo.getName();
+        int id = getUniqueChatID();
+        
+        newChat = new Chat(name, id);
+        
+        this.chats.put(id, newChat);
+    }
+    
+    private void updateChat(SelectionKey key, UpdateChatsPacket chatInfo)
+    {
+        Chat chat;
+        
+        String name = chatInfo.getName();
+        int id = chatInfo.getID();
+        
+        chat = chats.get(id);
+        chat.setName(name);
+    }
+    
+    private int getUniqueChatID()
+    {
+        int ID;
+        
+        if (!recycledChatIDs.isEmpty())
+        {
+            ID = recycledChatIDs.get(0);
+            recycledChatIDs.remove(0);
+        }
+        else
+        {
+            ID = nextChatId++;
+        }
+        
+        return ID;
     }
     
     
@@ -607,7 +672,7 @@ public class Server {
 
             // Add space for the user's name and three ints (name length, role, id)
             size += c.getName().length() * 2;
-            size += 4;
+            size += 8;
             
             chatList.add(c);
         }

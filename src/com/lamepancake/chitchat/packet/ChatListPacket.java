@@ -26,7 +26,7 @@ public class ChatListPacket extends Packet
     
     public ChatListPacket(List<Chat> chats, int length)
     {
-        super(CHATLIST, length + 4);
+        super(CHATLIST, length);
         this.chats = chats;
     }
     

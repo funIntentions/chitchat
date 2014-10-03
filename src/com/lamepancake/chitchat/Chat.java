@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public class Chat 
 {
-    private final int    chatID;
+    private final int chatID;
     private String chatName;
     
     /**
@@ -39,6 +39,11 @@ public class Chat
     public String getName()
     {
         return chatName;
+    }
+    
+    public void setName(String name)
+    {
+        chatName = name;
     }
     
     public Integer getID()

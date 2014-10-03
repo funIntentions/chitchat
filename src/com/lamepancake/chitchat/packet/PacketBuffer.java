@@ -199,6 +199,9 @@ public class PacketBuffer {
             case Packet.CHATLIST:
                 this.packet = new ChatListPacket(this.packetHeader, this.packetData);
                 break;
+            case Packet.CHATSUPDATE:
+                this.packet = new UpdateChatsPacket(this.packetHeader, this.packetData);
+                break;
         }
     }
 }
