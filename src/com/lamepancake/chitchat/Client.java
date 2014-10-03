@@ -305,6 +305,21 @@ public class Client  {
                 
                 client.sendMessage(new GrantAccessPacket(id, User.UNSPEC));
             }
+            else if((splitmsg.length > 1) && 
+                    splitmsg[0].equalsIgnoreCase("JOIN"))
+            {
+                String recievingChatID = splitmsg[1];
+                int id;
+                
+                try {
+                    id = Integer.parseInt(recievingChatID);
+                    
+                } catch(Exception e) {
+                    System.out.println("Not a valid chat ID: " + recievingChatID);
+                    continue;
+                }
+                client.sendMessage(new JoinedPacket(client.username, client.userID, client.userRole, id));
+            }
             else if(msg.equalsIgnoreCase("LOGOUT")) {
                 System.out.println("Logging out.");
                 client.logout = true;

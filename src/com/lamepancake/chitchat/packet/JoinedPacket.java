@@ -16,6 +16,8 @@ import java.nio.charset.StandardCharsets;
 public class JoinedPacket extends Packet {
     
     private User user;
+    private int chatID;
+    private int orgID;
     
     /**
      * Constructs a JoinedPacket with the new user's name, role and ID.
@@ -23,10 +25,11 @@ public class JoinedPacket extends Packet {
      * @param username The new user's name.
      * @param role     The new user's role.
      * @param userID   The new user's ID.
+     * @param chatID   The requested chat ID.
      */
-    public JoinedPacket(String username, int role, int userID)
+    public JoinedPacket(String username, int role, int userID, int chatID)
     {
-        this(new User(username, role, userID)); 
+        this(new User(username, role, userID), chatID); 
     } 
     
     /**
@@ -34,12 +37,14 @@ public class JoinedPacket extends Packet {
      * 
      * Note that the user must have a valid name, role and ID.
      * @param u The user whose information will go in the packet.
+     * @param chatID   The requested chat ID.
      */
-    public JoinedPacket(User u)
+    public JoinedPacket(User u, int chatID)
     {
         // Space for the username length, the username, the role and the ID
-        super(Packet.JOINED, (u.getName().length() * 2) + 12);
+        super(Packet.JOINED, (u.getName().length() * 2) + 16);
         this.user = u;
+        this.chatID = chatID;
     }
     
     /**
@@ -55,6 +60,7 @@ public class JoinedPacket extends Packet {
         byte[]  rawName = new byte[nameLen];
         data.get(rawName);
         this.user = new User(new String(rawName, StandardCharsets.UTF_16LE), data.getInt(), data.getInt());
+        this.chatID = data.getInt();
     }
     
     @Override
@@ -66,6 +72,7 @@ public class JoinedPacket extends Packet {
         buf.put(this.user.getName().getBytes(StandardCharsets.UTF_16LE));
         buf.putInt(this.user.getRole());
         buf.putInt(this.user.getID());
+        buf.putInt((this.chatID));
         
         buf.rewind();
         return buf;
@@ -80,4 +87,8 @@ public class JoinedPacket extends Packet {
         return this.user;
     }
 
+    public int getChatID()
+    {
+        return this.chatID;
+    }
 }

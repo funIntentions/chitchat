@@ -215,6 +215,9 @@ public class Server {
                 case Packet.CHATLIST:
                     sendChatList(clientKey);
                     break;
+                case Packet.JOINED:
+                    addUserToChat(clientKey, (JoinedPacket)received); 
+                    break;
                 case Packet.GRANTACCESS:
                     Chat chat = this.chats.get(1); // the 1 is just temporary.
                     Map<SelectionKey, User> users = chat.getConnectedUsers();
@@ -288,21 +291,18 @@ public class Server {
         User newUser;
         int newId = getUniqueID();
         
-        Chat chat = this.chats.get(1); // the 1 is just temporary.
-        Map<SelectionKey, User> users = chat.getConnectedUsers();
+        //Chat chat = this.chats.get(1); // the 1 is just temporary.
+        //Map<SelectionKey, User> users = chat.getConnectedUsers();
         
         // The client sent another login packet; ignore it.
-        if(users.get(key) != null)
+        if(lobby.get(key) != null)
             return;
         
         int role = loginInfo.getUsername().equalsIgnoreCase("Admin") ? ADMIN: User.UNSPEC;
         
         newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), role, newId);
         
-        users.put(key, newUser);
-
-        if(newUser.getRole() == User.ADMIN)
-            addUserToChat(key, new GrantAccessPacket(newId, User.ADMIN));
+        lobby.put(key, newUser);
     }
     
     /**
@@ -365,6 +365,34 @@ public class Server {
      * @param userInfo  Contains the id of the user that's being added.
      * @todo Send the admin's name to the user letting them know who added them.
      */
+    private void addUserToChat(SelectionKey key, JoinedPacket userInfo)
+    {
+        Set<SelectionKey>       userChannels;
+        int                     userID       = userInfo.getUser().getID();
+        //SelectionKey            sel          = null;
+        
+        Chat chat = this.chats.get(1); // the 1 is just temporary.
+        Map<SelectionKey, User> users = chat.getConnectedUsers();
+        
+        // Swap the user from the waiting list to the in chat list.
+        User waitingUser = this.lobby.get(key);
+        
+        waitingUser.setRole(userInfo.getUser().getRole());
+        
+        // inform the user they are now in the chat.
+        try {
+            SocketChannel channel = (SocketChannel)key.channel();
+            channel.write(userInfo.serialise());              
+        } catch (IOException e) {
+            System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
+        }
+        
+        // Send a list of connected clients immediately after being added to the chat.
+        sendUserList(key, WhoIsInPacket.CONNECTED);
+        
+        announceJoin(key, waitingUser, 1); /////////////////TEMPORARY
+    }
+    
     private void addUserToChat(SelectionKey key, GrantAccessPacket userInfo)
     {
         Set<SelectionKey>       userChannels;
@@ -375,7 +403,7 @@ public class Server {
         Map<SelectionKey, User> users = chat.getConnectedUsers();
         
         // Swap the user from the waiting list to the in chat list.
-        User waitingUser = users.get(key);
+        User waitingUser = this.lobby.get(key);
         
         waitingUser.setRole(userInfo.getUserRole());
         
@@ -390,7 +418,7 @@ public class Server {
         // Send a list of connected clients immediately after being added to the chat.
         sendUserList(key, WhoIsInPacket.CONNECTED);
         
-        announceJoin(key, waitingUser);
+        announceJoin(key, waitingUser, 1); /////////////////TEMPORARY
     }
     
     /**
@@ -417,7 +445,7 @@ public class Server {
         // Send a list of connected clients immediately after being added to the chat.
         sendUserList(key, WhoIsInPacket.CONNECTED);
         
-        announceJoin(key, chattingUser);
+        announceJoin(key, chattingUser, 1); //////TEMPORARY
     }
     
     /**
@@ -583,7 +611,6 @@ public class Server {
             chatList.add(c);
         }
         
-        System.out.println(size);
         packet = new ChatListPacket(chatList, size);
         try {
             ((SocketChannel)clientKey.channel()).write(packet.serialise());
@@ -649,12 +676,12 @@ public class Server {
      * @param key The key associated with the joining user.
      * @param u   A User object containing the user's information.
      */
-    private void announceJoin(SelectionKey key, User u)
+    private void announceJoin(SelectionKey key, User u, int chatID)
     {
         Set<SelectionKey> userChannels;
-        JoinedPacket      join         = new JoinedPacket(u);   
+        JoinedPacket      join         = new JoinedPacket(u, chatID);   
         
-        Chat chat = this.chats.get(1); // the 1 is just temporary.
+        Chat chat = this.chats.get(chatID); // the 1 is just temporary.
         Map<SelectionKey, User> users = chat.getConnectedUsers();
         
         userChannels = users.keySet();
