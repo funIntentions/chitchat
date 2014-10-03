@@ -41,6 +41,11 @@ public abstract class Packet {
      */
     public static final int GRANTACCESS     = 6;
     
+     /**
+     * Requests or sends a list of chats.
+     */
+    public static final int CHATLIST     = 7;
+    
     /**
      * The offset from which the inheriting packet classes must interpret data in
      * the buffer.
