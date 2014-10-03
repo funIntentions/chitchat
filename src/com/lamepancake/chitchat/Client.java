@@ -359,6 +359,7 @@ public class Client  {
                     System.out.println("Not a valid chat ID: " + recievingChatID);
                     continue;
                 }
+                System.out.println(client.userRole);
                 client.sendMessage(new JoinedPacket(client.username, client.userRole, client.userID, id));
                 //System.out.println(client.userRole);
             }

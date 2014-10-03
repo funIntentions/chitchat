@@ -364,10 +364,13 @@ public class Server {
             return;
         
         int role = loginInfo.getUsername().equalsIgnoreCase("Admin") ? ADMIN: User.UNSPEC;
-        
+        System.out.println(role);
         newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), role, newId);
         
         lobby.put(key, newUser);
+        
+        // Send a list of connected clients immediately after being added to the chat.
+        sendUserList(key, WhoIsInPacket.CONNECTED);
     }
     
     /**
@@ -441,9 +444,12 @@ public class Server {
         
         // Swap the user from the waiting list to the in chat list.
         User waitingUser = this.lobby.get(key);
+        this.lobby.remove(key);
         
-        waitingUser.setRole(userInfo.getUser().getRole());
+        System.out.println(waitingUser.getRole());
         //System.out.println(waitingUser.getRole());
+        
+        users.put(key, waitingUser);
         
         // inform the user they are now in the chat.
         try {
