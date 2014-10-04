@@ -13,20 +13,35 @@ import java.nio.ByteBuffer;
  */
 public class LogoutPacket extends Packet{
     
+    int chatID;
+    
     /**
      * Constructs a new LogoutPacket.
      */
-    public LogoutPacket()
+    public LogoutPacket(int chatID)
     {
-        super(LOGOUT, 0);
+        super(LOGOUT, 4);
+        this.chatID = chatID;
+    }
+    
+    public LogoutPacket(ByteBuffer header, ByteBuffer data)
+    {
+        super(header);       
+        this.chatID = data.getInt();
     }
     
     @Override
     public ByteBuffer serialise()
     {
         ByteBuffer buf = super.serialise();
+        buf.putInt(this.chatID);
         buf.rewind();
         return buf;
+    }
+    
+    public int getChatID()
+    {
+        return chatID;
     }
     
 }

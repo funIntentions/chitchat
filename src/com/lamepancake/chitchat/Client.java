@@ -78,6 +78,8 @@ public class Client  {
      */
     private volatile boolean logout;
     
+    private int chatID;
+    
     /**
      * Constructs a new Client with the given server information and authentication
      * details.
@@ -286,7 +288,7 @@ public class Client  {
                     continue;
                 }
                 
-                client.sendMessage(new GrantAccessPacket(id, role));
+                client.sendMessage(new GrantAccessPacket(id, role, client.chatID));
             }
             else if((client.userRole == User.ADMIN) &&
                     (splitmsg.length > 1) && 
@@ -303,7 +305,7 @@ public class Client  {
                     continue;
                 }
                 
-                client.sendMessage(new GrantAccessPacket(id, User.UNSPEC));
+                client.sendMessage(new GrantAccessPacket(id, User.UNSPEC, client.chatID));
             }
             else if((client.userRole == User.ADMIN) &&
                     (splitmsg.length > 1) && 
@@ -366,7 +368,7 @@ public class Client  {
             else if(msg.equalsIgnoreCase("LOGOUT")) {
                 System.out.println("Logging out.");
                 client.logout = true;
-                client.sendMessage(new LogoutPacket());
+                client.sendMessage(new LogoutPacket(client.chatID));
                 break;
             }
             else if(msg.equalsIgnoreCase("WHOISIN")) {     
@@ -396,7 +398,7 @@ public class Client  {
             {
                 if (!client.waiting())
                 {
-                    client.sendMessage(new MessagePacket(msg, client.userID));
+                    client.sendMessage(new MessagePacket(msg, client.userID, client.chatID));
                 }
                 else
                 {
@@ -595,3 +597,4 @@ public class Client  {
         }
     }
 }
+

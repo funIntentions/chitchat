@@ -12,6 +12,7 @@ import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.PacketBuffer;
 import com.lamepancake.chitchat.packet.WhoIsInPacket;
 import com.lamepancake.chitchat.packet.UpdateChatsPacket;
+import com.lamepancake.chitchat.packet.LogoutPacket;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -202,7 +203,9 @@ public class Server {
         
         // Remove the user if they've disconnected
         if(state == PacketBuffer.DISCONNECTED)
-            remove(clientKey);
+        {
+            //remove(clientKey);TEMPORARY
+        }
 
         // Process the packet if we're finished reading
         else if(state == PacketBuffer.FINISHED)
@@ -219,7 +222,7 @@ public class Server {
                     sendMessage(clientKey, (MessagePacket)received);
                     break;
                 case Packet.LOGOUT:
-                    remove(clientKey);
+                    remove(clientKey, ((LogoutPacket)received).getChatID());
                     break;
                 case Packet.WHOISIN:
                     sendUserList(clientKey, ((WhoIsInPacket)received).whichList());
@@ -244,7 +247,7 @@ public class Server {
                     }
                     break;
                 case Packet.GRANTACCESS:
-                    Chat chat = this.chats.get(1); // the 1 is just temporary.
+                    Chat chat = this.chats.get(((GrantAccessPacket)received).getChatID()); 
                     Map<SelectionKey, User> users = chat.getConnectedUsers();
                     
                     User sender = users.get(clientKey);
@@ -267,7 +270,7 @@ public class Server {
                             }
                             else
                             {
-                                updateList(selected);
+                                updateList(selected, ((GrantAccessPacket)received).getChatID());
                                 
                                 setUserRole(users, selected, (GrantAccessPacket)received);
                                 updateUserInChat(selected, (GrantAccessPacket)received);
@@ -355,10 +358,7 @@ public class Server {
     {
         User newUser;
         int newId = getUniqueID();
-        
-        //Chat chat = this.chats.get(1); // the 1 is just temporary.
-        //Map<SelectionKey, User> users = chat.getConnectedUsers();
-        
+                
         // The client sent another login packet; ignore it.
         if(lobby.get(key) != null)
             return;
@@ -389,7 +389,7 @@ public class Server {
             return;
         }*/
         
-        Chat chat = this.chats.get(1); // the 1 is just temporary.
+        Chat chat = this.chats.get(userInfo.getChatID()); // the 1 is just temporary.
         Map<SelectionKey, User> users = chat.getConnectedUsers();
         
         userChannels = users.keySet();
@@ -439,7 +439,7 @@ public class Server {
         int                     userID       = userInfo.getUser().getID();
         //SelectionKey            sel          = null;
         
-        Chat chat = this.chats.get(1); // the 1 is just temporary.
+        Chat chat = this.chats.get(userInfo.getChatID()); // the 1 is just temporary.
         Map<SelectionKey, User> users = chat.getConnectedUsers();
         
         // Swap the user from the waiting list to the in chat list.
@@ -462,7 +462,7 @@ public class Server {
         // Send a list of connected clients immediately after being added to the chat.
         sendUserList(key, WhoIsInPacket.CONNECTED);
         
-        announceJoin(key, waitingUser, 1); /////////////////TEMPORARY
+        announceJoin(key, waitingUser, userInfo.getChatID()); /////////////////TEMPORARY
     }
     
     private void addUserToChat(SelectionKey key, GrantAccessPacket userInfo)
@@ -471,7 +471,7 @@ public class Server {
         int                     userID       = userInfo.getUserID();
         //SelectionKey            sel          = null;
         
-        Chat chat = this.chats.get(1); // the 1 is just temporary.
+        Chat chat = this.chats.get(userInfo.getChatID()); // the 1 is just temporary.
         Map<SelectionKey, User> users = chat.getConnectedUsers();
         
         // Swap the user from the waiting list to the in chat list.
@@ -490,7 +490,7 @@ public class Server {
         // Send a list of connected clients immediately after being added to the chat.
         sendUserList(key, WhoIsInPacket.CONNECTED);
         
-        announceJoin(key, waitingUser, 1); /////////////////TEMPORARY
+        announceJoin(key, waitingUser, userInfo.getChatID()); /////////////////TEMPORARY
     }
     
     /**
@@ -501,7 +501,7 @@ public class Server {
      */
     private void updateUserInChat(SelectionKey key, GrantAccessPacket userInfo)
     {
-        Chat chat = this.chats.get(1); // the 1 is just temporary.
+        Chat chat = this.chats.get(userInfo.getChatID()); // the 1 is just temporary.
         Map<SelectionKey, User> users = chat.getConnectedUsers();
         
         User chattingUser = users.get(key);
@@ -517,7 +517,7 @@ public class Server {
         // Send a list of connected clients immediately after being added to the chat.
         sendUserList(key, WhoIsInPacket.CONNECTED);
         
-        announceJoin(key, chattingUser, 1); //////TEMPORARY
+        announceJoin(key, chattingUser, userInfo.getChatID()); //////TEMPORARY
     }
     
     /**
@@ -536,7 +536,7 @@ public class Server {
             System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
         }
         
-        remove(selected);
+        remove(selected, userInfo.getChatID());
     }
     
     /**
@@ -552,7 +552,7 @@ public class Server {
         Set<SelectionKey>       userChannels;
         User                    client;
         
-        Chat chat = this.chats.get(1); // the 1 is just temporary.
+        Chat chat = this.chats.get(message.getChatID()); // the 1 is just temporary.
         Map<SelectionKey, User> users = chat.getConnectedUsers();
         
         userChannels = users.keySet();
@@ -569,7 +569,7 @@ public class Server {
         else if(client.getID() != message.getUserID())
             message.setUserID(client.getID());
          
-        broadcast(key, message, false);
+        broadcast(key, message, false, message.getChatID());
     }
     
      /**
@@ -577,13 +577,13 @@ public class Server {
      * 
      * @param sel The selection key identifying the user.
      */
-    private void updateList(SelectionKey sel)
+    private void updateList(SelectionKey sel, int chatID)
     {
         Set<SelectionKey> userChannels;
         int id;
         LeftPacket left;
         
-        Chat chat = this.chats.get(1); // the 1 is just temporary.
+        Chat chat = this.chats.get(chatID); // the 1 is just temporary.
         Map<SelectionKey, User> users = chat.getConnectedUsers();
         
         userChannels = users.keySet();
@@ -609,13 +609,13 @@ public class Server {
      * 
      * @param sel The selection key identifying the user.
      */
-    private void remove(SelectionKey sel)
+    private void remove(SelectionKey sel, int chatID)
     {
         Set<SelectionKey> userChannels;
         int id;
         LeftPacket left;
         
-        Chat chat = this.chats.get(1); // the 1 is just temporary.
+        Chat chat = this.chats.get(chatID); // the 1 is just temporary.
         Map<SelectionKey, User> users = chat.getConnectedUsers();
         
         if (users.containsKey(sel))
@@ -762,7 +762,7 @@ public class Server {
         if(userChannels.size() <= 1)
             return;
         
-        broadcast(key, join, false);
+        broadcast(key, join, false, chatID);
     }
     
     /**
@@ -772,9 +772,9 @@ public class Server {
      * @param p The packet to be broadcasted.
      * @param broadcast True if you want to include the sending user in the broadcast, false otherwise.
      */
-    private void broadcast(SelectionKey key, Packet p, Boolean broadcast)
+    private void broadcast(SelectionKey key, Packet p, Boolean broadcast, int chatID)
     {
-        Chat chat = this.chats.get(1); // the 1 is just temporary.
+        Chat chat = this.chats.get(chatID); // the 1 is just temporary.
         Map<SelectionKey, User> users = chat.getConnectedUsers();
         
         Set<SelectionKey> userChannels = users.keySet();

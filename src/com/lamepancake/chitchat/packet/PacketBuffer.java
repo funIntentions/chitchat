@@ -179,7 +179,7 @@ public class PacketBuffer {
                 this.packet = new LoginPacket(this.packetHeader, this.packetData);
                 break;
             case Packet.LOGOUT:
-                this.packet = new LogoutPacket();
+                this.packet = new LogoutPacket(this.packetHeader, this.packetData);
                 break;
             case Packet.MESSAGE:
                 this.packet = new MessagePacket(this.packetHeader, this.packetData);

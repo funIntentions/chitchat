@@ -14,6 +14,7 @@ public class MessagePacket extends Packet {
 
 	private final String message;
         private int          userID;
+        private int          chatID;
 	
 	/**
          * Constructs a MessagePacket with the given message and userID.
@@ -21,10 +22,11 @@ public class MessagePacket extends Packet {
          * @param message The message to send.
          * @param userID  The ID of the user sending the message.
          */
-	public MessagePacket(String message, int userID) {
-            super(Packet.MESSAGE, 4 + message.length() * 2);
+	public MessagePacket(String message, int userID, int chatID) {
+            super(Packet.MESSAGE, 8 + message.length() * 2);
             this.message = message;
             this.userID = userID;
+            this.chatID = chatID;
 	}
 
         /**
@@ -36,8 +38,9 @@ public class MessagePacket extends Packet {
         public MessagePacket(ByteBuffer header, ByteBuffer data)
         {
             super(header);
-            byte[] rawMessage = new byte[data.capacity() - 4];
+            byte[] rawMessage = new byte[data.capacity() - 8];
             this.userID = data.getInt();
+            this.chatID = data.getInt();
             data.get(rawMessage);
             this.message = new String(rawMessage, StandardCharsets.UTF_16LE);
         }
@@ -47,6 +50,7 @@ public class MessagePacket extends Packet {
         {
             ByteBuffer buf = super.serialise();
             buf.putInt(this.userID);
+            buf.putInt(this.chatID);
             buf.put(this.message.getBytes(StandardCharsets.UTF_16LE));
             buf.rewind();
             
@@ -85,6 +89,11 @@ public class MessagePacket extends Packet {
                 throw new IllegalArgumentException("MessagePacket.setUserID: newID must be >= 0, was " + newID);
             
             this.userID = newID;
+        }
+        
+        public int getChatID()
+        {
+            return this.chatID;
         }
 }
 
