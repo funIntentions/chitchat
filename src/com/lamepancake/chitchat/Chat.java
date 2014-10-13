@@ -5,6 +5,7 @@
  */
 package com.lamepancake.chitchat;
 
+import com.lamepancake.chitchat.mediator.Event;
 import java.nio.channels.SelectionKey;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +31,6 @@ public class Chat
         this.users = new HashMap<>();
     }
     
-    
     public Map<SelectionKey, User> getConnectedUsers()
     {
         return users;
@@ -49,5 +49,28 @@ public class Chat
     public Integer getID()
     {
         return chatID;
+    }
+    
+    public void update(Event e)
+    {
+        int type = e.getType();
+        
+        switch(type)
+        {
+            case Event.LOGIN:
+                break;
+            case Event.LOGOUT:
+                break;
+            case Event.MESSAGE:
+                break;
+            case Event.JOIN:
+                break;
+            case Event.LEAVE:
+                break;
+            case Event.GRANT:
+                break;
+            default:
+                System.out.println("Unknown event " + type);
+        }
     }
 }

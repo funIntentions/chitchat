@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.lamepancake.chitchat;
+package com.lamepancake.chitchat.mediator;
 import com.lamepancake.chitchat.packet.Packet;
 import java.util.Observable;
 
