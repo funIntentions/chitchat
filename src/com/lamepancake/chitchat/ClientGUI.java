@@ -31,7 +31,7 @@ public class ClientGUI extends JFrame implements ActionListener {
         private GUIMediator guiMediator;
 
 	// Constructor connection receiving a socket number
-	ClientGUI(GUIMediator guiMediator) {
+	public ClientGUI(GUIMediator guiMediator) {
 
 		super("Chat Client");
 		defaultPort = 1500;

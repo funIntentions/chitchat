@@ -595,8 +595,9 @@ public class Client  {
                 }
             }
         }
-        
-        public int getUserRole()
+    }
+    
+    public int getUserRole()
         {
             return userRole;
         }
@@ -615,6 +616,5 @@ public class Client  {
         {
             return chatID;
         }
-    }
 }
 
