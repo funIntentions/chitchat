@@ -3,6 +3,7 @@ package com.lamepancake.chitchat;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import com.lamepancake.chitchat.mediator.*;
 
 
 /*
