@@ -5,10 +5,16 @@
  */
 package com.lamepancake.chitchat;
 
+import com.lamepancake.chitchat.mediator.Event;
+
 /**
  *
  * @author shane
  */
 public class ChatManager {
     
+    public void handleEvent(Event e)
+    {
+        
+    }
 }
