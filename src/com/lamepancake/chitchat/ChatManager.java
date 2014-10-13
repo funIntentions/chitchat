@@ -11,10 +11,28 @@ import com.lamepancake.chitchat.mediator.Event;
  *
  * @author shane
  */
-public class ChatManager {
-    
-    public void handleEvent(Event e)
+public class ChatManager 
+{
+    public void HandleEvent(Event e)
     {
+        int type = e.getType();
         
+        switch(type)
+        {
+            case Event.LOGIN:
+                break;
+            case Event.LOGOUT:
+                break;
+            case Event.MESSAGE:
+                break;
+            case Event.JOIN:
+                break;
+            case Event.LEAVE:
+                break;
+            case Event.GRANT:
+                break;
+            default:
+                System.out.println("Unknown event " + type);
+        }
     }
 }

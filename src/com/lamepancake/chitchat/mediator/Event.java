@@ -23,6 +23,7 @@ public class Event {
     public static final int DELETECHAT = 10;
     public static final int UPDATECHAT = 11;
     public static final int PROMOTEUSER = 12;
+    public static final int BOOTUSER = 13;
     
     private final int type;
     private final Object arg;

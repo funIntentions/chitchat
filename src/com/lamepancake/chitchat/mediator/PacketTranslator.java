@@ -4,6 +4,8 @@
  * and open the template in the editor.
  */
 package com.lamepancake.chitchat.mediator;
+import com.lamepancake.chitchat.User;
+import com.lamepancake.chitchat.ChatManager;
 import com.lamepancake.chitchat.packet.ChatListPacket;
 import com.lamepancake.chitchat.packet.GrantAccessPacket;
 import com.lamepancake.chitchat.packet.JoinedPacket;
@@ -23,51 +25,86 @@ import java.util.Observable;
  */
 public class PacketTranslator extends Observable 
 {
+    ChatManager chatManager;
+    
     public PacketTranslator()
     {
-        
+        chatManager = new ChatManager();
     }
     
     public void translateReceived(SelectionKey clientKey, Packet packet)
     {
         int type = packet.getType();
-        int chatID;
+        Event event = null;
         
         switch(type)
         {
             case Packet.LOGIN:
                 LoginPacket loginPacket = (LoginPacket)packet;
-                chatID = -1;
+                event = new Event(Event.LOGIN, loginPacket);
                 break;
             case Packet.MESSAGE:
                 MessagePacket messagePacket = (MessagePacket)packet;
-                chatID = messagePacket.getChatID();
+                event = new Event(Event.MESSAGE, messagePacket);
                 break;
             case Packet.LOGOUT:
                 LogoutPacket logoutPacket = (LogoutPacket)packet;
-                chatID = logoutPacket.getChatID();
+                event = new Event(Event.LOGOUT, logoutPacket);
                 break;
             case Packet.WHOISIN:
                 WhoIsInPacket whoIsInPacket = (WhoIsInPacket)packet;
-                chatID = whoIsInPacket.getChatID();
+                int whichList = whoIsInPacket.whichList();
+                if (whichList == WhoIsInPacket.CONNECTED)
+                {
+                    event = new Event(Event.WHOISIN, whoIsInPacket);
+                }
+                else if (whichList == WhoIsInPacket.WAITING)
+                {
+                    event = new Event(Event.WAITINGLIST, whoIsInPacket);
+                }
                 break;
             case Packet.CHATLIST:
                 ChatListPacket chatListPacket = (ChatListPacket)packet;
-                chatID = -2;
+                event = new Event(Event.CHATLIST, chatListPacket);
                 break;
             case Packet.JOINED:
                 JoinedPacket joinedPacket= (JoinedPacket)packet;
-                chatID = joinedPacket.getChatID();
+                event = new Event(Event.JOIN, joinedPacket);
                 break;
             case Packet.CHATSUPDATE:
                 UpdateChatsPacket updateChatsPacket = (UpdateChatsPacket)packet;
-                chatID = updateChatsPacket.getChatID();
+                int updateFlag = updateChatsPacket.getUpdate();
+                switch(updateFlag)
+                {
+                    case UpdateChatsPacket.CREATE:
+                        event = new Event(Event.CREATECHAT, updateChatsPacket);
+                        break;
+                    case UpdateChatsPacket.UPDATE:
+                        event = new Event(Event.UPDATECHAT, updateChatsPacket);
+                        break;
+                    case UpdateChatsPacket.REMOVE:
+                        event = new Event(Event.DELETECHAT, updateChatsPacket);
+                        break;
+                }
                 break;
             case Packet.GRANTACCESS:
                 GrantAccessPacket grantAccessPacket = (GrantAccessPacket)packet;
-                chatID = grantAccessPacket.getChatID();
-                break;  
+                int newRole = grantAccessPacket.getUserRole();
+                if (newRole == User.UNSPEC)
+                {
+                    event = new Event(Event.BOOTUSER, grantAccessPacket);
+                }
+                else
+                {
+                    event = new Event(Event.PROMOTEUSER, grantAccessPacket);
+                }
+                break;
+            default:
+                return;
         }
+        
+              
+        chatManager.HandleEvent(event);
     }
     
     public void dispatchTranslation(Event e)
