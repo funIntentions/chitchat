@@ -67,7 +67,7 @@ public class UpdateChatsPacket extends Packet {
         return chatName;
     }
     
-    public int getID()
+    public int getChatID()
     {
         return chatID;
     }

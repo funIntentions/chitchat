@@ -1,5 +1,6 @@
 package com.lamepancake.chitchat;
 
+import com.lamepancake.chitchat.mediator.PacketTranslator;
 import static com.lamepancake.chitchat.User.ADMIN;
 import static com.lamepancake.chitchat.User.USER;
 import com.lamepancake.chitchat.packet.ChatListPacket;
@@ -49,6 +50,11 @@ public class Server {
      * The port on which to listen for connections.
      */
     private final int listenPort;
+    
+    /**
+     * Mediator that receives/handles packets.
+     */
+    private final PacketTranslator packetTranslator;
 
     
     private final Map<SelectionKey, User> lobby;
@@ -104,6 +110,8 @@ public class Server {
             System.out.println("Server could not initialise: " + e.getMessage());
             throw(e);
         }
+        
+        this.packetTranslator = new PacketTranslator();
         
         this.lobby = new HashMap<>();
         this.chats = new HashMap<>();
@@ -211,7 +219,9 @@ public class Server {
         else if(state == PacketBuffer.FINISHED)
         {
             Packet  received = packetBuf.getPacket();
-            int     type     = received.getType();
+            
+            packetTranslator.translateReceived(clientKey, received);
+            /*int     type     = received.getType();
                       
             switch(type)
             {
@@ -283,7 +293,7 @@ public class Server {
                         System.err.println("Access requirement not met for this command.");
                     }
                     break;
-            }
+            }*/
             packetBuf.clearState();
         }
     }
@@ -305,7 +315,7 @@ public class Server {
         Chat chat;
         
         String name = chatInfo.getName();
-        int id = chatInfo.getID();
+        int id = chatInfo.getChatID();
         
         chat = chats.get(id);
         chat.setName(name);
@@ -734,7 +744,7 @@ public class Server {
             userList.add(u);
         }
         
-        packet = new WhoIsInPacket(userList, size, list);
+        packet = new WhoIsInPacket(userList, size, list, 1); // one is temp?
         try {
             ((SocketChannel)clientKey.channel()).write(packet.serialise());
         } catch (IOException e) {

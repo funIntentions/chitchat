@@ -38,14 +38,19 @@ public class WhoIsInPacket extends Packet {
     private final int whichList;
     
     /**
+     * Id of the chat that's being requested for information.
+     */
+    private final int chatID;
+    
+    /**
      * Construct a WhoIsInPacket to be sent to the server.
      * 
      * @param whichList The list of users to see.
      */
-    public WhoIsInPacket(int whichList)
+    public WhoIsInPacket(int whichList, int id)
     {
         // The 4 is already added in the other constructor, so don't repeat it here
-        this(null, 0, whichList);
+        this(null, 0, whichList, id);
     }
     
     /**
@@ -56,11 +61,12 @@ public class WhoIsInPacket extends Packet {
      * @param length    The length, in bytes, of the data portion of the packet.
      * @param whichList The list being requested.
      */
-    public WhoIsInPacket(List<User> users, int length, int whichList)
+    public WhoIsInPacket(List<User> users, int length, int whichList, int id)
     {
         super(WHOISIN, length + 4);
         this.users = users;
         this.whichList = whichList;
+        this.chatID = id;
     }
     
     /**
@@ -72,7 +78,8 @@ public class WhoIsInPacket extends Packet {
     public WhoIsInPacket(ByteBuffer header, ByteBuffer data)
     {
         super(header);
-
+        
+        this.chatID = data.getInt();
         this.whichList = data.getInt();
         
         // If the data capacity is only enough for whichList, then it doesn't
@@ -125,6 +132,7 @@ public class WhoIsInPacket extends Packet {
     public ByteBuffer serialise()
     {
         ByteBuffer buf = super.serialise();
+        buf.putInt(this.chatID);
         buf.putInt(this.whichList);
 
         if(this.users == null)
@@ -148,5 +156,10 @@ public class WhoIsInPacket extends Packet {
         buf.rewind();
         
         return buf;
+    }
+    
+    public int getChatID()
+    {
+        return this.chatID;
     }
 }

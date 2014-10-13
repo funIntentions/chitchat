@@ -386,9 +386,11 @@ public class Client  {
 
                 System.out.println("[END]");
             }
-            else if(msg.equalsIgnoreCase("WAITINGLIST"))
+            else if((splitmsg.length > 1) && 
+                    splitmsg[0].equalsIgnoreCase("WAITINGLIST"))
             {
-                client.sendMessage(new WhoIsInPacket(WhoIsInPacket.WAITING));
+                int chatID = Integer.parseInt(splitmsg[1]);
+                client.sendMessage(new WhoIsInPacket(WhoIsInPacket.WAITING, chatID));
             }
             else if(msg.equalsIgnoreCase("CHATLIST"))
             {
