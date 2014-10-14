@@ -5,7 +5,6 @@
  */
 package com.lamepancake.chitchat;
 
-import com.lamepancake.chitchat.mediator.Event;
 import com.lamepancake.chitchat.packet.GrantAccessPacket;
 import com.lamepancake.chitchat.packet.JoinedPacket;
 import com.lamepancake.chitchat.packet.MessagePacket;
@@ -60,27 +59,9 @@ public class Chat
         return chatID;
     }
     
-    public void update(Event e)
+    public void update(Packet p)
     {
-        int type = e.getType();
-        
-        switch(type)
-        {
-            case Event.LOGIN:
-                break;
-            case Event.LOGOUT:
-                break;
-            case Event.MESSAGE:
-                break;
-            case Event.JOIN:
-                break;
-            case Event.LEAVE:
-                break;
-            case Event.GRANT:
-                break;
-            default:
-                System.out.println("Unknown event " + type);
-        }
+        int type = p.getType();
     }
     
     /**

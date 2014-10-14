@@ -6,11 +6,11 @@
 package com.lamepancake.chitchat;
 
 import static com.lamepancake.chitchat.User.ADMIN;
-import com.lamepancake.chitchat.mediator.Event;
 import com.lamepancake.chitchat.packet.ChatListPacket;
 import com.lamepancake.chitchat.packet.GrantAccessPacket;
 import com.lamepancake.chitchat.packet.LeftPacket;
 import com.lamepancake.chitchat.packet.LoginPacket;
+import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.UpdateChatsPacket;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
@@ -64,27 +64,9 @@ public class ChatManager
         this.recycledChatIDs = new ArrayList<>();
     }
     
-    public void HandleEvent(Event e)
+    public void handlePacket(Packet p)
     {
-        int type = e.getType();
-        
-        switch(type)
-        {
-            case Event.LOGIN:
-                break;
-            case Event.LOGOUT:
-                break;
-            case Event.MESSAGE:
-                break;
-            case Event.JOIN:
-                break;
-            case Event.LEAVE:
-                break;
-            case Event.GRANT:
-                break;
-            default:
-                System.out.println("Unknown event " + type);
-        }
+        int type = p.getType();
     }
     
      /**

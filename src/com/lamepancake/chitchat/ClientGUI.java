@@ -3,7 +3,6 @@ package com.lamepancake.chitchat;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import com.lamepancake.chitchat.mediator.*;
 
 
 /*
@@ -28,10 +27,9 @@ public class ClientGUI extends JFrame implements ActionListener {
 	private int defaultPort;
 	private String defaultHost;
         
-        private GUIMediator guiMediator;
 
 	// Constructor connection receiving a socket number
-	public ClientGUI(GUIMediator guiMediator) {
+	public ClientGUI() {
 
 		super("Chat Client");
 		defaultPort = 1500;
@@ -123,19 +121,16 @@ public class ClientGUI extends JFrame implements ActionListener {
 		Object o = e.getSource();
 		// if it is the Logout button
 		if(o == logout) {
-			guiMediator.receiveMessageFromGUI("LOGOUT");
 			return;
 		}
 		// if it the who is in button
-		if(o == whoIsIn) {
-			guiMediator.receiveMessageFromGUI("WHOISIN");				
+		if(o == whoIsIn) {			
 			return;
 		}
 
 		// ok it is coming from the JTextField
 		if(connected) {
-			// just have to send the message
-			guiMediator.receiveMessageFromGUI("CHAT" + tf.getText());				
+			// just have to send the message				
 			tf.setText("");
 			return;
 		}
@@ -162,11 +157,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 			catch(Exception en) {
 				return;   // nothing I can do if port number is not valid
 			}
-
-                        guiMediator.receiveMessageFromGUI("PORT" + port);
-                        guiMediator.receiveMessageFromGUI("SERVER" + server);
-                        guiMediator.receiveMessageFromGUI("USERNAME" + username);
-                                                
+                                               
 			tf.setText("");
 			label.setText("Enter your message below");
 			connected = true;
