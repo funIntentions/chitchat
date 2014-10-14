@@ -598,5 +598,25 @@ public class Client  {
             }
         }
     }
+    
+    public int getUserRole()
+        {
+            return userRole;
+        }
+        
+        public int getUserID()
+        {
+            return userID;
+        }
+        
+        public String getUserName()
+        {
+            return username;
+        }
+        
+        public int getChatID()
+        {
+            return chatID;
+        }
 }
 
