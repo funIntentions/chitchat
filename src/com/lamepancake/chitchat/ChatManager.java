@@ -6,12 +6,12 @@
 package com.lamepancake.chitchat;
 
 import static com.lamepancake.chitchat.User.ADMIN;
-import com.lamepancake.chitchat.mediator.Event;
 import com.lamepancake.chitchat.packet.ChatListPacket;
 import com.lamepancake.chitchat.packet.GrantAccessPacket;
 import com.lamepancake.chitchat.packet.LeftPacket;
 import com.lamepancake.chitchat.packet.LoginPacket;
 import com.lamepancake.chitchat.packet.UpdateChatsPacket;
+import com.lamepancake.chitchat.packet.WhoIsInPacket;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -63,30 +63,7 @@ public class ChatManager
         this.chats = new HashMap<>();
         this.recycledChatIDs = new ArrayList<>();
     }
-    
-    public void HandleEvent(Event e)
-    {
-        int type = e.getType();
         
-        switch(type)
-        {
-            case Event.LOGIN:
-                break;
-            case Event.LOGOUT:
-                break;
-            case Event.MESSAGE:
-                break;
-            case Event.JOIN:
-                break;
-            case Event.LEAVE:
-                break;
-            case Event.GRANT:
-                break;
-            default:
-                System.out.println("Unknown event " + type);
-        }
-    }
-    
      /**
      * Updates a user from the list, cleans up its socket, and notifies other users.
      * 
@@ -117,6 +94,44 @@ public class ChatManager
             }
         }
 
+    }
+    
+    /**
+     * Creates a WhoIsInPacket and sends it to the requesting client.
+     * 
+     * @param clientKey The SelectionKey associated with this client.
+     * @param list      The user list to send (WhoIsInPacket.CONNECTED or WhoIsInPacket.WAITING).
+     */
+    private void sendUserLobbyList(Map<SelectionKey, User> lobby, SelectionKey clientKey, int list)
+    {
+        ArrayList<User>             userList;
+        Set<SelectionKey>           keys;
+        WhoIsInPacket               packet;
+        Map<SelectionKey, User>     userMap;
+        int                size = 4; // One extra int for the number of users
+                
+        userList = new ArrayList<>(lobby.size());
+        keys = lobby.keySet();
+        userMap = lobby;
+        
+        
+        for (SelectionKey key : keys)
+        {
+            User u = userMap.get(key);
+
+            // Add space for the user's name and three ints (name length, role, id)
+            size += u.getName().length() * 2;
+            size += 12;
+            
+            userList.add(u);
+        }
+        
+        packet = new WhoIsInPacket(userList, size, list, 1); // one is temp?
+        try {
+            ((SocketChannel)clientKey.channel()).write(packet.serialise());
+        } catch (IOException e) {
+            System.err.println("Server.sendUserList: Could not send list: " + e.getMessage());
+        }
     }
     
     
@@ -237,46 +252,7 @@ public class ChatManager
         //sendUserList(key, WhoIsInPacket.CONNECTED); Needed?
     }
     
-    /**
-     * Check user presence
-     * @param key
-     * @param userInfo 
-     */
-    private SelectionKey userCheck(SelectionKey key, GrantAccessPacket userInfo)
-    {
-        Set<SelectionKey>       userChannels;
-        int                     userID       = userInfo.getUserID();
-        SelectionKey            sel          = null;
         
-        /*if(userChannels.isEmpty()) // if the admin is trying to add users that dont exist
-        {
-            return;
-        }*/
-        
-        Chat chat = this.chats.get(userInfo.getChatID()); // the 1 is just temporary.
-        Map<SelectionKey, User> users = chat.getConnectedUsers();
-        
-        userChannels = users.keySet();
-        
-        for(SelectionKey curKey : userChannels)
-        {
-            User user = users.get(curKey);
-            
-            if (user.getID() == userID)
-            {
-                sel = curKey;
-                break;
-            }
-        }
-        
-        /*if (sel == null) // if the admin is trying to add users that dont exist
-        {
-            return;
-        }  */    
-        
-        return sel;
-    }
-    
     /**
      * Removes a user from the list, cleans up its socket, and notifies other users.
      * 
