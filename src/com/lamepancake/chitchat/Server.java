@@ -163,7 +163,7 @@ public class Server {
         else if(state == PacketBuffer.FINISHED)
         {
             Packet  received = packetBuf.getPacket();
-            
+
             /*int     type     = received.getType();
                       
             switch(type)

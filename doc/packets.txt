@@ -1,0 +1,24 @@
+Packets
+-------
+== Get Info ==
+Note: if an invalid chat ID is specified in WhoIsInPacket, the server will specify that there are 0 users in the list
+WhoIsInPacket (userID, chatID, optional list of users(userID, username, role, status flag); sends the requester a list of all users associated with the specified chat)
+ChatListPacket (userID, optional list of chats(chatID)
+
+== Access ==
+BootPacket (userID, deletes association between chat and user in database)
+ChangeRolePacket (user ID, chat ID, and role to be applied; updates the specified  user's role to the role contained in the packet)
+RequestAccessPacket (user ID, chat ID; requests access to the specified chat; user's role will be User.WAITING in the database)
+
+== Basics ==
+LoginPacket (sends username/password to server for validation, requires OperationSuccessPacket response)
+JoinLeavePacket (user ID, chat ID, and whether the user is joining or leaving; sent from a client to the server to indicate that they are joining/leaving a chat)
+MessagePacket (user ID, chat ID, and the message to send)
+
+== Notification ==
+UserNotifyPacket(user ID, chat ID, user role, flag indicating whether user joined, left or was promoted; sent to all other users when a user does one of the listed actions)
+ChatNotifyPacket(chat ID, chat name, flag indicating what changed; sent when the chat's status changes (e.g. name change))
+OperationSuccessPacket (flag indicating operation success/failure, operation type; used to indicate whether an operation that requires confirmation (e.g. logging in) succeeded)
+
+== CRUD ==
+ChatUpdatePacket (chatID, chat name, operation type; sent by a chat admin to update or delete their chat, or a client to create the chat, requires OperationSuccessPacket response)

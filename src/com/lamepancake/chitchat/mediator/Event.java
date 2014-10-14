@@ -12,10 +12,10 @@ package com.lamepancake.chitchat.mediator;
 public class Event {
     public static final int LOGIN = 0;
     public static final int LOGOUT = 1;
-    public static final int MESSAGE = 2;
-    public static final int JOIN = 3;
-    public static final int LEAVE = 4;
-    public static final int GRANT = 5;
+    public static final int MESSAGE = 1 << 1;
+    public static final int JOIN = 1 << 2;
+    public static final int LEAVE = 1 << 3;
+    public static final int GRANT = 1 << 4;
     public static final int CHATLIST = 6;
     public static final int WHOISIN = 7;
     public static final int WAITINGLIST = 8;
