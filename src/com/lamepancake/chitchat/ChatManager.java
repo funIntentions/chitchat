@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -7,8 +8,6 @@ package com.lamepancake.chitchat;
 
 import static com.lamepancake.chitchat.User.ADMIN;
 import com.lamepancake.chitchat.packet.ChatListPacket;
-import com.lamepancake.chitchat.packet.GrantAccessPacket;
-import com.lamepancake.chitchat.packet.LeftPacket;
 import com.lamepancake.chitchat.packet.LoginPacket;
 import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.UpdateChatsPacket;
@@ -55,7 +54,7 @@ public class ChatManager
     /**
      * The id for the next user.
      */
-    private int nextChatId = 0;
+    private int nextChatId = 0;    
     
     public ChatManager()
     {
@@ -98,10 +97,46 @@ public class ChatManager
                 System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
             }
         }
-
     }
     
-    
+        /**
+     * Creates a WhoIsInPacket and sends it to the requesting client.
+     * 
+     * @param clientKey The SelectionKey associated with this client.
+     * @param list      The user list to send (WhoIsInPacket.CONNECTED or WhoIsInPacket.WAITING).
+     */
+    private void sendUserLobbyList(Map<SelectionKey, User> lobby, SelectionKey clientKey, int list)
+    {
+        ArrayList<User>             userList;
+        Set<SelectionKey>           keys;
+        WhoIsInPacket               packet;
+        Map<SelectionKey, User>     userMap;
+        int                size = 4; // One extra int for the number of users
+                
+        userList = new ArrayList<>(lobby.size());
+        keys = lobby.keySet();
+        userMap = lobby;
+        
+        
+        for (SelectionKey key : keys)
+        {
+            User u = userMap.get(key);
+
+            // Add space for the user's name and three ints (name length, role, id)
+            size += u.getName().length() * 2;
+            size += 12;
+            
+            userList.add(u);
+        }
+        
+        packet = new WhoIsInPacket(userList, size, list, 1); // one is temp?
+        try {
+            ((SocketChannel)clientKey.channel()).write(packet.serialise());
+        } catch (IOException e) {
+            System.err.println("Server.sendUserList: Could not send list: " + e.getMessage());
+        }
+    }
+   
     private void createNewChat(SelectionKey key, UpdateChatsPacket chatInfo)
     {
         Chat newChat;
@@ -157,8 +192,7 @@ public class ChatManager
         }
         
         return ID;
-    }
-    
+    }   
     
     /**
      * Sets user role.
@@ -216,46 +250,6 @@ public class ChatManager
         
         // Send a list of connected clients immediately after being added to the chat.
         //sendUserList(key, WhoIsInPacket.CONNECTED); Needed?
-    }
-    
-    /**
-     * Check user presence
-     * @param key
-     * @param userInfo 
-     */
-    private SelectionKey userCheck(SelectionKey key, GrantAccessPacket userInfo)
-    {
-        Set<SelectionKey>       userChannels;
-        int                     userID       = userInfo.getUserID();
-        SelectionKey            sel          = null;
-        
-        /*if(userChannels.isEmpty()) // if the admin is trying to add users that dont exist
-        {
-            return;
-        }*/
-        
-        Chat chat = this.chats.get(userInfo.getChatID()); // the 1 is just temporary.
-        Map<SelectionKey, User> users = chat.getConnectedUsers();
-        
-        userChannels = users.keySet();
-        
-        for(SelectionKey curKey : userChannels)
-        {
-            User user = users.get(curKey);
-            
-            if (user.getID() == userID)
-            {
-                sel = curKey;
-                break;
-            }
-        }
-        
-        /*if (sel == null) // if the admin is trying to add users that dont exist
-        {
-            return;
-        }  */    
-        
-        return sel;
     }
     
     /**
@@ -344,5 +338,5 @@ public class ChatManager
             System.err.println("Server.sendChatList: Could not send list: " + e.getMessage());
         }
     }
-    
+       
 }

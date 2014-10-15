@@ -5,8 +5,7 @@
  */
 package com.lamepancake.chitchat;
 
-import com.lamepancake.chitchat.packet.JoinLeavePacket;
-import com.lamepancake.chitchat.packet.LoginPacket;
+import com.lamepancake.chitchat.packet.JoinedPacket;
 import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.WhoIsInPacket;
@@ -38,10 +37,6 @@ public class Chat
         this.chatID = id;
         this.users = new HashMap<>();
     }
-
-    public Chat(int chatID, String chatName) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
     
     public Map<SelectionKey, User> getConnectedUsers()
     {
@@ -63,9 +58,28 @@ public class Chat
         return chatID;
     }
     
-    public void update(Packet p)
+    /**
+     * Determine if a user is in this chat.
+     * @param userID the id of the user.
+     * @return true if the user is in the chat, false if they are not.
+     */
+    public boolean HasUser(int userID)
     {
-        int type = p.getType();
+        Set<SelectionKey>       userChannels;
+                
+        userChannels = users.keySet();
+        
+        for(SelectionKey curKey : userChannels)
+        {
+            User user = users.get(curKey);
+            
+            if (user.getID() == userID)
+            {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -104,10 +118,10 @@ public class Chat
      * @param key The key associated with the joining user.
      * @param u   A User object containing the user's information.
      */
-    private void announceJoin(SelectionKey key, User u, int chatID)
+    private void announceJoin(SelectionKey key, User u)
     {
         Set<SelectionKey> userChannels;
-        //JoinedPacket      join         = new JoinedPacket(u, chatID);
+        JoinedPacket      join         = new JoinedPacket(u, chatID);
         
         userChannels = users.keySet();
                
@@ -115,7 +129,7 @@ public class Chat
         if(userChannels.size() <= 1)
             return;
         
-        //broadcast(key, join, false, chatID);
+        broadcast(key, join, false, chatID);
     }
     
     /**
@@ -124,7 +138,7 @@ public class Chat
      * @param clientKey The SelectionKey associated with this client.
      * @param list      The user list to send (WhoIsInPacket.CONNECTED or WhoIsInPacket.WAITING).
      */
-    private void sendUserList(Map<SelectionKey, User> lobby, SelectionKey clientKey, int list)
+    private void sendUserList(SelectionKey clientKey)
     {
         ArrayList<User>             userList;
         Set<SelectionKey>           keys;
@@ -132,20 +146,9 @@ public class Chat
         Map<SelectionKey, User>     userMap;
         int                size = 4; // One extra int for the number of users
                 
-        if(list == WhoIsInPacket.CONNECTED)
-        {
-            userList = new ArrayList<>(users.size());
-            keys = users.keySet();
-            userMap = users;
-        }
-        else if(list == WhoIsInPacket.WAITING)
-        {
-            userList = new ArrayList<>(lobby.size());
-            keys = lobby.keySet();
-            userMap = lobby;
-        }
-        else
-            throw new IllegalArgumentException("list must be 0 (users) or 1 (pending users), was " + list);
+        userList = new ArrayList<>(users.size());
+        keys = users.keySet();
+        userMap = users;
         
         for (SelectionKey key : keys)
         {
@@ -158,7 +161,7 @@ public class Chat
             userList.add(u);
         }
         
-        packet = new WhoIsInPacket(userList, size, list, 1); // one is temp?
+        packet = new WhoIsInPacket(userList, size, WhoIsInPacket.CONNECTED, chatID);
         try {
             ((SocketChannel)clientKey.channel()).write(packet.serialise());
         } catch (IOException e) {
@@ -166,92 +169,54 @@ public class Chat
         }
     }
     
-    /**
-     * Adds a user to the chat.
-     * 
-     * @param key       The SelectionKey of the admin who added the user.
-     * @param userInfo  Contains the id of the user that's being added.
-     * @todo Send the admin's name to the user letting them know who added them.
-     */
-    private void addUserToChat(Map<SelectionKey, User> lobby, SelectionKey key, Packet userInfo)
-    {
-        Set<SelectionKey>       userChannels;
-        //int                     userID = userInfo.getUser().getID();
-        //SelectionKey            sel          = null;
-                
-        // Swap the user from the waiting list to the in chat list.
-        User waitingUser = lobby.get(key);
-        lobby.remove(key);
-                
-        users.put(key, waitingUser);
-        
-        // inform the user they are now in the chat.
-        try {
-            SocketChannel channel = (SocketChannel)key.channel();
-            channel.write(userInfo.serialise());              
-        } catch (IOException e) {
-            System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
-        }
-        
-        // Send a list of connected clients immediately after being added to the chat.
-        sendUserList(lobby, key, WhoIsInPacket.CONNECTED);
-        
-        //announceJoin(key, waitingUser, userInfo.getChatID()); /////////////////TEMPORARY
-    }
     
-    private void addUserToChat(Map<SelectionKey, User> lobby, SelectionKey key, LoginPacket userInfo)
+    
+    /**
+     * Adds a user to the chat so they receive messages.
+     * @param key The SelectionKey of the user.
+     * @param user The user being added.
+     */
+    private void subscribeUser(SelectionKey key, User user)
     {
-        Set<SelectionKey>       userChannels;
-        //int                     userID       = userInfo.getUserID();
-        //SelectionKey            sel          = null;
-                
-        // Swap the user from the waiting list to the in chat list.
-        User waitingUser = lobby.get(key);
-        lobby.remove(key);
-        
-        //waitingUser.setRole(userInfo.getUserRole());
-        
-        users.put(key, waitingUser);
-        
+        users.put(key, user);
         
         // inform the user they are now in the chat.
-        /*try {
-            SocketChannel channel = (SocketChannel)key.channel();
-            channel.write(userInfo.serialise());              
-        } catch (IOException e) {
-            System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
-        }*/
+//        try {
+//            SocketChannel channel = (SocketChannel)key.channel();
+//            channel.write(userInfo.serialise());              
+//        } catch (IOException e) {
+//            System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
+//        }
         
         // Send a list of connected clients immediately after being added to the chat.
-        sendUserList(lobby, key, WhoIsInPacket.CONNECTED);
+        sendUserList(key);
         
-        //announceJoin(key, waitingUser, userInfo.getChatID()); /////////////////TEMPORARY
+        announceJoin(key, user); /////////////////TEMPORARY
     }
     
     /**
-     * Updates a user that's already in the chat.
-     * 
-     * @param key The SelectionKey of the user being updated.
-     * @param userInfo The Packet that contains the updated info.
+     * Removes a user from the chat so they don't receive messages.
+     * @param key The SelectionKey of the user.
+     * @param user The user being added.
      */
-    private void updateUserInChat(Map<SelectionKey, User> lobby, SelectionKey key, JoinLeavePacket userInfo)
-    {        
-        User chattingUser = users.get(key);
+    private void unsubscribeUser(SelectionKey key, User user)
+    {
+        users.remove(key, user);
         
         // inform the user they are now in the chat.
-        /*try {
-            SocketChannel channel = (SocketChannel)key.channel();
-            channel.write(userInfo.serialise());              
-        } catch (IOException e) {
-            System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
-        }*/
+//        try {
+//            SocketChannel channel = (SocketChannel)key.channel();
+//            channel.write(userInfo.serialise());              
+//        } catch (IOException e) {
+//            System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
+//        }
         
         // Send a list of connected clients immediately after being added to the chat.
-        sendUserList(lobby, key, WhoIsInPacket.CONNECTED);
-        
-        //announceJoin(key, chattingUser, userInfo.getChatID()); //////TEMPORARY
+//        sendUserList(key);
+//        
+//        announceJoin(key, user); /////////////////TEMPORARY
     }
-    
+           
     /**
      * Broadcasts the passed in message to all connected users.
      * 
