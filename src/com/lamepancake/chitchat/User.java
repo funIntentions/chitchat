@@ -16,37 +16,14 @@ public class User {
     private int    id;
     
     /**
-     * Constructs a new user with the specified name, ID and role.
+     * Constructs an empty User.
      * 
-     * @param name   The user's name.
-     * @param userID The user's ID.
-     * @param role   The user's role.
+     * Note that you'll have to use the set methods (can be chained) to construct
+     * the object.
      */
-    public User(String name, int role, int userID)
-    {
-        this(name, null, role, userID);
-    }
-    
-    /**
-     * Constructs a user with the specified name, password and ID.
-     *
-     * @param name      The user's name.
-     * @param password  The user's password.
-     * @param userID    The user's ID within the chat.
-     */
-    public User(String name, String password, int userID)
-    {
-        this(name, password, UNSPEC, userID);
-    }
-    
-    public User(String name, String password, int role, int userID)
-    {
-        this.name       = name;
-        this.password   = password;
-        this.id         = userID;
-        this.role       = role;
-    }
-    
+    public User()
+    {}
+       
     /**
      * Returns the user's name.
      * 
@@ -67,16 +44,46 @@ public class User {
         return this.role;
     }
     
+    public User setName(String name)
+    {
+        this.name = name;
+        return this;
+    }
+    
     /**
      * 
      * @param newRole 
+     * @return
      */
-    public void setRole(int newRole)
+    public User setRole(int newRole)
     {
         if(newRole > USER)
                 throw new IllegalArgumentException("role must be -1 <= role <= 1, was " + role);
         
         this.role = newRole;
+        return this;
+    }
+    
+    /**
+     * Sets the user's password.
+     * @param password The new password to set.
+     * @return This User.
+     */
+    public User setPassword(String password)
+    {
+        this.password = password;
+        return this;
+    }
+    
+    /**
+     * Sets the user's ID.
+     * @param id The new ID to assign to the User.
+     * @return 
+     */
+    public User setID(int id)
+    {
+        this.id = id;
+        return this;
     }
     
     /**

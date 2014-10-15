@@ -103,7 +103,7 @@ public class WhoIsInPacket extends Packet {
                 role = data.getInt();
                 id = data.getInt();
 
-                users.add(new User(username, role, id));            
+                users.add(new User().setName(username).setRole(role).setID(id));            
             }
         }
     }

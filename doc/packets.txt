@@ -3,7 +3,7 @@ Packets
 == Get Info ==
 Note: if an invalid chat ID is specified in WhoIsInPacket, the server will specify that there are 0 users in the list
 WhoIsInPacket (userID, chatID, optional list of users(userID, username, role, status flag); sends the requester a list of all users associated with the specified chat)
-ChatListPacket (userID, optional list of chats(chatID)
+ChatListPacket (userID, optional list of chats(chatID, userRole; sends the requester a list of all chats and their role in each chat)
 
 == Access ==
 BootPacket (userID, deletes association between chat and user in database)
@@ -22,3 +22,4 @@ OperationSuccessPacket (flag indicating operation success/failure, operation typ
 
 == CRUD ==
 ChatUpdatePacket (chatID, chat name, operation type; sent by a chat admin to update or delete their chat, or a client to create the chat, requires OperationSuccessPacket response)
+

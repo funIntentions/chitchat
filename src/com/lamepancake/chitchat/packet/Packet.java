@@ -9,51 +9,60 @@ public abstract class Packet {
     /**
      * Login packet containing username and password.
      */
-    public static final int LOGIN    = 0;
-    
-    /**
-     * Logout packet indicating that the user wants to log out.
-     */
-    public static final int LOGOUT   = 1;
+    public static final int LOGIN = 0;
     
     /**
      * Contains chat data.
      */
-    public static final int MESSAGE  = 2;
+    public static final int MESSAGE = 1;
     
     /**
-     * Requests or sends a list of users in the chat.
+     * Specifies that the client wants to join or leave a particular chat.
      */
-    public static final int WHOISIN  = 3;
+    public static final int JOINLEAVE = 3;
     
     /**
-     * Sent to all connected clients when a new user joins the chat.
+     * Requests or sends list of users in a particular chat..
      */
-    public static final int JOINED   = 4;
+    public static final int WHOISIN = 4;
+  
+    /**
+     * Requests .
+     */
+    public static final int CHATLIST = 6;
     
     /**
-     * Sent to all connected clients when a new user leaves the chat.
+     * Sent by and admin to boot a user from the chat.
      */
-    public static final int LEFT     = 5;
+    public static final int BOOTPACKET = 7;
     
     /**
-     * Sent by an admin to grant a waiting user access to the chat.
+     * Sent by an admin to promote or demote a user within the chat.
      */
-    public static final int GRANTACCESS     = 6;
-    
-     /**
-     * Requests or sends a list of chats.
-     */
-    public static final int CHATLIST     = 7;
-        
-    /**
-     * Creates, deletes, or changes a chats data
-     */
-    public static final int CHATSUPDATE     = 8;
+    public static final int CHANGEROLE = 8;
     
     /**
-     * The offset from which the inheriting packet classes must interpret data in
-     * the buffer.
+     * Sent by a user to request access to a particular chat.
+     */
+    public static final int REQUESTACCESS = 9;
+
+    /**
+     * Sent by the chat to all its users to notify them that a user left, joined, was promoted, etc.
+     */
+    public static final int USERNOTIFY = 10;
+    
+    /**
+     * Sent by the chat to all its users to notify them that the chat state has changed (e.g., the chat was renamed).
+     */
+    public static final int CHATNOTIFY = 11;
+    
+    /**
+     * Sent by the server in response to certain events that require confirmation (e.g., logging in).
+     */
+    public static final int OPERATIONSTATUS = 12;
+    
+    /**
+     * The header size of a packet.
      */
     public static final int HEADER_SIZE = 8;
     

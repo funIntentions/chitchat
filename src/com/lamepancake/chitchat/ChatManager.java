@@ -211,8 +211,7 @@ public class ChatManager
         
         int role = loginInfo.getUsername().equalsIgnoreCase("Admin") ? ADMIN: User.UNSPEC;
         System.out.println(role);
-        newUser = new User(loginInfo.getUsername(), loginInfo.getPassword(), role, newId);
-        
+        newUser = new User().setName(loginInfo.getUsername()).setPassword(loginInfo.getPassword());        
         lobby.put(key, newUser);
         
         // Send a list of connected clients immediately after being added to the chat.
