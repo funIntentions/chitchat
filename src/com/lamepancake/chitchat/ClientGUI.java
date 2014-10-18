@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-
 /*
  * The Client with its GUI
  */
@@ -14,9 +13,10 @@ public class ClientGUI extends JFrame implements ActionListener {
 	// will first hold "Username:", later on "Enter message"
 	private JLabel label;
 	// to hold the Username and later on the messages
-	private JTextField tf;
+	private JTextField tfMessage;
+        private JTextField tf;
 	// to hold the server address an the port number
-	private JTextField tfServer, tfPort;
+	private JTextField tfServer, tfPort, tfUsername, tfPassword;
 	// to Logout and get the list of the users
 	private JButton login, logout, whoIsIn;
 	// for the chat room
@@ -27,66 +27,111 @@ public class ClientGUI extends JFrame implements ActionListener {
 	private int defaultPort;
 	private String defaultHost;
         
-
+        private JTabbedPane chats, lists;
+        
+        private JButton send;
+        
 	// Constructor connection receiving a socket number
 	public ClientGUI() {
 
 		super("Chat Client");
 		defaultPort = 1500;
 		defaultHost = "localhost";
-		
-		// The NorthPanel with:
-		JPanel northPanel = new JPanel(new GridLayout(3,1));
-		// the server name anmd the port number
-		JPanel serverAndPort = new JPanel(new GridLayout(1,5, 1, 3));
-		// the two JTextField with default value for server address and port number
-		tfServer = new JTextField(defaultHost);
-		tfPort = new JTextField("" + defaultPort);
-		tfPort.setHorizontalAlignment(SwingConstants.RIGHT);
-
-		serverAndPort.add(new JLabel("Server Address:  "));
-		serverAndPort.add(tfServer);
-		serverAndPort.add(new JLabel("Port Number:  "));
-		serverAndPort.add(tfPort);
-		serverAndPort.add(new JLabel(""));
-		// adds the Server an port field to the GUI
-		northPanel.add(serverAndPort);
-
-		// the Label and the TextField
-		label = new JLabel("Enter your username below", SwingConstants.CENTER);
-		northPanel.add(label);
-		tf = new JTextField("Anonymous");
-		tf.setBackground(Color.WHITE);
-		northPanel.add(tf);
-		add(northPanel, BorderLayout.NORTH);
-
-		// The CenterPanel which is the chat room
-		ta = new JTextArea("Welcome to the Chat room\n", 80, 80);
-		JPanel centerPanel = new JPanel(new GridLayout(1,1));
-		centerPanel.add(new JScrollPane(ta));
-		ta.setEditable(false);
-		add(centerPanel, BorderLayout.CENTER);
-
-		// the 3 buttons
-		login = new JButton("Login");
-		login.addActionListener(this);
-		logout = new JButton("Logout");
-		logout.addActionListener(this);
-		logout.setEnabled(false);		// you have to login before being able to logout
-		whoIsIn = new JButton("Who is in");
-		whoIsIn.addActionListener(this);
-		whoIsIn.setEnabled(false);		// you have to login before being able to Who is in
-
-		JPanel southPanel = new JPanel();
-		southPanel.add(login);
-		southPanel.add(logout);
-		southPanel.add(whoIsIn);
-		add(southPanel, BorderLayout.SOUTH);
-
-		setDefaultCloseOperation(EXIT_ON_CLOSE);
+                
+                tfServer = new JTextField(defaultHost);
+                tfUsername = new JTextField("Username");
+                tfPassword = new JTextField("Password");
+                login = new JButton("Login");
+                login.addActionListener(this);
+                JPanel loginPage = new JPanel(new GridLayout(7, 1));
+                loginPage.add(new JLabel("Username:  "));
+                loginPage.add(tfUsername);
+                loginPage.add(new JLabel("Password:  "));
+                loginPage.add(tfPassword);
+                loginPage.add(new JLabel("Server Address:  "));
+                loginPage.add(tfServer);
+                loginPage.add(login);
+		add(loginPage, BorderLayout.CENTER);
+                setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setSize(600, 600);
 		setVisible(true);
-		tf.requestFocus();
+		tfServer.requestFocus();
+                
+                chats = new JTabbedPane();
+                lists = new JTabbedPane();
+                
+                JPanel chatPanel = new JPanel(new GridLayout(3, 1));
+                chatPanel.add(chats);
+                tfMessage = new JTextField("");
+                chatPanel.add(tfMessage);
+                
+                send = new JButton("Send");
+                send.addActionListener(this);
+                chatPanel.add(send);
+                
+                JPanel userPanels = new JPanel(new GridLayout(10, 1));
+                JPanel chatPanels = new JPanel(new GridLayout(10, 1));
+                lists.addTab("Users", userPanels);
+                lists.addTab("Chats", chatPanels);
+//                add(chatPanel, BorderLayout.CENTER);
+//                add(lists, BorderLayout.EAST);
+//                setDefaultCloseOperation(EXIT_ON_CLOSE);
+//		setSize(600, 600);
+//		setVisible(true);
+		                
+                
+//		// The NorthPanel with:
+//		JPanel northPanel = new JPanel(new GridLayout(3,1));
+//		// the server name anmd the port number
+//		JPanel serverAndPort = new JPanel(new GridLayout(1,5, 1, 3));
+//		// the two JTextField with default value for server address and port number
+//		tfServer = new JTextField(defaultHost);
+//		tfPort = new JTextField("" + defaultPort);
+//		tfPort.setHorizontalAlignment(SwingConstants.RIGHT);
+//
+//		serverAndPort.add(new JLabel("Server Address:  "));
+//		serverAndPort.add(tfServer);
+//		serverAndPort.add(new JLabel("Port Number:  "));
+//		serverAndPort.add(tfPort);
+//		serverAndPort.add(new JLabel(""));
+//		// adds the Server an port field to the GUI
+//		northPanel.add(serverAndPort);
+//
+//		// the Label and the TextField
+//		label = new JLabel("Enter your username below", SwingConstants.CENTER);
+//		northPanel.add(label);
+//		tf = new JTextField("Anonymous");
+//		tf.setBackground(Color.WHITE);
+//		northPanel.add(tf);
+//		add(northPanel, BorderLayout.NORTH);
+//
+//		// The CenterPanel which is the chat room
+//		ta = new JTextArea("Welcome to the Chat room\n", 80, 80);
+//		JPanel centerPanel = new JPanel(new GridLayout(1,1));
+//		centerPanel.add(new JScrollPane(ta));
+//		ta.setEditable(false);
+//		add(centerPanel, BorderLayout.CENTER);
+//
+//		// the 3 buttons
+//		login = new JButton("Login");
+//		login.addActionListener(this);
+//		logout = new JButton("Logout");
+//		logout.addActionListener(this);
+//		logout.setEnabled(false);		// you have to login before being able to logout
+//		whoIsIn = new JButton("Who is in");
+//		whoIsIn.addActionListener(this);
+//		whoIsIn.setEnabled(false);		// you have to login before being able to Who is in
+//
+//		JPanel southPanel = new JPanel();
+//		southPanel.add(login);
+//		southPanel.add(logout);
+//		southPanel.add(whoIsIn);
+//		add(southPanel, BorderLayout.SOUTH);
+//
+//		setDefaultCloseOperation(EXIT_ON_CLOSE);
+//		setSize(600, 600);
+//		setVisible(true);
+//		tf.requestFocus();
 
 	}
 
@@ -121,16 +166,19 @@ public class ClientGUI extends JFrame implements ActionListener {
 		Object o = e.getSource();
 		// if it is the Logout button
 		if(o == logout) {
+			//guiMediator.receiveMessageFromGUI("LOGOUT");
 			return;
 		}
 		// if it the who is in button
-		if(o == whoIsIn) {			
+		if(o == whoIsIn) {
+			//guiMediator.receiveMessageFromGUI("WHOISIN");				
 			return;
 		}
 
 		// ok it is coming from the JTextField
 		if(connected) {
-			// just have to send the message				
+			// just have to send the message
+			//guiMediator.receiveMessageFromGUI("CHAT" + tf.getText());				
 			tf.setText("");
 			return;
 		}
@@ -157,7 +205,11 @@ public class ClientGUI extends JFrame implements ActionListener {
 			catch(Exception en) {
 				return;   // nothing I can do if port number is not valid
 			}
-                                               
+
+                        //guiMediator.receiveMessageFromGUI("PORT" + port);
+                        //guiMediator.receiveMessageFromGUI("SERVER" + server);
+                        //guiMediator.receiveMessageFromGUI("USERNAME" + username);
+                                                
 			tf.setText("");
 			label.setText("Enter your message below");
 			connected = true;
@@ -181,4 +233,3 @@ public class ClientGUI extends JFrame implements ActionListener {
             tf.setText(input);
         }
 }
-
