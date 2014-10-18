@@ -1,5 +1,7 @@
 package com.lamepancake.chitchat.packet;
 
+import java.nio.ByteBuffer;
+
 /**
  * Sent to all users in a chat to notify them of chat status changes.
  * 
@@ -13,6 +15,10 @@ public class ChatNotifyPacket extends Packet
 {
     public ChatNotifyPacket()
     {
+        super(CHATNOTIFY, 0);
+    }
+
+    public ChatNotifyPacket(ByteBuffer packetHeader, ByteBuffer packetData) {
         super(CHATNOTIFY, 0);
     }
 }

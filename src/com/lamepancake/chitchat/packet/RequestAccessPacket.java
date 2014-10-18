@@ -1,5 +1,7 @@
 package com.lamepancake.chitchat.packet;
 
+import java.nio.ByteBuffer;
+
 /**
  * Requests access to a given chat.
  * 
@@ -13,6 +15,10 @@ public class RequestAccessPacket extends Packet
 {
     public RequestAccessPacket()
     {
+        super(REQUESTACCESS, 0);
+    }
+
+    public RequestAccessPacket(ByteBuffer packetHeader, ByteBuffer packetData) {
         super(REQUESTACCESS, 0);
     }
 }

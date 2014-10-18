@@ -5,6 +5,8 @@
  */
 package com.lamepancake.chitchat.packet;
 
+import java.nio.ByteBuffer;
+
 /**
  * Sent by a user attempting to join or leave a chat.
  * 
@@ -25,6 +27,11 @@ public class JoinLeavePacket extends Packet
     public JoinLeavePacket()
     {
         super(0, 0);
+    }
+
+    public JoinLeavePacket(ByteBuffer packetHeader, ByteBuffer packetData) {
+        super(0, 0);
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
 }

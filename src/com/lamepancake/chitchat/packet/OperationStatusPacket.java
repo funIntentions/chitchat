@@ -5,6 +5,8 @@
  */
 package com.lamepancake.chitchat.packet;
 
+import java.nio.ByteBuffer;
+
 /**
  * Sent to indicate the success or failure of specific operation.
  * 
@@ -16,6 +18,10 @@ public class OperationStatusPacket extends Packet
 {
     public OperationStatusPacket()
     {
+        super(OPERATIONSTATUS, 0);
+    }
+
+    public OperationStatusPacket(ByteBuffer packetHeader, ByteBuffer packetData) {
         super(OPERATIONSTATUS, 0);
     }
 }

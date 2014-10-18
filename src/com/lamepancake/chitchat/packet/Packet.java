@@ -37,7 +37,7 @@ public abstract class Packet {
     /**
      * Sent by and admin to boot a user from the chat.
      */
-    public static final int BOOTPACKET = 7;
+    public static final int BOOT = 7;
     
     /**
      * Sent by an admin to promote or demote a user within the chat.

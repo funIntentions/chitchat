@@ -2,6 +2,7 @@ package com.lamepancake.chitchat.packet;
 
 import com.lamepancake.chitchat.Chat;
 import com.lamepancake.chitchat.User;
+import java.nio.ByteBuffer;
 
 /**
  * Changes a user's role within a chat.
@@ -30,6 +31,10 @@ public class ChangeRolePacket extends Packet {
      */
     public ChangeRolePacket(Chat chat, User user, int role)
     {
+        super(CHANGEROLE, 0);
+    }
+
+    public ChangeRolePacket(ByteBuffer packetHeader, ByteBuffer packetData) {
         super(CHANGEROLE, 0);
     }
     

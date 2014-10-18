@@ -178,8 +178,14 @@ public class PacketBuffer {
             case Packet.LOGIN:
                 this.packet = new LoginPacket(this.packetHeader, this.packetData);
                 break;
-            case Packet.LOGOUT:
-                this.packet = new LogoutPacket(this.packetHeader, this.packetData);
+            case Packet.BOOT:
+                this.packet = new BootPacket(this.packetHeader, this.packetData);
+                break;
+            case Packet.REQUESTACCESS:
+                this.packet = new RequestAccessPacket(this.packetHeader, this.packetData);
+                break;
+            case Packet.JOINLEAVE:
+                this.packet = new JoinLeavePacket(this.packetHeader, this.packetData);
                 break;
             case Packet.MESSAGE:
                 this.packet = new MessagePacket(this.packetHeader, this.packetData);
@@ -187,21 +193,25 @@ public class PacketBuffer {
             case Packet.WHOISIN:
                 this.packet = new WhoIsInPacket(this.packetHeader, this.packetData);
                 break;
-            case Packet.JOINED:
-                this.packet = new JoinedPacket(this.packetHeader, this.packetData);
-                break;
-            case Packet.LEFT:
-                this.packet = new LeftPacket(this.packetHeader, this.packetData);
-                break;
-            case Packet.GRANTACCESS:
-                this.packet = new GrantAccessPacket(this.packetHeader, this.packetData);
-                break;
             case Packet.CHATLIST:
                 this.packet = new ChatListPacket(this.packetHeader, this.packetData);
                 break;
-            case Packet.CHATSUPDATE:
+            case Packet.USERNOTIFY:
+                this.packet = new UserNotifyPacket(this.packetHeader, this,packetData);
+                break;    
+            case Packet.CHATNOTIFY:
+                this.packet = new ChatNotifyPacket(this.packetHeader, this.packetData);
+                break;
+            case Packet.CHANGEROLE:
+                this.packet = new ChangeRolePacket(this.packetHeader, this.packetData);
+                break;
+            case Packet.UPDATECHAT:
                 this.packet = new UpdateChatsPacket(this.packetHeader, this.packetData);
                 break;
+            case Packet.OPERATIONSTATUS:
+                this.packet = new OperationStatusPacket(this.packetHeader, this.packetData);
+                break;
+            
         }
     }
 }

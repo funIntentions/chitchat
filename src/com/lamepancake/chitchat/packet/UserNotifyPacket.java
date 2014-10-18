@@ -5,6 +5,8 @@
  */
 package com.lamepancake.chitchat.packet;
 
+import java.nio.ByteBuffer;
+
 /**
  * Sent to all users in a particular chat when another user's status is updated.
  * 
@@ -21,6 +23,10 @@ public class UserNotifyPacket extends Packet {
     
     public UserNotifyPacket()
     {
+        super(USERNOTIFY, 0);
+    }
+
+    public UserNotifyPacket(ByteBuffer packetHeader, PacketBuffer aThis, ByteBuffer packetData) {
         super(USERNOTIFY, 0);
     }
 }
