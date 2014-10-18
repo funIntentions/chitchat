@@ -2,7 +2,10 @@ package com.lamepancake.chitchat.packet;
 import java.nio.ByteBuffer;
 
 /**
- *
+ * The base class for all packets.
+ * 
+ * Contains the packet type and the length of the entire packet.
+ * 
  * @author shane
  */
 public abstract class Packet {
@@ -27,7 +30,7 @@ public abstract class Packet {
     public static final int WHOISIN = 4;
   
     /**
-     * Requests .
+     * Requests a list of chats and the user's role within them.
      */
     public static final int CHATLIST = 6;
     
@@ -62,6 +65,11 @@ public abstract class Packet {
     public static final int OPERATIONSTATUS = 12;
     
     /**
+     * Sent from a client to the server to perform CRUD operations on a chat.
+     */
+    public static final int UPDATECHAT= 13;
+    
+    /**
      * The header size of a packet.
      */
     public static final int HEADER_SIZE = 8;
@@ -86,6 +94,7 @@ public abstract class Packet {
         this.type   = header.getInt();
         this.length = header.getInt();
     }
+
     
     /**
      * Allocates a ByteBuffer and adds the packet type and length into it.

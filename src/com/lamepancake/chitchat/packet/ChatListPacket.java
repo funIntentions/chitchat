@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.lamepancake.chitchat.packet;
 
 import com.lamepancake.chitchat.Chat;
@@ -12,7 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * Sent to request or transmit a list of all available chats.
+ * 
+ * The server will send this packet to a user unsolicited upon logging in. After
+ * this, the user must explicitly request a chat list to receive updates on
+ * available chats.
+ * 
+ * The packet contains the list of all available chats upon login and the role
+ * that the user holds in each of them.
+ * 
  * @author tware
  */
 public class ChatListPacket extends Packet

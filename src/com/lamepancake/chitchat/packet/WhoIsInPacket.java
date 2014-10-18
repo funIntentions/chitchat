@@ -12,61 +12,67 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * Sent to request or transmit a list of all users in a given chat.
+ * 
+ * The WhoIsInPacket will be sent to a client upon joining a chat. It contains a
+ * list of all users, online or offline, who have access to the chat.
+ * 
+ * The user will send a packet with only the chat ID and their user ID to the
+ * server, and the server will construct a list of all users and their roles in
+ * the chat if the chat exists.
+ * 
+ * Unless it is explicitly requested later, the WhoIsInPacket will not be sent
+ * to the user after their initial join. All other updates in regards to users'
+ * statuses in the chat will be handled by the UserNotifyPacket. Note also that
+ * the server will send this packet unsolicited when the user joins, so clients
+ * must be prepared to handle this.
+ * 
  * @author shane
  */
 public class WhoIsInPacket extends Packet {
     
     /**
-     * See who is in the list of users connected to the chat.
-     */
-    public static final int CONNECTED = 0;
-        
-    /**
-     * See who is in the list of users waiting to be added to the chat.
-     */
-    public static final int WAITING = 1;
-    
-    /**
      * The list of users in the requested list.
      */
     private List<User> users;
-    
+        
     /**
-     * The list being requested or sent.
-     */
-    private final int whichList;
-    
-    /**
-     * Id of the chat that's being requested for information.
+     * ID of the chat that's being requested for information.
      */
     private final int chatID;
     
     /**
+     * ID of the user requesting or receiving the chat list.
+     */
+    private final int userID;
+    
+    /**
      * Construct a WhoIsInPacket to be sent to the server.
      * 
-     * @param whichList The list of users to see.
+     * @param chatID The ID of the chat from which to get the list of users.
+     * @param userID The user requesting the list.
      */
-    public WhoIsInPacket(int whichList, int id)
+    public WhoIsInPacket(int chatID, int userID)
     {
         // The 4 is already added in the other constructor, so don't repeat it here
-        this(null, 0, whichList, id);
+        this(null, 0, chatID, userID);
     }
     
     /**
      * Construct a WhoIsIn packet containing a list of users to be sent to
      * the requesting client.
      * 
-     * @param users     The list of currently connected users.
-     * @param length    The length, in bytes, of the data portion of the packet.
-     * @param whichList The list being requested.
+     * @param users  The list of all users for the specified chat.
+     * @param length The length, in bytes, of the data portion of the packet.
+     * @param chatID The ID of the chat containing the user list.
+     * @param userID The ID of the user requesting or receiving the list.
      */
-    public WhoIsInPacket(List<User> users, int length, int whichList, int id)
+    public WhoIsInPacket(List<User> users, int length, int chatID, int userID)
     {
         super(WHOISIN, length + 4);
         this.users = users;
-        this.whichList = whichList;
-        this.chatID = id;
+        this.chatID = chatID;
+        this.userID = userID;
     }
     
     /**
@@ -78,26 +84,24 @@ public class WhoIsInPacket extends Packet {
     public WhoIsInPacket(ByteBuffer header, ByteBuffer data)
     {
         super(header);
+        int listLen;
         
         this.chatID = data.getInt();
-        this.whichList = data.getInt();
+        this.userID = data.getInt();
         
-        // If the data capacity is only enough for whichList, then it doesn't
-        // contain any users
-        if(this.getLength() != HEADER_SIZE + 4)
+        listLen = data.getInt();
+        
+        if(listLen > 0)
         {
-            int numUsers = data.getInt();
-        
-            this.users = new ArrayList<>(numUsers);
+            this.users = new ArrayList<>(listLen);
 
-            for(int i = 0; i < numUsers; i++)
+            for(int i = 0; i < listLen; i++)
             {
                 int     nameLen  = data.getInt();
                 int     role;
                 int     id;
                 byte[]  rawName  = new byte[nameLen];
                 String  username;
-
                 data.get(rawName);
                 username = new String(rawName, StandardCharsets.UTF_16LE);
                 role = data.getInt();
@@ -118,22 +122,13 @@ public class WhoIsInPacket extends Packet {
         return this.users;
     }
     
-    /**
-     * Returns the type of list being requested/sent.
-     * 
-     * @return The type of list being requested/sent.
-     */
-    public int whichList()
-    {
-        return this.whichList;
-    }
     
     @Override
     public ByteBuffer serialise()
     {
         ByteBuffer buf = super.serialise();
         buf.putInt(this.chatID);
-        buf.putInt(this.whichList);
+        buf.putInt(this.userID);
 
         if(this.users == null)
         {
@@ -158,8 +153,21 @@ public class WhoIsInPacket extends Packet {
         return buf;
     }
     
+    /**
+     * Gets the chat ID for the list of users.
+     * @return The chat ID for the list of users.
+     */
     public int getChatID()
     {
         return this.chatID;
+    }
+    
+    /**
+     * Gets the user ID of the user requesting/receiving the list.
+     * @return The user ID of the user requesting/receiving the list.
+     */
+    public int getUserID()
+    {
+        return this.userID;
     }
 }

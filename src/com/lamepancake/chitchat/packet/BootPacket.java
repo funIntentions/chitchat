@@ -1,21 +1,90 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.lamepancake.chitchat.packet;
 
+import com.lamepancake.chitchat.Chat;
 import com.lamepancake.chitchat.User;
+import java.nio.ByteBuffer;
 
 /**
- *
+ * Boots a user from the given chat.
+ * 
+ * A chat admin can send this packet to completely boot a user from their chat.
+ * The database association between the user and the chat is removed such that
+ * the user must request access to the chat again if they wish to rejoin.
+ * 
+ * The client will not allow a user to send this packet if they are not an admin
+ * in the given chat. This could be easily circumvented with packet forging, but
+ * we decided not to handle that case as this is a demo program.
+ * 
  * @author shane
  */
 public class BootPacket extends Packet{
     
-    public BootPacket(User u)
+    private final int bootedID;
+    private final int chatID;
+    
+    /**
+     * Construct a new BootPacket to boot the specified user from the chat.
+     * 
+     * @param chat   The chat from which to boot the user.
+     * @param booted The user being booted from the chat.
+     */
+    public BootPacket(Chat chat, User booted)
     {
-        super(0, 0);
+        super(BOOTPACKET, HEADER_SIZE + 8);
+        this.chatID = chat.getID();
+        this.bootedID = booted.getID();
+    }
+     
+    /**
+     * Construct a new BootPacket to boot the specified user from the chat.
+     * 
+     * @param chatID   The ID of the chat from which to boot the user.
+     * @param bootedID The ID of the user being booted from the chat. 
+     */
+    public BootPacket(int chatID, int bootedID)
+    {
+        super(BOOTPACKET, HEADER_SIZE + 8);
+        this.chatID = chatID;
+        this.bootedID = bootedID;
     }
     
+    /**
+     * Reconstruct a BootPacket from data packed into a buffer.
+     * 
+     * @param header The header containing the packet type and length.
+     * @param data   The chatID and userID for the user being booted.
+     */
+    public BootPacket(ByteBuffer header, ByteBuffer data)
+    {
+        super(header);
+        this.chatID = data.getInt();
+        this.bootedID = data.getInt();
+    }
+    
+    @Override
+    public ByteBuffer serialise()
+    {
+        ByteBuffer buf = super.serialise();
+        buf.putInt(this.chatID);
+        buf.putInt(this.bootedID);
+        return buf;
+    }
+    
+    /**
+     * Gets the ID of the chat from which to boot the user.
+     * @return The ID of the chat from which to boot the user
+     */
+    public int getChatID()
+    {
+        return this.chatID;
+    }
+    
+    /**
+     * Gets the ID of the user being booted.
+     * @return The ID of user being booted.
+     */
+    public int getBootedID()
+    {
+        return this.bootedID;
+    }
 }

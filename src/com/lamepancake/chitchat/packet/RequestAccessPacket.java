@@ -1,14 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.lamepancake.chitchat.packet;
 
 /**
- *
+ * Requests access to a given chat.
+ * 
+ * Users send this packet to join a chat in which they do not yet have a role.
+ * If the user is already waiting to enter this chat, a JoinLeavePacket should
+ * be sent instead.
+ * 
  * @author shane
  */
-public class RequestAccessPacket {
-    
+public class RequestAccessPacket extends Packet
+{
+    public RequestAccessPacket()
+    {
+        super(REQUESTACCESS, 0);
+    }
 }

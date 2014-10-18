@@ -7,6 +7,9 @@ import java.nio.charset.StandardCharsets;
 /**
  * Contains a message to be sent to other users in the chat.
  * 
+ * Specifies the chat to which the message is to be sent and the user sending
+ * the message.
+ * 
  * @author shane
  */
 

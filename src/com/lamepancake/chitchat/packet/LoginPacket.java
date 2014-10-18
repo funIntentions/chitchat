@@ -9,7 +9,14 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 /**
- *
+ * Sent by a user attempting to log in.
+ * 
+ * Contains the username and password of the user trying to log in. Users cannot
+ * access any chat functions until they've logged in.
+ * 
+ * The server will always respond to this packet with an OperationStatusPacket
+ * to indicate whether the login succeeded or failed.
+ * 
  * @author shane
  */
 public class LoginPacket extends Packet {
