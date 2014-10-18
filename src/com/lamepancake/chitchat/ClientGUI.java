@@ -3,6 +3,7 @@ package com.lamepancake.chitchat;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.nio.channels.SocketChannel;
 
 /*
  * The Client with its GUI
@@ -23,22 +24,21 @@ public class ClientGUI extends JFrame implements ActionListener {
 	private JTextArea ta;
 	// if it is for connection
 	private boolean connected;
-	// the default port number
-	private int defaultPort;
-	private String defaultHost;
         
         private JTabbedPane chats, lists;
         
         private JButton send;
         
+        private SocketChannel socket;
+        
+        private Client client;
+        
 	// Constructor connection receiving a socket number
-	public ClientGUI() {
+	public ClientGUI(SocketChannel s) {
 
 		super("Chat Client");
-		defaultPort = 1500;
-		defaultHost = "localhost";
+                socket = s;
                 
-                tfServer = new JTextField(defaultHost);
                 tfUsername = new JTextField("Username");
                 tfPassword = new JTextField("Password");
                 login = new JButton("Login");
@@ -48,14 +48,14 @@ public class ClientGUI extends JFrame implements ActionListener {
                 loginPage.add(tfUsername);
                 loginPage.add(new JLabel("Password:  "));
                 loginPage.add(tfPassword);
-                loginPage.add(new JLabel("Server Address:  "));
-                loginPage.add(tfServer);
+//                loginPage.add(new JLabel("Server Address:  "));
+//                loginPage.add(tfServer);
                 loginPage.add(login);
 		add(loginPage, BorderLayout.CENTER);
                 setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setSize(600, 600);
 		setVisible(true);
-		tfServer.requestFocus();
+		//tfServer.requestFocus();
                 
                 chats = new JTabbedPane();
                 lists = new JTabbedPane();
@@ -149,8 +149,6 @@ public class ClientGUI extends JFrame implements ActionListener {
 		label.setText("Enter your username below");
 		tf.setText("Anonymous");
 		// reset port number and host name as a construction time
-		tfPort.setText("" + defaultPort);
-		tfServer.setText(defaultHost);
 		// let the user change them
 		tfServer.setEditable(false);
 		tfPort.setEditable(false);
@@ -186,44 +184,37 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 		if(o == login) {
 			// ok it is a connection request
-			String username = tf.getText().trim();
+			String username = tfUsername.getText().trim();
 			// empty username ignore it
 			if(username.length() == 0)
 				return;
-			// empty serverAddress ignore it
-			String server = tfServer.getText().trim();
-			if(server.length() == 0)
-				return;
-			// empty or invalid port numer, ignore it
-			String portNumber = tfPort.getText().trim();
-			if(portNumber.length() == 0)
-				return;
-			int port = 0;
-			try {
-				port = Integer.parseInt(portNumber);
-			}
-			catch(Exception en) {
-				return;   // nothing I can do if port number is not valid
-			}
+
+                        String password = tfPassword.getText().trim();
+                        if(password.length() == 0)
+                        {
+                            return;
+                        }
+                        
+                        client = new Client(username, password, socket);
 
                         //guiMediator.receiveMessageFromGUI("PORT" + port);
                         //guiMediator.receiveMessageFromGUI("SERVER" + server);
                         //guiMediator.receiveMessageFromGUI("USERNAME" + username);
-                                                
-			tf.setText("");
-			label.setText("Enter your message below");
-			connected = true;
-			
-			// disable login button
-			login.setEnabled(false);
-			// enable the 2 buttons
-			logout.setEnabled(true);
-			whoIsIn.setEnabled(true);
-			// disable the Server and Port JTextField
-			tfServer.setEditable(false);
-			tfPort.setEditable(false);
-			// Action listener for when the user enter a message
-			tf.addActionListener(this);
+//                                                
+//			tf.setText("");
+//			label.setText("Enter your message below");
+//			connected = true;
+//			
+//			// disable login button
+//			login.setEnabled(false);
+//			// enable the 2 buttons
+//			logout.setEnabled(true);
+//			whoIsIn.setEnabled(true);
+//			// disable the Server and Port JTextField
+//			tfServer.setEditable(false);
+//			tfPort.setEditable(false);
+//			// Action listener for when the user enter a message
+//			tf.addActionListener(this);
 		}
 
 	}
