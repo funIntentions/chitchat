@@ -34,10 +34,10 @@ public class Chat
      */
     private final Map<User, Boolean> users;
     
-    public Chat(String name, int id)
+    public Chat(String name)
     {
         this.chatName = name;
-        this.chatID = id;
+        this.chatID = -1;
         this.users = new HashMap<>();
     }
     
