@@ -19,17 +19,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.lamepancake.chitchat.DAO.*;
+import java.sql.SQLException;
+
 /**
  *
  * @author shane
  */
 public class ChatManager
 {
-     /**
-     * The id for the next user.
-     */
-    private int nextId = 0;
-    
     
     private final Map<SelectionKey, User> lobby;
     
@@ -51,15 +49,19 @@ public class ChatManager
     private List<Integer> recycledIDs;
     
     /**
-     * The id for the next user.
+     * Initiliases the chat manager and the DAO's.
+     * @param uname    The username for the chitchat database.
+     * @param password The password for the chitchat database.
+     * @throws SQLException If the database could not be initialised.
      */
-    private int nextChatId = 0;    
-    
-    public ChatManager()
+    public ChatManager(final String uname, final String password) throws SQLException
     {
+        UserDAOMySQLImpl.init(uname, password);
+        ChatDAOMySQLImpl.init(uname, password);
+        ChatRoleDAOMySQLImpl.init(uname, password);
+        
         this.lobby = new HashMap<>();
         this.chats = new HashMap<>();
-        this.recycledChatIDs = new ArrayList<>();
     }
     
     public void handlePacket(Packet p)
@@ -126,12 +128,10 @@ public class ChatManager
     {
         Chat newChat;
         
-        String name = chatInfo.getName();
-        int id = getUniqueChatID();
-        
+        String name = chatInfo.getName();        
         newChat = new Chat(name, id);
         
-        this.chats.put(id, newChat);
+        //this.chats.put(id, newChat);
     }
     
     private void updateChat(UpdateChatsPacket chatInfo)
@@ -145,72 +145,6 @@ public class ChatManager
         chat.setName(name);
     }
     
-    private int getUniqueChatID()
-    {
-        int ID;
-        
-        if (!recycledChatIDs.isEmpty())
-        {
-            ID = recycledChatIDs.get(0);
-            recycledChatIDs.remove(0);
-        }
-        else
-        {
-            ID = nextChatId++;
-        }
-        
-        return ID;
-    }
-    
-    private int getUniqueID()
-    {
-        int ID;
-        
-        if (!recycledIDs.isEmpty())
-        {
-            ID = recycledIDs.get(0);
-            recycledIDs.remove(0);
-        }
-        else
-        {
-            ID = nextId++;
-        }
-        
-        return ID;
-    }   
-    
-    /**
-     * Sets user role.
-     * @param key
-     * @param userInfo 
-     */
-    private void setUserRole(Map<SelectionKey, User> map, SelectionKey key, GrantAccessPacket userInfo)
-    {
-        User waitingUser = map.get(key);
-        waitingUser.setRole(userInfo.getUserRole());
-        
-        //announceJoin(key, waitingUser);
-    }
-    
-    /**
-     * Removes a user from the chat.
-     * 
-     * @param selected The selected user to remove.
-     * @param userInfo The packet being sent to them.
-     */
-    private void removeUserFromChat(SelectionKey selected, GrantAccessPacket userInfo)
-    {
-        // inform the user they have been booted from the chat.
-        try {
-            SocketChannel channel = (SocketChannel)selected.channel();
-            channel.write(userInfo.serialise());              
-        } catch (IOException e) {
-            System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
-        }
-        
-        remove(selected, userInfo.getChatID());
-    }
-    
     /**
      * Associates the new user with the selection key.
      * 
@@ -222,14 +156,35 @@ public class ChatManager
     private void login(SelectionKey key, LoginPacket loginInfo)
     {
         User newUser;
-        int newId = getUniqueID();
-                
-        // The client sent another login packet; ignore it.
+
         if(lobby.get(key) != null)
+        {
+            //OperationStatusPacket loginstatus
             return;
-        
-        int role = loginInfo.getUsername().equalsIgnoreCase("Admin") ? ADMIN: User.UNSPEC;
-        System.out.println(role);
+        }
+        // Check to make sure that the User isn't already logged in
+        // If they are
+        //      Send OperationStatusPacket with OP_LOGIN and 0
+        //
+        // Get user info from database
+        // If it exists
+        //      Check that the username/password match
+        //      If not, send OperationStatusPacket with OP_LOGIN and 0
+        //      Else
+        //          Set User object's socket to SelectionKey.channel();
+        //          Add User object to the map
+        //          Send OperationStatusPacket with OP_LOGIN, user's ID, and 1
+        // Else
+        //      Attempt to create a new User in the database with specified username and pw
+        //      If it succeeds
+        //          Set User object's socket to SelectionKey.channel();
+        //          Add User object to the map
+        //          Send OperationStatusPacket with OP_LOGIN, user's ID, and 1
+        //      Else
+        //          Send OperationStatusPacke with OP_LOGIN and 0
+        // 
+        //
+
         newUser = new User().setName(loginInfo.getUsername()).setPassword(loginInfo.getPassword());        
         lobby.put(key, newUser);
         
