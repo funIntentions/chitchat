@@ -48,6 +48,11 @@ public class Chat
         this.users = new HashMap<>();
     }
     
+    public void handlePacket(Packet packet)
+    {
+        
+    }
+    
     public void bootUser(BootPacket b)
     {
         PacketCreator.createUserNotify();

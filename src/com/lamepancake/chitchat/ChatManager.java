@@ -28,7 +28,10 @@ import java.util.Set;
 import com.lamepancake.chitchat.DAO.*;
 import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.OperationStatusPacket;
+import com.lamepancake.chitchat.packet.PacketCreator;
+import com.lamepancake.chitchat.packet.RequestAccessPacket;
 import java.sql.SQLException;
+import java.util.Iterator;
 
 /**
  *
@@ -65,71 +68,97 @@ public class ChatManager
     public void handlePacket(SelectionKey clientKey, Packet received)
     {
         int type = received.getType();
+        int chatID = -1;
         
         switch(type)
             {
                 case Packet.LOGIN:
                     login(clientKey, (LoginPacket)received);
                     break;
-                case Packet.MESSAGE:
-                    //sendMessage(clientKey, (MessagePacket)received);
-                    break;
-                case Packet.JOINLEAVE:
-                    //remove(clientKey, ((LogoutPacket)received).getChatID());
-                    //or
-                    //addUserToChat(clientKey, (JoinedPacket)received); 
-                    break;
-                case Packet.WHOISIN:
-                    //sendUserList(clientKey, ((WhoIsInPacket)received).whichList());
-                    break;
                 case Packet.CHATLIST:
-                    //sendChatList(clientKey);
+                    sendListOfChats(clientKey, (ChatListPacket)received);
                     break;
                 case Packet.UPDATECHAT:
                     chatCUD(clientKey, (UpdateChatsPacket)received);
                     break;
-                case Packet.CHANGEROLE:
-                    break;
+                case Packet.BOOT:
+                    chatID = ((BootPacket)received).getChatID();
+                    PassPacketToChat(chatID, received);
                 case Packet.REQUESTACCESS:
+                    chatID = ((RequestAccessPacket)received).getChatID();
+                    PassPacketToChat(chatID, received);
                     break;
-//                case Packet.GRANTACCESS:
-//                    Chat chat = this.chats.get(((GrantAccessPacket)received).getChatID()); 
-//                    Map<SelectionKey, User> users = chat.getConnectedUsers();
-//                    
-//                    User sender = users.get(clientKey);
-//                    if(sender != null && sender.getRole() == User.ADMIN)
-//                    {
-//                        SelectionKey selected = userCheck(clientKey, (GrantAccessPacket)received);
-//                        
-//                        if(selected != null)
-//                        {
-//                            User user = users.get(selected);
-//                            
-//                            if (((GrantAccessPacket)received).getUserRole() == User.UNSPEC)
-//                            {
-//                                removeUserFromChat(selected, (GrantAccessPacket)received);
-//                            }
-//                            else if (user == null)
-//                            {
-//                                setUserRole(users, selected, (GrantAccessPacket)received);
-//                                addUserToChat(selected, (GrantAccessPacket)received);
-//                            }
-//                            else
-//                            {
-//                                updateList(selected, ((GrantAccessPacket)received).getChatID());
-//                                
-//                                setUserRole(users, selected, (GrantAccessPacket)received);
-//                                updateUserInChat(selected, (GrantAccessPacket)received);
-//                            }
-//                        }
-//                        
-//                    }
-//                    else
-//                    {
-//                        System.err.println("Access requirement not met for this command.");
-//                    }
-//                    break;
+                case Packet.MESSAGE:
+                    chatID = ((MessagePacket)received).getChatID();
+                    PassPacketToChat(chatID, received);
+                    break;
+                case Packet.JOINLEAVE:
+                    chatID = ((JoinLeavePacket)received).getChatID();
+                    PassPacketToChat(chatID, received);
+                    break;
+                case Packet.WHOISIN:
+                    chatID = ((WhoIsInPacket)received).getChatID();
+                    PassPacketToChat(chatID, received);
+                    break;
+                case Packet.CHANGEROLE:
+                    chatID = ((ChangeRolePacket)received).getChatID();
+                    PassPacketToChat(chatID, received);
+                    break;
             }
+    }
+    
+    /**
+     * Sends a list of available chats to a connected client.
+     * @param clientKey
+     * @param inPacket 
+     */
+    private void sendListOfChats(SelectionKey clientKey, ChatListPacket inPacket)
+    {
+        ChatListPacket outPacket;
+        
+        User user = this.lobby.get(clientKey);
+        
+        List<Chat> chatList = new ArrayList<>();
+        
+        Iterator it = this.chats.entrySet().iterator();
+        
+        while (it.hasNext()) 
+        {
+            Map.Entry pairs = (Map.Entry)it.next();
+            chatList.add((Chat)pairs.getValue());
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+        
+        try 
+        {
+            Map<Integer, Integer> roles = ChatRoleDAOMySQLImpl.getInstance().getChats(user);
+
+            outPacket = PacketCreator.createChatList(chatList, roles, user.getID());
+             
+            try 
+            {
+                SocketChannel channel = (SocketChannel)clientKey.channel();
+                channel.write(outPacket.serialise());              
+            } catch (IOException e) {
+                System.err.println("ChatManager.sendListOfChats: Could not send message: " + e.getMessage());
+            }
+             
+        } catch (SQLException e) 
+        {
+            System.err.println("ChatManager.sendListOfChats: SQL exception thrown: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Simply passes a packet among for chat to process.
+     * @chatID the id of the chat to pass it to.
+     * @param received the packet to pass along.
+     */
+    private void PassPacketToChat(int chatID, Packet received)
+    {        
+        Chat chat = this.chats.get(chatID);
+        
+        chat.handlePacket(received);
     }
     
     /**
@@ -247,23 +276,6 @@ public class ChatManager
         {
             System.err.println("ChatManager.createChat: SQL exception thrown: " + e.getMessage());
         }
-    }
-    
-     /**
-     * Updates a user from the list, cleans up its socket, and notifies other users.
-     * 
-     * @param sel The selection key identifying the user.
-     */
-    private void updateList(SelectionKey sel, int chatID)
-    {
-//        Set<SelectionKey> userChannels;
-//        int id;
-//        
-//        Chat chat = this.chats.get(chatID); // the 1 is just temporary.
-//        Map<SelectionKey, User> users = chat.getConnectedUsers();
-//        
-//        userChannels = users.keySet();
-//        id           = users.get(sel).getID();
     }
     
         /**
