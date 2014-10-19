@@ -24,14 +24,63 @@ import java.nio.ByteBuffer;
  */
 public class JoinLeavePacket extends Packet
 {
-    public JoinLeavePacket()
+    private final int userID;
+    private final int chatID;
+    private final int flag;
+    
+    public JoinLeavePacket(int userid, int chatid, int flag)
     {
-        super(0, 0);
+        super(JOINLEAVE, 12);
+        this.userID = userid;
+        this.chatID = chatid;
+        this.flag = flag;
     }
 
-    public JoinLeavePacket(ByteBuffer packetHeader, ByteBuffer packetData) {
-        super(0, 0);
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public JoinLeavePacket(ByteBuffer packetHeader, ByteBuffer packetData) 
+    {
+        super(packetHeader);
+        this.userID = packetData.getInt();
+        this.chatID = packetData.getInt();
+        this.flag = packetData.getInt();
     }
     
+    @Override
+    public ByteBuffer serialise()
+    {
+        ByteBuffer buf = super.serialise();
+        buf.putInt(this.userID);
+        buf.putInt(this.chatID);
+        buf.putInt(this.flag);
+        
+        buf.rewind();
+        
+        return buf;
+    }
+    
+    /**
+     * Gets the user ID of the user who wants to join or leave.
+     * @return The user ID of the user who wants to join or leave.
+     */
+    public int getUserID()
+    {
+        return userID;
+    }
+    
+     /**
+     * Gets the chat ID of the chat they want access to.
+     * @return The chat ID of the chat they want access to.
+     */
+    public int getChatID()
+    {
+        return chatID;
+    }
+    
+     /**
+     * Gets the flag to say if they want to join or leave
+     * @return The flag to say if they want to join or leave
+     */
+    public int getFlag()
+    {
+        return chatID;
+    }
 }

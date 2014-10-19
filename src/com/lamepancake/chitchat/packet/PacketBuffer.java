@@ -197,7 +197,7 @@ public class PacketBuffer {
                 this.packet = new ChatListPacket(this.packetHeader, this.packetData);
                 break;
             case Packet.USERNOTIFY:
-                this.packet = new UserNotifyPacket(this.packetHeader, this,packetData);
+                this.packet = new UserNotifyPacket(this.packetHeader, this.packetData);
                 break;    
             case Packet.CHATNOTIFY:
                 this.packet = new ChatNotifyPacket(this.packetHeader, this.packetData);

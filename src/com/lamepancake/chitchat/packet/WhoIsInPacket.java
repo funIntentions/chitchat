@@ -69,7 +69,7 @@ public class WhoIsInPacket extends Packet {
      */
     public WhoIsInPacket(List<User> users, int length, int chatID, int userID)
     {
-        super(WHOISIN, length + 4);
+        super(WHOISIN, length + 12);
         this.users = users;
         this.chatID = chatID;
         this.userID = userID;

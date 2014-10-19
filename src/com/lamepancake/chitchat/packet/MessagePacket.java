@@ -17,7 +17,7 @@ public class MessagePacket extends Packet {
 
 	private final String message;
         private int          userID;
-        private int          chatID;
+        private final int    chatID;
 	
 	/**
          * Constructs a MessagePacket with the given message and userID.
