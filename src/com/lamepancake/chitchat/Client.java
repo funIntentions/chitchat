@@ -47,11 +47,8 @@ public class Client  {
      * This client's role in the chat.
      */
     private int userRole;
-    
-    /**
-     * A list of all users in the chat (including this client).
-     */
-    private List<User> users;
+      
+    private Map<Chat, Integer> chatList;
 
     /**
      * Whether the user is in chat or waiting for access.
@@ -88,7 +85,7 @@ public class Client  {
             this.password = password;
             this.userID = -1;
             this.isWaiting = true;
-            users = new ArrayList<>();
+            chatList = new HashMap<Chat, Integer>();
             connected = true;
             logout = false;
     }
@@ -134,37 +131,6 @@ public class Client  {
     }
 
     /**
-     * Allows the user to send messages and notifies them that they've been accepted.
-     */
-//    private void updateStatus(GrantAccessPacket packet)
-//    {
-//        int role = packet.getUserRole();
-//        
-//        userRole = role;
-//        switch(role)
-//        {
-//            case User.ADMIN:
-//            case User.USER:
-//            {
-//                if (isWaiting)
-//                {
-//                    System.out.println("Status Update : You've been added to the chat.");
-//                    isWaiting = false;
-//                }
-//               
-//                System.out.println("Status Update : An admin has updated your role to " + (role == User.ADMIN ? "Scrum Master." : "Developer."));
-//                userID = packet.getUserID();
-//                break;
-//            }
-//            case User.UNSPEC:
-//            {
-//                System.out.println("Status Update : An admin has booted you from the chat.");
-//                break;
-//            }
-//        }
-//    }
-
-    /**
      * Displays a message to the console or the GUI if present.
      */
     private void display(String msg) 
@@ -194,41 +160,41 @@ public class Client  {
         }
     }
     
-//    public void sendJoinLeave(int chatID, boolean joining)
-//    {
-//        sendPacket(new JoinLeavePacket(userID, chatID, joining));
-//    }
-//    
-//    public void sendLogin()
-//    {
-//        sendPacket(new LoginPacket(username, password));
-//    }
-//    
-//    public void sendRequestAccess(int chatID)
-//    {
-//        sendPacket(new RequestAccessPacket(userID, chatID));
-//    }
-//    
-//    public void sendBoot(int userid)
-//    {
-//        if(userRole == User.ADMIN)
-//        {
-//            sendPacket(new BootPacket(userid));
-//        }
-//    }
-//    
-//    public void sendChangeRole(int userid, int chatid, int role)
-//    {
-//        if(userRole == User.ADMIN)
-//        {
-//            sendPacket(new ChangeRolePacket(userid, chatid, role));
-//        }
-//    }
-//    
-//    public void sendMessage(int chatID, String msg)
-//    {
-//        sendPacket(new MessagePacket(userID, chatID, msg));
-//    }
+    public void sendJoinLeave(int chatID, int joining)
+    {
+        sendPacket(PacketCreator.createJoinLeave(userID, chatID, joining));
+    }
+    
+    public void sendLogin()
+    {
+        sendPacket(PacketCreator.createLogin(username, password));
+    }
+    
+    public void sendRequestAccess(int chatID)
+    {
+        sendPacket(PacketCreator.createRequestAccess(userID, chatID));
+    }
+    
+    public void sendBoot(Chat chat, User user)
+    {
+        if(userRole == User.ADMIN)
+        {
+            sendPacket(PacketCreator.createBoot(chat, user));
+        }
+    }
+    
+    public void sendChangeRole(int userid, int chatid, int role)
+    {
+        if(userRole == User.ADMIN)
+        {
+            sendPacket(PacketCreator.createChangeRole(userid, chatid, role));
+        }
+    }
+    
+    public void sendMessage(int chatID, String msg)
+    {
+        sendPacket(PacketCreator.createMessage(msg, userID, chatID));
+    }
     
     /**
      * Close socket, end listening thread, etc.
@@ -518,77 +484,77 @@ public class Client  {
         @Override
         public void run() 
         {
-//            int     type;
-//            Packet  p;
-//            
-//            while(connected)
-//            {
-//                // This should actually never happen since we're in blocking mode
-//                // But you never know
-//                if(this.packetBuf.read() != PacketBuffer.FINISHED)
-//                {
-//                    if(this.packetBuf.getState() == PacketBuffer.DISCONNECTED)
-//                    {
-//                        if(!logout)
-//                        {
-//                            display("Status Update : Disconnected from chat. Press Enter to continue.");
-//                            connected = false;
-//                        }
-//                        return;
-//                    }
-//                    else
-//                    {
-//                        continue;
-//                    }
-//                }
-//                
-//                p = this.packetBuf.getPacket();
-//                type = p.getType();
-//                        
-//                switch(type)
-//                {
-//                    case Packet.MESSAGE:
-//                        displayMessage((MessagePacket)p);
-//                        break;
-//                    case Packet.WHOISIN:
-//                        WhoIsInPacket userList = (WhoIsInPacket)p;
-//                        if(userList.whichList() == WhoIsInPacket.WAITING)
-//                        {
-//                            System.out.println("[WAITING USERS]");
-//                            List<User> waitingUsers = userList.getUsers();
-//                            for(User u : waitingUsers)
-//                            {
-//                                System.out.print('\t');
-//                                System.out.println("Name: " + u.getName() + "; ID: " + u.getID());
-//                            }
-//                            System.out.println("[END]");
-//                        }
-//                        else
-//                            users = userList.getUsers();
-//                        break;
-//                    case Packet.JOINED:
-//                        addUser((JoinedPacket)p);
-//                        break;
-//                    case Packet.LEFT:
-//                        removeUser((LeftPacket)p);
-//                        break;
-//                    case Packet.GRANTACCESS:
-//                        updateStatus((GrantAccessPacket)p);
-//                        break;
-//                    case Packet.CHATLIST:
-//                        ChatListPacket chatList = (ChatListPacket)p;
-//                        System.out.println("[OPEN CHATS]");
-//                        List<Chat> openChats = chatList.getChats();
-//                        for(Chat c : openChats)
-//                        {
-//                            System.out.print('\t');
-//                            System.out.println("Name: " + c.getName() + "; ID: " + c.getID());
-//                        }
-//                        System.out.println("[END]");
-//                        break;
-//                }
-//                this.packetBuf.clearState();
-//            }
+            int     type;
+            Packet  p;
+            
+            while(connected)
+            {
+                // This should actually never happen since we're in blocking mode
+                // But you never know
+                if(this.packetBuf.read() != PacketBuffer.FINISHED)
+                {
+                    if(this.packetBuf.getState() == PacketBuffer.DISCONNECTED)
+                    {
+                        if(!logout)
+                        {
+                            display("Status Update : Disconnected from chat. Press Enter to continue.");
+                            connected = false;
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                
+                p = this.packetBuf.getPacket();
+                type = p.getType();
+                        
+                switch(type)
+                {
+                    case Packet.MESSAGE:
+                        displayMessage((MessagePacket)p);
+                        break;
+                    case Packet.WHOISIN:
+                        WhoIsInPacket userList = (WhoIsInPacket)p;
+                        if(userList.whichList() == WhoIsInPacket.WAITING)
+                        {
+                            System.out.println("[WAITING USERS]");
+                            List<User> waitingUsers = userList.getUsers();
+                            for(User u : waitingUsers)
+                            {
+                                System.out.print('\t');
+                                System.out.println("Name: " + u.getName() + "; ID: " + u.getID());
+                            }
+                            System.out.println("[END]");
+                        }
+                        else
+                            users = userList.getUsers();
+                        break;
+                    case Packet.JOINED:
+                        addUser((JoinedPacket)p);
+                        break;
+                    case Packet.LEFT:
+                        removeUser((LeftPacket)p);
+                        break;
+                    case Packet.GRANTACCESS:
+                        updateStatus((GrantAccessPacket)p);
+                        break;
+                    case Packet.CHATLIST:
+                        ChatListPacket chatList = (ChatListPacket)p;
+                        System.out.println("[OPEN CHATS]");
+                        List<Chat> openChats = chatList.getChats();
+                        for(Chat c : openChats)
+                        {
+                            System.out.print('\t');
+                            System.out.println("Name: " + c.getName() + "; ID: " + c.getID());
+                        }
+                        System.out.println("[END]");
+                        break;
+                }
+                this.packetBuf.clearState();
+            }
         }
         
         /**
