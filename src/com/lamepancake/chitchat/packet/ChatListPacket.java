@@ -1,10 +1,12 @@
 package com.lamepancake.chitchat.packet;
 
 import com.lamepancake.chitchat.Chat;
+import com.lamepancake.chitchat.User;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Sent to request or transmit a list of all available chats.
@@ -21,6 +23,8 @@ import java.util.List;
 public class ChatListPacket extends Packet
 {
     private List<Chat> chats;
+    private Map<Integer, Integer> roles;
+    private Map<Chat, Integer> chatList;
     
     public ChatListPacket()
     {
@@ -29,8 +33,23 @@ public class ChatListPacket extends Packet
     
     public ChatListPacket(List<Chat> chats, int chatLength, Map<Integer, Integer> role, int roleLength)
     {
-        super(CHATLIST, length);
+        super(CHATLIST, chatLength);
         this.chats = chats;
+        this.roles = role;
+        
+        for(Chat c : chats)
+        {
+            Integer r = roles.get(c.getID());
+            if(r != null)
+            {
+                r = roles.get(c.getID());
+            }
+            else
+            {
+                r = User.UNSPEC;
+            }
+            chatList.put(c, r);
+        }
     }
     
     /**
@@ -46,20 +65,20 @@ public class ChatListPacket extends Packet
         {
             int numChats = data.getInt();
 
-            this.chats = new ArrayList<>(numChats);
-
             for(int i = 0; i < numChats; i++)
             {
                 int     nameLen  = data.getInt();
                 int     id;
+                int     role;
                 byte[]  rawName  = new byte[nameLen];
                 String  chatName;
 
                 data.get(rawName);
                 chatName = new String(rawName, StandardCharsets.UTF_16LE);
                 id = data.getInt();
+                role = data.getInt();
 
-                chats.add(new Chat(chatName, id));            
+                chatList.put(new Chat(chatName, id), role);            
             }
         }
     }
@@ -67,6 +86,11 @@ public class ChatListPacket extends Packet
     public List<Chat> getChats()
     {
         return this.chats;
+    }
+    
+    public Map<Integer, Integer> getRoles()
+    {
+        return this.roles;
     }
     
     @Override
@@ -80,7 +104,7 @@ public class ChatListPacket extends Packet
             return buf;
         }
         
-        // Structure is: {numUsers}[{nameLength}{name}{role}{id}]
+        // Structure is: {numChats}{chatName}{chatID}{userID}{role}
         buf.putInt(this.chats.size());
         for(Chat c : this.chats)
         {
@@ -89,8 +113,8 @@ public class ChatListPacket extends Packet
             buf.putInt(chatname.length() * 2);
             buf.put(chatname.getBytes(StandardCharsets.UTF_16LE));
             buf.putInt(c.getID());
+            buf.putInt(roles.get(c.getID()));
         }
-        
         buf.rewind();
         
         return buf;
