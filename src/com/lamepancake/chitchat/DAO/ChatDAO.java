@@ -8,6 +8,7 @@ package com.lamepancake.chitchat.DAO;
 import com.lamepancake.chitchat.Chat;
 import com.lamepancake.chitchat.User;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  *
@@ -33,27 +34,31 @@ public interface ChatDAO {
     Chat getByName(String name) throws SQLException;
     
     /**
+     * Gets a list of all chats.
+     * 
+     * @return The list of chats.
+     * @throws SQLException When a database error occurs.
+     */
+    List<Chat> getAllChats() throws SQLException;
+    
+    /**
      * Writes the chat's details to the database.
      * @param c The Chat to be saved.
      * @throws SQLException When a database error occurs.
      */
-    void save(Chat c)throws SQLException;
+    boolean create(Chat c)throws SQLException;
     
     /**
-     * Adds a user to this chat with the specified role.
-     * 
-     * If the user is already associated with this chat, update their role.
-     * @param u The user to be added/updated to the chat.
-     * @param role The role to grant the user.
+     * Writes the chat's details to the database.
+     * @param c The Chat to be saved.
      * @throws SQLException When a database error occurs.
      */
-    void addUser(User u, int role) throws SQLException;
+    void update(Chat c) throws SQLException;
     
     /**
-     * Dissociates a user from this chat.
-     * 
-     * @param u The user to be removed from this chat.
-     * @throws SQLException When a database error occurs.
+     * Deletes a chat from the database
+     * @param c
+     * @throws SQLException 
      */
-    void removeUser(User u) throws SQLException;
+    void delete(Chat c) throws SQLException;
 }

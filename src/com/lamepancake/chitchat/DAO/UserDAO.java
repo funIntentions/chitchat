@@ -5,7 +5,6 @@
  */
 package com.lamepancake.chitchat.DAO;
 
-import com.lamepancake.chitchat.Chat;
 import com.lamepancake.chitchat.User;
 import java.sql.SQLException;
 import java.util.List;
@@ -39,17 +38,20 @@ public interface UserDAO {
     User getByName(String name) throws SQLException;
     
     /**
-     * Gets a list of all chats which this user is a part of.
-     * @param u The User whose chats to retrieve.
-     * @return A list of chats associated with this user.
+     * Creates a new user with the specified info if they don't exist.
+     * 
+     * @param u The new user to create.
+     * @return False if a user with the same username exists.
      * @throws SQLException When a database error occurs.
      */
-    List<Chat> getUserChats(User u) throws SQLException;
+    boolean create(User u) throws SQLException;
     
     /**
-     * Commits a user's info to the database.
-     * @param u
-     * @throws SQLException 
+     * Updates a user's information.
+     * 
+     * @param u The user who needs to be updated.
+     * @return False if the user doesn't exist.
+     * @throws SQLException When a database error occurs.
      */
-    void save(User u) throws SQLException;
+    void update(User u) throws SQLException;
 }

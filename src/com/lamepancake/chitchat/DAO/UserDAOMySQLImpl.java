@@ -5,14 +5,9 @@
  */
 package com.lamepancake.chitchat.DAO;
 
-import com.lamepancake.chitchat.Chat;
 import com.lamepancake.chitchat.User;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,43 +15,53 @@ import java.util.List;
  *
  * @author shane
  */
-public class UserDAOMySQLImpl implements UserDAO {
+public class UserDAOMySQLImpl extends MySQLDAOBase implements UserDAO {
     
+    private static UserDAOMySQLImpl inst;
+            
     private final PreparedStatement userByIDStatement;
     private final PreparedStatement userByNameStatement;
-    private final PreparedStatement userChatsStatement;
-    
-    private final Connection con;
-    private       Statement  query;
-    private       ResultSet  queryResults;
-    
-    
-    public UserDAOMySQLImpl(final String username, final String password) throws SQLException
+    private final PreparedStatement createUser;
+    private final PreparedStatement updateUser;
+
+    public static void init(String username, String password) throws SQLException
     {
+        final String initTable = "CREATE TABLE IF NOT EXISTS `user` (" +
+                                 "  `userId` int(10) unsigned NOT NULL AUTO_INCREMENT," +
+                                 "  `username` varchar(30) NOT NULL," +
+                                 "  `password` varchar(40) NOT NULL," +
+                                 "  PRIMARY KEY (`userId`)" +
+                                 ") ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=latin1";
+        
+        if(inst != null)
+            throw new UnsupportedOperationException("The UserDAO has already been initialised.");
+
+        inst = new UserDAOMySQLImpl(username, password, initTable);
+    }
+    
+    public static UserDAOMySQLImpl getInstance() throws SQLException
+    {
+        if(inst == null)
+            init(DEFAULT_UNAME, DEFAULT_PASS);
+
+        return inst;
+    }
+    
+    private UserDAOMySQLImpl(final String username, final String password, final String initTable) throws SQLException
+    {
+        super(username, password, initTable);
+
         final String userByID = "SELECT * FROM `user` WHERE userId= ?";
         final String userByName = "SELECT * FROM `user` WHERE username= ?";
         final String userChats = "SELECT * FROM `chat` JOIN `chat_user` ON `chat`.`chatId`=`chat_user`.`chatId` AND `chat_user`.`userId` = ?";
-        
-        try {
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/chitchat", username, password);
-            con.setAutoCommit(false);
-        } catch(SQLException se) {
-            System.err.println("UserDAOMySQLImpl constructor: could not get database connnection: " + se.getMessage());
-            throw(se);
-        }
-       
-        try {
-            query = con.createStatement();
-            queryResults = query.executeQuery("USE chitchat");
-        } catch (SQLException se) {
-            System.err.println("UserDAOMySQLImpl constructor: could not use chitchat database.");
-            throw(se);
-        }
+        final String userCreate = "INSERT INTO `user`(`username`,`password`) VALUES(?, ?)";
+        final String userUpdate = "UPDATE `user` SET `password` = ? WHERE `userId` = ?";
         
         try {
             userByIDStatement = con.prepareStatement(userByID);
             userByNameStatement = con.prepareStatement(userByName);
-            userChatsStatement = con.prepareStatement(userChats);
+            createUser = con.prepareStatement(userCreate);
+            updateUser = con.prepareStatement(userUpdate);
         } catch(SQLException se) {
             System.err.println("UserDAOMySQLImpl constructor: could not prepare statements.");
             throw(se);
@@ -100,6 +105,9 @@ public class UserDAOMySQLImpl implements UserDAO {
         userByIDStatement.setInt(1, id);
         queryResults = userByIDStatement.executeQuery();
         
+        if(!queryResults.next())
+            return null;
+        
         userID = queryResults.getInt("userId");
         username = queryResults.getString("username");
         password = queryResults.getString("password");
@@ -131,34 +139,28 @@ public class UserDAOMySQLImpl implements UserDAO {
         u.setID(userID).setName(username).setPassword(password);
         return u;
     }
-    
+   
     @Override
-    public List<Chat> getUserChats(User u) throws SQLException
-    {
-        List<Chat> chatList;
-        int chatID;
-        String chatName;
+    public boolean create(User u) throws SQLException
+    {        
+        User temp = getByName(u.getName());
+        if(temp != null)
+            return false;
         
-        userChatsStatement.clearParameters();
-        userChatsStatement.setInt(1, u.getID());
-        queryResults = userChatsStatement.executeQuery();
+        createUser.clearParameters();
+        createUser.setString(1, u.getName());
+        createUser.setString(2, u.getPassword());
+        createUser.executeUpdate();
         
-        chatList = new ArrayList<>();
-        
-        while(queryResults.next())
-        {
-            chatID = queryResults.getInt("chatId");
-            chatName = queryResults.getString("name");
-            chatList.add(new Chat(chatName, chatID));
-        }
-        return chatList;
+        return true;
     }
     
     @Override
-    public void save(User u) throws SQLException
+    public void update(User u) throws SQLException
     {
-        // Check if the user already exists in the database
-        // If not, create a new user with the specified username and password
-        // If so, update any values they've requested to change
+        updateUser.clearParameters();
+        updateUser.setString(1, u.getPassword());
+        updateUser.setInt(2, u.getID());
+        updateUser.executeUpdate();
     }
 }

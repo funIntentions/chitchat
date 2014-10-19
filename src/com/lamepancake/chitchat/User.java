@@ -44,6 +44,26 @@ public class User {
         return this.role;
     }
     
+        
+    /**
+     * Gets the user's password, if set.
+     * 
+     * Note that the password will almost never be set on client-side user
+     * objects.
+     * 
+     * @return The password, if set.
+     */
+    public String getPassword()
+    {
+        return this.password;
+    }
+    
+    /**
+     * Sets the user's name.
+     * 
+     * @param name The new name for this user.
+     * @return This user.
+     */
     public User setName(String name)
     {
         this.name = name;

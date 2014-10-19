@@ -5,7 +5,6 @@
  */
 package com.lamepancake.chitchat;
 
-import com.lamepancake.chitchat.packet.JoinedPacket;
 import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.WhoIsInPacket;
@@ -121,7 +120,7 @@ public class Chat
     private void announceJoin(SelectionKey key, User u)
     {
         Set<SelectionKey> userChannels;
-        JoinedPacket      join         = new JoinedPacket(u, chatID);
+        //JoinedPacket      join         = new JoinedPacket(u, chatID);
         
         userChannels = users.keySet();
                
@@ -129,7 +128,7 @@ public class Chat
         if(userChannels.size() <= 1)
             return;
         
-        broadcast(key, join, false, chatID);
+        //broadcast(key, join, false, chatID);
     }
     
     /**
@@ -161,12 +160,12 @@ public class Chat
             userList.add(u);
         }
         
-        packet = new WhoIsInPacket(userList, size, WhoIsInPacket.CONNECTED, chatID);
-        try {
+        //packet = new WhoIsInPacket(userList, size, WhoIsInPacket.CONNECTED, chatID);
+        /*try {
             ((SocketChannel)clientKey.channel()).write(packet.serialise());
         } catch (IOException e) {
             System.err.println("Server.sendUserList: Could not send list: " + e.getMessage());
-        }
+        }*/
     }
     
     
@@ -201,7 +200,7 @@ public class Chat
      */
     private void unsubscribeUser(SelectionKey key, User user)
     {
-        users.remove(key, user);
+        //users.remove(key, user);
         
         // inform the user they are now in the chat.
 //        try {
