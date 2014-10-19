@@ -24,10 +24,10 @@ public class ChatListPacket extends Packet
     
     public ChatListPacket()
     {
-        this(null, 0);
+        this(null, 0, null, 0);
     }
     
-    public ChatListPacket(List<Chat> chats, int length)
+    public ChatListPacket(List<Chat> chats, int chatLength, Map<Integer, Integer> role, int roleLength)
     {
         super(CHATLIST, length);
         this.chats = chats;
