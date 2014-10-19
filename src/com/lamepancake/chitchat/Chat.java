@@ -5,7 +5,6 @@
  */
 package com.lamepancake.chitchat;
 
-import com.lamepancake.chitchat.packet.JoinedPacket;
 import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.WhoIsInPacket;
