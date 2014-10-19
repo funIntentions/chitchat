@@ -62,4 +62,12 @@ public interface ChatRoleDAO {
      * @throws SQLException When a database error occurs.
      */
     Map<Integer, Integer> getChats(User u) throws SQLException;
+    
+    /**
+     * Gets the role of the given user in the given chat.
+     * @param userID The ID of the user.
+     * @param chatID The ID of the chat.
+     * @return The role of the user in the given chat.
+     */
+    int getUserRoleInChat(int userID, int chatID) throws SQLException;
 }

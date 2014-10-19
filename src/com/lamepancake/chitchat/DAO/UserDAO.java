@@ -44,13 +44,12 @@ public interface UserDAO {
      * @return False if a user with the same username exists.
      * @throws SQLException When a database error occurs.
      */
-    boolean create(User u) throws SQLException;
+    int create(User u) throws SQLException;
     
     /**
      * Updates a user's information.
      * 
      * @param u The user who needs to be updated.
-     * @return False if the user doesn't exist.
      * @throws SQLException When a database error occurs.
      */
     void update(User u) throws SQLException;

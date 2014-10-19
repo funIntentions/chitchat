@@ -6,7 +6,6 @@
 package com.lamepancake.chitchat.DAO;
 
 import com.lamepancake.chitchat.Chat;
-import com.lamepancake.chitchat.User;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -44,9 +43,10 @@ public interface ChatDAO {
     /**
      * Writes the chat's details to the database.
      * @param c The Chat to be saved.
+     * @return The ID of the newly created chat.
      * @throws SQLException When a database error occurs.
      */
-    boolean create(Chat c)throws SQLException;
+    int create(Chat c)throws SQLException;
     
     /**
      * Writes the chat's details to the database.
@@ -57,7 +57,7 @@ public interface ChatDAO {
     
     /**
      * Deletes a chat from the database
-     * @param c
+     * @param c The chat to be deleted.
      * @throws SQLException 
      */
     void delete(Chat c) throws SQLException;

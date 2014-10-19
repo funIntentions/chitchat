@@ -141,18 +141,14 @@ public class UserDAOMySQLImpl extends MySQLDAOBase implements UserDAO {
     }
    
     @Override
-    public boolean create(User u) throws SQLException
-    {        
-        User temp = getByName(u.getName());
-        if(temp != null)
-            return false;
-        
+    public int create(User u) throws SQLException
+    {                
         createUser.clearParameters();
         createUser.setString(1, u.getName());
         createUser.setString(2, u.getPassword());
         createUser.executeUpdate();
-        
-        return true;
+        queryResults = query.executeQuery("SELECT MAX(`userId`) FROM `user`)");
+        return queryResults.getInt(0);
     }
     
     @Override

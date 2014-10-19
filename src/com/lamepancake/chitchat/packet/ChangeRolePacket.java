@@ -1,9 +1,6 @@
 package com.lamepancake.chitchat.packet;
 
-import com.lamepancake.chitchat.Chat;
-import com.lamepancake.chitchat.User;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Changes a user's role within a chat.
@@ -24,11 +21,11 @@ import java.nio.charset.StandardCharsets;
  */
 public class ChangeRolePacket extends Packet {
     
-    private int chatID;
+    private final int chatID;
     
-    private int userID;
+    private final int userID;
     
-    private int role;
+    private final int role;
     /**
      * The 
      * @param chat

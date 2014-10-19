@@ -26,7 +26,8 @@ public class ChatRoleDAOMySQLImpl extends MySQLDAOBase implements ChatRoleDAO {
     private final PreparedStatement userChatAssocStatement;
     private final PreparedStatement addChatUserStatement;
     private final PreparedStatement updateUserRoleStatement;
-    private final PreparedStatement deleteChatUserStatement;   
+    private final PreparedStatement deleteChatUserStatement;
+    private final PreparedStatement roleInChatStatement;
 
     private ChatRoleDAOMySQLImpl(String name, String password, final String initTable) throws SQLException
     {
@@ -36,7 +37,8 @@ public class ChatRoleDAOMySQLImpl extends MySQLDAOBase implements ChatRoleDAO {
         final String addUser = "INSERT INTO `chat_user` VALUES(?, ?, ?)";
         final String removeUser = "DELETE  FROM `chat_user` WHERE `userId`= ? AND `chatId`=?";
         final String updateUser = "UPDATE `chat_user` SET `role`=? WHERE `userId`=? AND `chatId`=?";
-        final String userChatAssoc = "SELECT `chatId`, `role` FROM `chat_user` WHERE `userId`=?";        
+        final String userChatAssoc = "SELECT `chatId`, `role` FROM `chat_user` WHERE `userId`=?";
+        final String roleInChat = "SELECT `role` FROM `chat_user` WHERE `userId`=? AND `chatId`=?";
         
         try {
             chatUsersStatement = con.prepareStatement(chatUsers);
@@ -44,6 +46,7 @@ public class ChatRoleDAOMySQLImpl extends MySQLDAOBase implements ChatRoleDAO {
             updateUserRoleStatement = con.prepareStatement(updateUser);
             deleteChatUserStatement = con.prepareStatement(removeUser);
             userChatAssocStatement = con.prepareStatement(userChatAssoc);
+            roleInChatStatement = con.prepareStatement(roleInChat);
             
         } catch(SQLException se) {
             System.err.println("ChatDAOMySQLImpl constructor: could not prepare statements.");
@@ -149,4 +152,19 @@ public class ChatRoleDAOMySQLImpl extends MySQLDAOBase implements ChatRoleDAO {
         }
         return userRoles;
     }
+    
+    @Override
+    public int getUserRoleInChat(int userID, int chatID) throws SQLException
+    {
+        int role = User.UNSPEC;
+        roleInChatStatement.clearParameters();
+        roleInChatStatement.setInt(1, userID);
+        roleInChatStatement.setInt(2, chatID);
+        queryResults = roleInChatStatement.executeQuery();
+        if(queryResults.next())
+            role = queryResults.getInt("role");
+        
+        return role;
+    }
+        
 }

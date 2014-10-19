@@ -76,26 +76,12 @@ public class ChatManager
     {
         Set<SelectionKey> userChannels;
         int id;
-        LeftPacket left;
         
         Chat chat = this.chats.get(chatID); // the 1 is just temporary.
         Map<SelectionKey, User> users = chat.getConnectedUsers();
         
         userChannels = users.keySet();
         id           = users.get(sel).getID();
-        
-        
-        left = new LeftPacket(id);
-
-        for(SelectionKey curKey : userChannels)
-        {
-            try {
-                SocketChannel channel = (SocketChannel)curKey.channel();
-                channel.write(left.serialise());              
-            } catch (IOException e) {
-                System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
-            }
-        }
     }
     
         /**
