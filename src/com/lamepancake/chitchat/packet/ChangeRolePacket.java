@@ -3,6 +3,7 @@ package com.lamepancake.chitchat.packet;
 import com.lamepancake.chitchat.Chat;
 import com.lamepancake.chitchat.User;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Changes a user's role within a chat.
@@ -19,24 +20,76 @@ import java.nio.ByteBuffer;
  * chat will also be updated. Note that users will receive this packet
  * regardless of whether they're subscribed to updates from that chat.
  * 
- * @author shane
+ * @author Tim
  */
 public class ChangeRolePacket extends Packet {
     
+    private int chatID;
+    
+    private int userID;
+    
+    private int role;
     /**
      * The 
      * @param chat
      * @param user
      * @param role 
      */
-    public ChangeRolePacket(Chat chat, User user, int role)
+    public ChangeRolePacket(int chat, int user, int role)
     {
-        super(CHANGEROLE, 0);
+        super(CHANGEROLE, 12);
+        this.chatID = chat;
+        this.userID = user;
+        this.role = role;
     }
 
-    public ChangeRolePacket(ByteBuffer packetHeader, ByteBuffer packetData) {
-        super(CHANGEROLE, 0);
+    public ChangeRolePacket(ByteBuffer packetHeader, ByteBuffer packetData) 
+    {
+        super(packetHeader);
+        
+        this.chatID = packetData.getInt();
+        this.userID = packetData.getInt();
+        this.role = packetData.getInt();
+        
     }
     
+    @Override
+    public ByteBuffer serialise()
+    {
+        ByteBuffer buf = super.serialise();
+        buf.putInt(this.chatID);
+        buf.putInt(this.userID);
+        buf.putInt(this.role);
+        
+        buf.rewind();
+        
+        return buf;
+    }
     
+    /**
+     * Gets the chat ID for the list of users.
+     * @return The chat ID for the list of users.
+     */
+    public int getChatID()
+    {
+        return this.chatID;
+    }
+    
+    /**
+     * Gets the user ID of the user requesting/receiving the list.
+     * @return The user ID of the user requesting/receiving the list.
+     */
+    public int getUserID()
+    {
+        return this.userID;
+    }
+    
+    /**
+     * Get user role for the intended user
+     * @return the user role
+     */
+    public int getRole()
+    {
+        return this.role;
+    }
 }

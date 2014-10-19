@@ -19,14 +19,91 @@ import java.nio.ByteBuffer;
  * chat for updates.
  * @author shane
  */
-public class UserNotifyPacket extends Packet {
+public class UserNotifyPacket extends Packet
+{
     
-    public UserNotifyPacket()
+    /**
+     * The id of the chat that this will be sent to.
+     */
+    private final int chatID;
+    /**
+     * The id of the user that has been changed.
+     */
+    private final int userID;
+    /**
+     * The role of the user.
+     */
+    private final int userRole;
+    /**
+     * Indicates whether the user joined(0), left(1), or promoted(2).
+     */
+    private final int flag;
+    
+    public UserNotifyPacket(int userid, int chatid, int role, int flag)
     {
-        super(USERNOTIFY, 0);
+        super(USERNOTIFY, 16);
+        this.userID = userid;
+        this.chatID = chatid;
+        this.userRole = role;
+        this.flag = flag;
     }
 
-    public UserNotifyPacket(ByteBuffer packetHeader, PacketBuffer aThis, ByteBuffer packetData) {
-        super(USERNOTIFY, 0);
+    public UserNotifyPacket(ByteBuffer packetHeader, ByteBuffer packetData)
+    {
+        super(packetHeader);
+        this.userID = packetData.getInt();
+        this.chatID = packetData.getInt();
+        this.userRole = packetData.getInt();
+        this.flag = packetData.getInt();
+    }
+    
+    @Override
+    public ByteBuffer serialise()
+    {
+        ByteBuffer buf = super.serialise();
+        buf.putInt(this.userID);
+        buf.putInt(this.chatID);
+        buf.putInt(this.userRole);
+        buf.putInt(this.flag);
+        
+        buf.rewind();
+        
+        return buf;
+    }
+    
+     /**
+     * Gets the user ID of the user who has been updated.
+     * @return The user ID of the user who has been updated.
+     */
+    public int getUserID()
+    {
+        return userID;
+    }
+    
+     /**
+     * Gets the chat ID of the chat that this packet is being sent to.
+     * @return The chat ID of the chat that this packet is being sent to.
+     */
+    public int getChatID()
+    {
+        return chatID;
+    }
+    
+     /**
+     * Gets the role of the user who has joined, left or promoted.
+     * @return The role of the user who has joined, left or promoted.
+     */
+    public int getUserRole()
+    {
+        return userRole;
+    }
+    
+    /**
+     * Gets the flag of the packet to determine if this is a join, left or promoted packet.
+     * @return The flag of the packet to determine if this is a join, left or promoted packet.
+     */
+    public int getFlag()
+    {
+        return flag;
     }
 }
