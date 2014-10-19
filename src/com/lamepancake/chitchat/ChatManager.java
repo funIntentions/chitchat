@@ -5,14 +5,20 @@
  */
 package com.lamepancake.chitchat;
 
+import com.lamepancake.chitchat.DAO.UserDAOMySQLImpl;
 import static com.lamepancake.chitchat.User.ADMIN;
+import com.lamepancake.chitchat.packet.BootPacket;
+import com.lamepancake.chitchat.packet.ChangeRolePacket;
 import com.lamepancake.chitchat.packet.ChatListPacket;
+import com.lamepancake.chitchat.packet.JoinLeavePacket;
 import com.lamepancake.chitchat.packet.LoginPacket;
 import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.UpdateChatsPacket;
+import com.lamepancake.chitchat.packet.WhoIsInPacket;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +26,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.lamepancake.chitchat.DAO.*;
+import com.lamepancake.chitchat.packet.MessagePacket;
+import com.lamepancake.chitchat.packet.OperationStatusPacket;
 import java.sql.SQLException;
 
 /**
@@ -64,11 +72,85 @@ public class ChatManager
         this.chats = new HashMap<>();
     }
     
-    public void handlePacket(Packet p)
+    public void handlePacket(SelectionKey clientKey, Packet received)
     {
-        int type = p.getType();
+        int type = received.getType();
+        
+        switch(type)
+            {
+                case Packet.LOGIN:
+                    login(clientKey, (LoginPacket)received);
+                    break;
+                case Packet.MESSAGE:
+                    //sendMessage(clientKey, (MessagePacket)received);
+                    break;
+                case Packet.JOINLEAVE:
+                    //remove(clientKey, ((LogoutPacket)received).getChatID());
+                    //or
+                    //addUserToChat(clientKey, (JoinedPacket)received); 
+                    break;
+                case Packet.WHOISIN:
+                    //sendUserList(clientKey, ((WhoIsInPacket)received).whichList());
+                    break;
+                case Packet.CHATLIST:
+                    sendChatList(clientKey);
+                    break;
+                case Packet.UPDATECHAT:
+//                    switch(((UpdateChatsPacket)received).getUpdate())
+//                    {
+//                        case UpdateChatsPacket.CREATE:
+//                            createNewChat(clientKey, (UpdateChatsPacket)received);
+//                            break;
+//                        case UpdateChatsPacket.REMOVE:
+//                            break;
+//                        case UpdateChatsPacket.UPDATE:
+//                            updateChat(clientKey, (UpdateChatsPacket)received);
+//                            break;
+//                    }
+                    break;
+                case Packet.CHANGEROLE:
+                    break;
+                case Packet.REQUESTACCESS:
+                    break;
+//                case Packet.GRANTACCESS:
+//                    Chat chat = this.chats.get(((GrantAccessPacket)received).getChatID()); 
+//                    Map<SelectionKey, User> users = chat.getConnectedUsers();
+//                    
+//                    User sender = users.get(clientKey);
+//                    if(sender != null && sender.getRole() == User.ADMIN)
+//                    {
+//                        SelectionKey selected = userCheck(clientKey, (GrantAccessPacket)received);
+//                        
+//                        if(selected != null)
+//                        {
+//                            User user = users.get(selected);
+//                            
+//                            if (((GrantAccessPacket)received).getUserRole() == User.UNSPEC)
+//                            {
+//                                removeUserFromChat(selected, (GrantAccessPacket)received);
+//                            }
+//                            else if (user == null)
+//                            {
+//                                setUserRole(users, selected, (GrantAccessPacket)received);
+//                                addUserToChat(selected, (GrantAccessPacket)received);
+//                            }
+//                            else
+//                            {
+//                                updateList(selected, ((GrantAccessPacket)received).getChatID());
+//                                
+//                                setUserRole(users, selected, (GrantAccessPacket)received);
+//                                updateUserInChat(selected, (GrantAccessPacket)received);
+//                            }
+//                        }
+//                        
+//                    }
+//                    else
+//                    {
+//                        System.err.println("Access requirement not met for this command.");
+//                    }
+//                    break;
+            }
     }
-    
      /**
      * Updates a user from the list, cleans up its socket, and notifies other users.
      * 
@@ -116,12 +198,12 @@ public class ChatManager
             userList.add(u);
         }
         
-        packet = new WhoIsInPacket(userList, size, list, 1); // one is temp?
-        try {
-            ((SocketChannel)clientKey.channel()).write(packet.serialise());
-        } catch (IOException e) {
-            System.err.println("Server.sendUserList: Could not send list: " + e.getMessage());
-        }
+//        packet = new WhoIsInPacket(userList, size, list, 1); // one is temp?
+//        try {
+//            ((SocketChannel)clientKey.channel()).write(packet.serialise());
+//        } catch (IOException e) {
+//            System.err.println("Server.sendUserList: Could not send list: " + e.getMessage());
+//        }
     }
    
     private void createNewChat(SelectionKey key, UpdateChatsPacket chatInfo)
@@ -129,7 +211,7 @@ public class ChatManager
         Chat newChat;
         
         String name = chatInfo.getName();        
-        newChat = new Chat(name, id);
+        //newChat = new Chat(name, id);
         
         //this.chats.put(id, newChat);
     }
@@ -144,52 +226,114 @@ public class ChatManager
         chat = chats.get(id);
         chat.setName(name);
     }
+        
+    /**
+     * Sets user role.
+     * @param key
+     * @param userInfo 
+     */
+    private void setUserRole(Map<SelectionKey, User> map, SelectionKey key, ChangeRolePacket userInfo)
+    {
+        User waitingUser = map.get(key);
+        waitingUser.setRole(userInfo.getRole());
+        
+        //announceJoin(key, waitingUser);
+    }
     
     /**
-     * Associates the new user with the selection key.
+     * Removes a user from the chat.
      * 
-     * @param key       The SelectionKey with which to associate the user.
-     * @param loginInfo The LoginPacket containing the user's information.
-     * @todo Add user validation (e.g. check for username/password in DB).
-     * @todo Remove user.UNSPEC role.
+     * @param selected The selected user to remove.
+     * @param userInfo The packet being sent to them.
      */
+    private void bootUserFromChat(SelectionKey selected, BootPacket userInfo)
+    {
+        // inform the user they have been booted from the chat.
+        try {
+            SocketChannel channel = (SocketChannel)selected.channel();
+            channel.write(userInfo.serialise());              
+        } catch (IOException e) {
+            System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
+        }
+        
+        remove(selected, userInfo.getChatID());
+    }
+    
+    /**
+     * Checks to see if a user exists, if so, they'll be logged in and if not they'll be created.
+     * 
+     * @param key The selection key that gets mapped to a user.
+     * @param loginInfo The info that defines a user.
+     */    
     private void login(SelectionKey key, LoginPacket loginInfo)
     {
-        User newUser;
-
-        if(lobby.get(key) != null)
-        {
-            //OperationStatusPacket loginstatus
-            return;
-        }
-        // Check to make sure that the User isn't already logged in
-        // If they are
-        //      Send OperationStatusPacket with OP_LOGIN and 0
-        //
-        // Get user info from database
-        // If it exists
-        //      Check that the username/password match
-        //      If not, send OperationStatusPacket with OP_LOGIN and 0
-        //      Else
-        //          Set User object's socket to SelectionKey.channel();
-        //          Add User object to the map
-        //          Send OperationStatusPacket with OP_LOGIN, user's ID, and 1
-        // Else
-        //      Attempt to create a new User in the database with specified username and pw
-        //      If it succeeds
-        //          Set User object's socket to SelectionKey.channel();
-        //          Add User object to the map
-        //          Send OperationStatusPacket with OP_LOGIN, user's ID, and 1
-        //      Else
-        //          Send OperationStatusPacke with OP_LOGIN and 0
-        // 
-        //
-
-        newUser = new User().setName(loginInfo.getUsername()).setPassword(loginInfo.getPassword());        
-        lobby.put(key, newUser);
         
-        // Send a list of connected clients immediately after being added to the chat.
-        //sendUserList(key, WhoIsInPacket.CONNECTED); Needed?
+        User user = null;
+        OperationStatusPacket operationStat;
+        
+        if(lobby.get(key) != null) // user does exist
+        {
+            try 
+            {
+                user = UserDAOMySQLImpl.getInstance().getByName(loginInfo.getUsername());
+                
+                if (user.getPassword().equalsIgnoreCase(loginInfo.getPassword())) // match passwords
+                {
+                    user.setSocket((SocketChannel)key.channel());
+                    lobby.put(key, user);
+                    
+                    operationStat = new OperationStatusPacket(user.getID(), OperationStatusPacket.OP_LOGIN, 1);
+                }
+                else
+                {
+                    operationStat = new OperationStatusPacket(0, OperationStatusPacket.OP_LOGIN, 0);
+                }
+                
+            } catch (SQLException e) 
+            {
+                System.err.println("ChatManager.login: SQL exception thrown: " + e.getMessage());
+                
+                operationStat = new OperationStatusPacket(0, OperationStatusPacket.OP_LOGIN, 0);
+            }
+        }
+        else // user doesn't exists
+        {
+            try 
+            {
+                user = new User().setName(loginInfo.getUsername()).setPassword(loginInfo.getPassword());
+                
+                UserDAOMySQLImpl.getInstance().create(user);
+                
+                user.setSocket((SocketChannel)key.channel());
+                
+                lobby.put(key, user);
+                    
+                operationStat = new OperationStatusPacket(user.getID(), OperationStatusPacket.OP_LOGIN, 1);
+                
+            } catch (SQLException e) 
+            {
+                System.err.println("ChatManager.login: SQL exception thrown: " + e.getMessage());
+                
+                operationStat = new OperationStatusPacket(0, OperationStatusPacket.OP_LOGIN, 0);
+            }
+        }
+        
+        try 
+        {
+            SocketChannel channel = (SocketChannel)key.channel();
+            channel.write(operationStat.serialise());              
+        } catch (IOException e) {
+            System.err.println("ChatManager.login: Could not send message: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Adds a selection key of a client to the map prior to login.
+     * @param key 
+     */
+    public void addClient(SelectionKey key)
+    {
+        lobby.put(key, null);
     }
     
     /**
@@ -201,7 +345,7 @@ public class ChatManager
     {
         Set<SelectionKey> userChannels;
         int id;
-        LeftPacket left;
+        JoinLeavePacket left;
         
         Chat chat = this.chats.get(chatID); // the 1 is just temporary.
         Map<SelectionKey, User> users = chat.getConnectedUsers();
@@ -219,7 +363,7 @@ public class ChatManager
             this.lobby.remove(sel);
         }
         
-        left = new LeftPacket(id);
+        left = new JoinLeavePacket(id, chatID, JoinLeavePacket.LEAVE);
         
         recycledIDs.add(id);
 

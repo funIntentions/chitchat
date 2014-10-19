@@ -27,6 +27,8 @@ public class JoinLeavePacket extends Packet
     private final int userID;
     private final int chatID;
     private final int flag;
+    public static final int JOIN = 0;
+    public static final int LEAVE = 1;
     
     public JoinLeavePacket(int userid, int chatid, int flag)
     {

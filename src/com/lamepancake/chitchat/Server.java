@@ -40,7 +40,12 @@ public class Server {
      */
     private boolean keepGoing;
     
-
+    /**
+     * Handles incoming packets.
+     */
+    private ChatManager chatManager;
+    
+    
     /**
      * Initialise the server's selector object and listening socket.
      *
@@ -141,6 +146,8 @@ public class Server {
 
         // Attach a buffer for reading the packets
         clientKey.attach(new PacketBuffer(newClient));
+        
+        chatManager.addClient(key);
     }
 
     /**
@@ -163,80 +170,9 @@ public class Server {
         else if(state == PacketBuffer.FINISHED)
         {
             Packet  received = packetBuf.getPacket();
-
-            /*int     type     = received.getType();
-                      
-            switch(type)
-            {
-                case Packet.LOGIN:
-                    login(clientKey, (LoginPacket)received);
-                    break;
-                case Packet.MESSAGE:
-                    sendMessage(clientKey, (MessagePacket)received);
-                    break;
-                case Packet.LOGOUT:
-                    remove(clientKey, ((LogoutPacket)received).getChatID());
-                    break;
-                case Packet.WHOISIN:
-                    sendUserList(clientKey, ((WhoIsInPacket)received).whichList());
-                    break;
-                case Packet.CHATLIST:
-                    sendChatList(clientKey);
-                    break;
-                case Packet.JOINED:
-                    addUserToChat(clientKey, (JoinedPacket)received); 
-                    break;
-                case Packet.CHATSUPDATE:
-                    switch(((UpdateChatsPacket)received).getUpdate())
-                    {
-                        case UpdateChatsPacket.CREATE:
-                            createNewChat(clientKey, (UpdateChatsPacket)received);
-                            break;
-                        case UpdateChatsPacket.REMOVE:
-                            break;
-                        case UpdateChatsPacket.UPDATE:
-                            updateChat(clientKey, (UpdateChatsPacket)received);
-                            break;
-                    }
-                    break;
-                case Packet.GRANTACCESS:
-                    Chat chat = this.chats.get(((GrantAccessPacket)received).getChatID()); 
-                    Map<SelectionKey, User> users = chat.getConnectedUsers();
-                    
-                    User sender = users.get(clientKey);
-                    if(sender != null && sender.getRole() == User.ADMIN)
-                    {
-                        SelectionKey selected = userCheck(clientKey, (GrantAccessPacket)received);
-                        
-                        if(selected != null)
-                        {
-                            User user = users.get(selected);
-                            
-                            if (((GrantAccessPacket)received).getUserRole() == User.UNSPEC)
-                            {
-                                removeUserFromChat(selected, (GrantAccessPacket)received);
-                            }
-                            else if (user == null)
-                            {
-                                setUserRole(users, selected, (GrantAccessPacket)received);
-                                addUserToChat(selected, (GrantAccessPacket)received);
-                            }
-                            else
-                            {
-                                updateList(selected, ((GrantAccessPacket)received).getChatID());
-                                
-                                setUserRole(users, selected, (GrantAccessPacket)received);
-                                updateUserInChat(selected, (GrantAccessPacket)received);
-                            }
-                        }
-                        
-                    }
-                    else
-                    {
-                        System.err.println("Access requirement not met for this command.");
-                    }
-                    break;
-            }*/
+            
+            chatManager.handlePacket(clientKey, received);
+            
             packetBuf.clearState();
         }
     }

@@ -1,5 +1,7 @@
 package com.lamepancake.chitchat;
 
+import java.nio.channels.SocketChannel;
+
 /**
  *
  * @author shane
@@ -14,6 +16,7 @@ public class User {
     private String password;
     private int    role;
     private int    id;
+    private SocketChannel socket;
     
     /**
      * Constructs an empty User.
@@ -114,6 +117,11 @@ public class User {
     public int getID()
     {
         return this.id;
+    }
+    
+    public void setSocket(SocketChannel s)
+    {
+        socket = s;
     }
     
     @Override
