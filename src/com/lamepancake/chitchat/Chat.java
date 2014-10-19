@@ -41,6 +41,13 @@ public class Chat
         this.users = new HashMap<>();
     }
     
+    public Chat(String name, int id)
+    {
+        this.chatName = name;
+        this.chatID = id;
+        this.users = new HashMap<>();
+    }
+    
     public void bootUser(BootPacket b)
     {
         PacketCreator.createUserNotify();
