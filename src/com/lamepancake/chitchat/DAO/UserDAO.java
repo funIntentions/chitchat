@@ -5,6 +5,7 @@
  */
 package com.lamepancake.chitchat.DAO;
 
+import com.lamepancake.chitchat.ServerUser;
 import com.lamepancake.chitchat.User;
 import java.sql.SQLException;
 import java.util.List;
@@ -19,7 +20,7 @@ public interface UserDAO {
      * @return The list of all users in the database.
      * @throws SQLException When a database error occurs.
      */
-    List<User> getAllUsers() throws SQLException;
+    List<ServerUser> getAllUsers() throws SQLException;
     
     /**
      * Gets a user by their ID.
@@ -27,7 +28,7 @@ public interface UserDAO {
      * @return The User with the specified by id, or null if they don't exist.
      * @throws SQLException When a database error occurs.
      */
-    User getByID(int id) throws SQLException;
+    ServerUser getByID(int id) throws SQLException;
     
     /**
      * Gets a user by their name.
@@ -35,7 +36,7 @@ public interface UserDAO {
      * @return The User with the specified name, or null if they don't exist.
      * @throws SQLException When a database error occurs.
      */
-    User getByName(String name) throws SQLException;
+    ServerUser getByName(String name) throws SQLException;
     
     /**
      * Creates a new user with the specified info if they don't exist.

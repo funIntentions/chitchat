@@ -3,10 +3,12 @@ package com.lamepancake.chitchat;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.nio.channels.SocketChannel;
+import java.lang.reflect.Method;
 
-/*
- * The Client with its GUI
+/**
+ * A Swing GUI for the Client.
+ * 
+ * @todo Ensure that all display methods run on the EDT (use reflection).
  */
 public class ClientGUI extends JFrame implements ActionListener {
 
@@ -29,8 +31,6 @@ public class ClientGUI extends JFrame implements ActionListener {
 
     private JButton send;
 
-    private SocketChannel socket;
-
     private Client client;
     
     private JOptionPane loginPage;
@@ -38,26 +38,22 @@ public class ClientGUI extends JFrame implements ActionListener {
     private JPanel chatPanel;
 
     // Constructor connection receiving a socket number
-    public ClientGUI(SocketChannel s) {
+    public ClientGUI(Client c) {
 
         super("Chat Client");
-        socket = s;
-
+        
+        client = c;
         
         tfUsername = new JTextField("Username");
         tfPassword = new JTextField("Password");
         Object[] options = {"Username: ", tfUsername, "Password: ", tfPassword};
         
+        c.start();
+        
         int option = JOptionPane.showConfirmDialog(null, options, "Login", JOptionPane.OK_CANCEL_OPTION);
         if(option == JOptionPane.OK_OPTION)
         {
-            if (tfUsername.getText().equals("h") && tfPassword.getText().equals("h")) {
-                System.out.println("Login successful");
-            } 
-            else 
-            {
-                System.out.println("login failed");
-            }
+            client.sendLogin(tfUsername.getText(), tfPassword.getText());
         } 
         else 
         {
@@ -108,9 +104,47 @@ public class ClientGUI extends JFrame implements ActionListener {
         ta.append(str);
         ta.setCaretPosition(ta.getText().length() - 1);
     }
-	// called by the GUI is the connection failed
-    // we reset our buttons, label, textfield
-
+    
+    /**
+     * Tells the GUI whether the login attempt c.failed or succeeded.
+     * 
+     * @param userID The user's ID if the login succeeded.
+     * @param valid Whether the login was valid.
+     */
+    public void loginValid(final int userID, final boolean valid)
+    {
+        if(SwingUtilities.isEventDispatchThread())
+        {
+            if(valid)
+            {
+                System.out.println("Hello! Login succeeded.");
+            }
+            else 
+            {
+                System.out.println("Failed :(");
+            }
+        }
+        else 
+        {
+            // Not on the GUI thread; make a runnable that invokes this later
+            SwingUtilities.invokeLater( new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Method m = ClientGUI.class.getMethod("loginValid", int.class, boolean.class);
+                        m.invoke(this, userID, valid);
+                    }
+                    catch( Exception e ) {
+                        throw new RuntimeException( e );
+                    }
+                }
+            });
+        }
+    }
+    
+    /**
+     * Resets the buttons on the GUI if the connection fails.
+     */
     void connectionFailed() {
         login.setEnabled(true);
         logout.setEnabled(false);
@@ -163,13 +197,13 @@ public class ClientGUI extends JFrame implements ActionListener {
                 return;
             }
 
-            //client = new Client(username, password, socket);
+            //client = new Client(this);
             
             this.remove(loginPage);
             this.add(chatPanel);
 
 
-                        //guiMediator.receiveMessageFromGUI("PORT" + port);
+            //guiMediator.receiveMessageFromGUI("PORT" + port);
             //guiMediator.receiveMessageFromGUI("SERVER" + server);
             //guiMediator.receiveMessageFromGUI("USERNAME" + username);
 //                                                
@@ -191,6 +225,72 @@ public class ClientGUI extends JFrame implements ActionListener {
 
     }
 
+    /**
+     * Displays the message and its sender.
+     * 
+     * @param message The message to display.
+     * @param username Name of the user who sent the message.
+     * @todo Display this in the correct chat tab (will need chat argument).
+     * @todo Deal with exceptions properly.
+     */
+    public void displayUserMessage(final String message, final String username)
+    {
+        if(SwingUtilities.isEventDispatchThread())
+        {
+            // Run the display code here
+        }
+        else 
+        {
+            // Not on the GUI thread; make a runnable that invokes this later
+            SwingUtilities.invokeLater( new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Method m = ClientGUI.class.getMethod("displayUserMessage", String.class, String.class);
+                        m.invoke(this, message, username);
+                    }
+                    catch( Exception e ) {
+                        throw new RuntimeException( e );
+                    }
+                }
+            });
+        }
+        // Probably going to end up putting append() code in here
+    }
+    
+    /**
+     * Displays a message from the Server.
+     * 
+     * If the thread code isn't on the EDT, run it later in a runnable.
+     * 
+     * @todo Deal with exceptions properly.
+     * @param message The message to display.
+     */
+    public void displayServerMessage(final String message)
+    {
+        // Display a message without a username, possibly as a popup
+        if(SwingUtilities.isEventDispatchThread())
+        {
+            // Run the display code here
+        }
+        else 
+        {
+            // Not on the GUI thread; make a runnable that invokes this later
+            SwingUtilities.invokeLater( new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Method m = ClientGUI.class.getMethod("displayServerMessage", String.class);
+                        m.invoke(this, message);
+                    }
+                    catch( Exception e ) {
+                        throw new RuntimeException( e );
+                    }
+                }
+            });
+        }
+    }
+    
     public void receiveFromMediator(String input) {
         tf.setText(input);
     }

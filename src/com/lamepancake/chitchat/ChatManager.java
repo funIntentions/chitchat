@@ -6,7 +6,6 @@
 package com.lamepancake.chitchat;
 
 import com.lamepancake.chitchat.DAO.UserDAOMySQLImpl;
-import static com.lamepancake.chitchat.User.ADMIN;
 import com.lamepancake.chitchat.packet.BootPacket;
 import com.lamepancake.chitchat.packet.ChangeRolePacket;
 import com.lamepancake.chitchat.packet.ChatListPacket;
@@ -18,7 +17,6 @@ import com.lamepancake.chitchat.packet.WhoIsInPacket;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +28,7 @@ import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.OperationStatusPacket;
 import com.lamepancake.chitchat.packet.PacketCreator;
 import com.lamepancake.chitchat.packet.RequestAccessPacket;
+import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.util.Iterator;
 
@@ -357,7 +356,7 @@ public class ChatManager
     private void login(SelectionKey key, LoginPacket loginInfo)
     {
         
-        User user = null;
+        ServerUser user;
         OperationStatusPacket operationStat;
         
         if(lobby.get(key) != null) // user does exist
@@ -366,23 +365,27 @@ public class ChatManager
             {
                 user = UserDAOMySQLImpl.getInstance().getByName(loginInfo.getUsername());
                 
-                if (user.getPassword().equalsIgnoreCase(loginInfo.getPassword())) // match passwords
+                if (user.getPassword().equals(loginInfo.getPassword())) // match passwords
                 {
                     user.setSocket((SocketChannel)key.channel());
                     lobby.put(key, user);
-                    
-                    operationStat = new OperationStatusPacket(user.getID(), OperationStatusPacket.OP_LOGIN, 1);
+                    operationStat = new OperationStatusPacket(user.getID(), 
+                                                              OperationStatusPacket.SUCCESS,
+                                                              OperationStatusPacket.OP_LOGIN);
                 }
                 else
                 {
-                    operationStat = new OperationStatusPacket(0, OperationStatusPacket.OP_LOGIN, 0);
+                    operationStat = new OperationStatusPacket(0,
+                                                              OperationStatusPacket.FAIL,
+                                                              OperationStatusPacket.OP_LOGIN);
                 }
                 
             } catch (SQLException e) 
             {
                 System.err.println("ChatManager.login: SQL exception thrown: " + e.getMessage());
-                
-                operationStat = new OperationStatusPacket(0, OperationStatusPacket.OP_LOGIN, 0);
+                operationStat = new OperationStatusPacket(0,
+                                                          OperationStatusPacket.FAIL,
+                                                          OperationStatusPacket.OP_LOGIN);
             }
         }
         else // user doesn't exists
@@ -390,23 +393,23 @@ public class ChatManager
             try 
             { 
                 user = createUser(key, loginInfo);
-                
                 UserDAOMySQLImpl.getInstance().create(user);
+                operationStat = new OperationStatusPacket(user.getID(),
+                                                          OperationStatusPacket.SUCCESS,
+                                                          OperationStatusPacket.OP_LOGIN);
                 
-                operationStat = new OperationStatusPacket(user.getID(), OperationStatusPacket.OP_LOGIN, 1);
-                
-            } catch (SQLException e) 
-            {
+            } catch (SQLException e) {
                 System.err.println("ChatManager.login: SQL exception thrown: " + e.getMessage());
-                
-                operationStat = new OperationStatusPacket(0, OperationStatusPacket.OP_LOGIN, 0);
+                operationStat = new OperationStatusPacket(0, 
+                                                          OperationStatusPacket.FAIL,
+                                                          OperationStatusPacket.OP_LOGIN);
             }
         }
         
         try 
         {
             SocketChannel channel = (SocketChannel)key.channel();
-            channel.write(operationStat.serialise());              
+            channel.write(operationStat.serialise()); 
         } catch (IOException e) {
             System.err.println("ChatManager.login: Could not send message: " + e.getMessage());
         }
@@ -418,9 +421,10 @@ public class ChatManager
      * @param loginInfo The login info used to create the new user.
      * @return the newly created User.
      */
-    private User createUser(SelectionKey key, LoginPacket loginInfo)
+    private ServerUser createUser(SelectionKey key, LoginPacket loginInfo)
     {
-        User user = new User().setName(loginInfo.getUsername()).setPassword(loginInfo.getPassword());
+        ServerUser user = new ServerUser();
+        user.setName(loginInfo.getUsername()).setPassword(loginInfo.getPassword());
         
         user.setSocket((SocketChannel)key.channel());
         

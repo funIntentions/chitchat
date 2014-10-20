@@ -9,6 +9,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.ServerSocketChannel;
+import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -50,12 +51,13 @@ public class Server {
      * Initialise the server's selector object and listening socket.
      *
      * @param port The port on which to listen for connections.
+     * @param man  The ChatManager for this Server.
      * @throws IOException When the server couldn't be initialised.
      */
-    public Server(int port) throws IOException {
+    public Server(int port, final ChatManager man) throws IOException {
 
         this.listenPort = port;
-
+        this.chatManager = man;
         try
         {
             ServerSocketChannel listenChannel;
@@ -163,6 +165,8 @@ public class Server {
         // Remove the user if they've disconnected
         if(state == PacketBuffer.DISCONNECTED)
         {
+            // chatManager.handlePacket(clientKey, null);
+            // unregister the key and close the connection
             //remove(clientKey);TEMPORARY
         }
 
@@ -170,9 +174,7 @@ public class Server {
         else if(state == PacketBuffer.FINISHED)
         {
             Packet  received = packetBuf.getPacket();
-            
             chatManager.handlePacket(clientKey, received);
-            
             packetBuf.clearState();
         }
     }
@@ -184,9 +186,13 @@ public class Server {
      * > java Server portNumber
      * If the port number is not specified 1500 is used
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, SQLException {
         // start server on port 1500 unless a PortNumber is specified 
         int portNumber = 1500;
+        ChatManager man;
+        
+        man = new ChatManager("chatter", "chitchat");
+
         switch (args.length) {
             case 1:
                 try {
@@ -204,7 +210,7 @@ public class Server {
 
         }
         // create a server object and start it
-        Server server = new Server(portNumber);
+        Server server = new Server(portNumber, man);
         server.start();
     }
 }

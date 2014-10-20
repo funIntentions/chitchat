@@ -6,6 +6,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.*;
+import javax.swing.SwingWorker;
 
 /**
  * Transmits chat and other messages to the server.
@@ -16,7 +17,7 @@ import java.util.*;
  * Loosely based upon the work of Paul-Benoit Larochelle (see link below).
  * @see http://www.dreamincode.net/forums/topic/259777-a-simple-chat-program-with-clientserver-gui-optional/
  */
-public class Client  {
+public class Client {
 
     /**
      * The socket over which the client sends and receives data.
@@ -66,7 +67,17 @@ public class Client  {
     private volatile boolean logout;
     
     private int chatID;
-        
+    
+    private ClientGUI gui;
+    
+    /**
+     * An operation for which we're awaiting confirmation.
+     * 
+     * This could be OP_LOGIN, OP_CRUD, OP_REQACCESS. No other operations
+     * requiring confirmation may be issued while waiting for an operation.
+     */
+    private final Map<Integer, Packet> waitingOp = new HashMap<>(1);
+
     /**
      * Constructs a new Client with the given server information and authentication
      * details.
@@ -85,11 +96,23 @@ public class Client  {
             this.password = password;
             this.userID = -1;
             this.isWaiting = true;
+
             chatList = new HashMap<Chat, Integer>();
             connected = true;
             logout = false;
     }
 
+    /**
+     * Sets the GUI for this Client.
+     * 
+     * This method must be called for the client to functino properly.
+     * @param gui The ClientGUI for this Client to use.
+     */
+    private void setGUI(ClientGUI gui)
+    {
+        this.gui = gui;
+    }
+    
     /**
      * Attempts to connect to the server and begins listening for user input.
      * 
@@ -104,19 +127,7 @@ public class Client  {
         display(msg);
 
         // creates the Thread to listen from the server 
-        new ListenFromServer().start();
-
-        try
-        {
-            ByteBuffer login = new LoginPacket(this.username, this.password).serialise();
-            socket.write(login);
-        } 
-        catch (IOException e) 
-        {
-            display("Failure while sending login packet: " + e.getMessage());
-            return false;
-        }
-
+        new ListenFromServer().execute();
         return true;
     }
     
@@ -160,26 +171,52 @@ public class Client  {
         }
     }
     
+    /**
+     * Tells the server that the user is joining or leaving a chat.
+     * 
+     * @param chatID  The chat to join or leave.
+     * @param joining Whether the user is joining or leaving.
+     */
     public void sendJoinLeave(int chatID, int joining)
     {
         sendPacket(PacketCreator.createJoinLeave(userID, chatID, joining));
     }
     
-    public void sendLogin()
+    /**
+     * Attempts to login with the given credentials.
+     * 
+     * @param uname The username to use for logging in.
+     * @param pass  The password to use for logging in.
+     */
+    public void sendLogin(final String uname, final String pass)
     {
-        sendPacket(PacketCreator.createLogin(username, password));
+        final LoginPacket l = PacketCreator.createLogin(username, password);
+        waitingOp.clear();
+        waitingOp.put(OperationStatusPacket.OP_LOGIN, l);
+        sendPacket(l);
     }
     
+    /**
+     * Send a packet to request access to the given chat.
+     * 
+     * @param chatID The chat to which we're requesting access.
+     */
     public void sendRequestAccess(int chatID)
     {
         sendPacket(PacketCreator.createRequestAccess(userID, chatID));
     }
     
+    /**
+     * If we are an admin in the given chat, sends a boot packet to boot the
+     * specified user.
+     * @param chat The chat from which to boot a user.
+     * @param user The user to boot.
+     */
     public void sendBoot(Chat chat, User user)
     {
         if(userRole == User.ADMIN)
         {
-            sendPacket(PacketCreator.createBoot(chat, user));
+            sendPacket(PacketCreator.createBoot(chat, user, user));
         }
     }
     
@@ -229,182 +266,11 @@ public class Client  {
         int port;
         SocketChannel s = parseCmdArgs(args);
         
-        ClientGUI clientGUI = new ClientGUI(s);
+        Client c = new Client("Shane", "SuperPass", s);
         
-//        Client client = parseCmdArgs(args);
-//        
-//        // test if we can start the connection to the Server
-//        // if it failed nothing we can do
-//        if(!client.start())
-//                return;
-//
-//        // wait for messages from user
-//        Scanner scan = new Scanner(System.in);
-//        
-//        // loop forever for message from the user
-//        while(true)
-//        {
-//            if(!client.connected)
-//            {
-//                //Attempt to create a new connections
-//                client.display("Status Update : Attempting to reconnect.");
-//                client = parseCmdArgs(args);
-//                
-//                if(!client.start())
-//                {
-//                    client.display("Status Update : Unable to reconnect. Quiting program.");
-//                    break;
-//                }
-//            }
-//            
-//            client.display(">> ");
-//            
-//            // read message from user
-//            String msg = scan.nextLine();
-//            
-//            String[] splitmsg = msg.split("\\s+");
-//            
-//            if ((client.userRole == User.ADMIN) &&
-//                    (splitmsg.length > 1) && 
-//                    splitmsg[0].equalsIgnoreCase("ADD"))
-//            {
-//                String recievingUserID = splitmsg[1];
-//                int id;
-//                int role;
-//                
-//                try {
-//                    id = Integer.parseInt(recievingUserID);
-//                    
-//                    role = (splitmsg.length > 2) ? Integer.parseInt(splitmsg[2]) : User.USER;
-//                    
-//                } catch(Exception e) {
-//                    System.out.println("Not a valid user ID: " + recievingUserID);
-//                    continue;
-//                }
-//                
-//                client.sendMessage(new GrantAccessPacket(id, role, client.chatID));
-//            }
-//            else if((client.userRole == User.ADMIN) &&
-//                    (splitmsg.length > 1) && 
-//                    splitmsg[0].equalsIgnoreCase("BOOT"))
-//            {
-//                String recievingUserID = splitmsg[1];
-//                int id;
-//                
-//                try {
-//                    id = Integer.parseInt(recievingUserID);
-//                    
-//                } catch(Exception e) {
-//                    System.out.println("Not a valid user ID: " + recievingUserID);
-//                    continue;
-//                }
-//                
-//                client.sendMessage(new GrantAccessPacket(id, User.UNSPEC, client.chatID));
-//            }
-//            else if((client.userRole == User.ADMIN) &&
-//                    (splitmsg.length > 1) && 
-//                    splitmsg[0].equalsIgnoreCase("UPDATECHAT"))
-//            {
-//                String updateCommand = splitmsg[1];
-//                String name;
-//                int id;
-//                int update;
-//                
-//                try {
-//                    if (updateCommand.equalsIgnoreCase("CREATE"))
-//                    {
-//                        name = splitmsg[2];
-//                        id = -1;
-//                        update = UpdateChatsPacket.CREATE;
-//                    }
-//                    else if (updateCommand.equalsIgnoreCase("UPDATE"))
-//                    {
-//                        id = Integer.parseInt(splitmsg[2]);
-//                        name = splitmsg[3];
-//                        update = UpdateChatsPacket.UPDATE;
-//                    }
-//                    else if (updateCommand.equalsIgnoreCase("REMOVE"))
-//                    {
-//                        id = Integer.parseInt(splitmsg[2]);
-//                        name = "";
-//                        update = UpdateChatsPacket.REMOVE;
-//                    }
-//                    else
-//                    {
-//                        System.out.println("Chat update command: " + updateCommand + " is not valid.");
-//                        continue;
-//                    }
-//                    
-//                } catch(Exception e) {
-//                    System.out.println("Not a valid chat update.");
-//                    continue;
-//                }
-//                
-//                client.sendMessage(new UpdateChatsPacket(name, id, update));
-//            }
-//            else if((splitmsg.length > 1) && 
-//                    splitmsg[0].equalsIgnoreCase("JOIN"))
-//            {
-//                String recievingChatID = splitmsg[1];
-//                int id;
-//                
-//                try {
-//                    id = Integer.parseInt(recievingChatID);
-//                    
-//                } catch(Exception e) {
-//                    System.out.println("Not a valid chat ID: " + recievingChatID);
-//                    continue;
-//                }
-//                System.out.println(client.userRole);
-//                client.sendMessage(new JoinedPacket(client.username, client.userRole, client.userID, id));
-//                //System.out.println(client.userRole);
-//            }
-//            else if(msg.equalsIgnoreCase("LOGOUT")) {
-//                System.out.println("Logging out.");
-//                client.logout = true;
-//                client.sendMessage(new LogoutPacket(client.chatID));
-//                break;
-//            }
-//            else if(msg.equalsIgnoreCase("WHOISIN")) {     
-//                /* 
-//                 * WHOISIN doesn't actually send anything to the server; it just
-//                 * displays all users in the list. 
-//                 */
-//                System.out.println("[CURRENT USER LIST]");
-//
-//                for(User u: client.users)
-//                {
-//                    System.out.print('\t');
-//                    System.out.println(u + " ID: " + u.getID());
-//                }
-//
-//                System.out.println("[END]");
-//            }
-//            else if((splitmsg.length > 1) && 
-//                    splitmsg[0].equalsIgnoreCase("WAITINGLIST"))
-//            {
-//                int chatID = Integer.parseInt(splitmsg[1]);
-//                client.sendMessage(new WhoIsInPacket(WhoIsInPacket.WAITING, chatID));
-//            }
-//            else if(msg.equalsIgnoreCase("CHATLIST"))
-//            {
-//                client.sendMessage(new ChatListPacket());
-//            }
-//            else
-//            {
-//                if (!client.waiting())
-//                {
-//                    client.sendMessage(new MessagePacket(msg, client.userID, client.chatID));
-//                }
-//                else
-//                {
-//                    System.out.println("You'll need to be in the chat before you can send messages. ;)");
-//                }       
-//            }  
-//            
-//        }
-//        // We're done here; disconnect
-//        client.disconnect();
+        // Set up our wonderful coupling
+        ClientGUI clientGUI = new ClientGUI(c);
+        c.setGUI(clientGUI);
     }
 
     /**
@@ -463,13 +329,181 @@ public class Client  {
         return socket;
     }
     
+    public int getUserRole()
+    {
+        return userRole;
+    }
+
+    public int getUserID()
+    {
+        return userID;
+    }
+
+    public String getUserName()
+    {
+        return username;
+    }
+
+    public int getChatID()
+    {
+        return chatID;
+    }
+    
+    /**
+     * Receives a list of packets from the ListenFromServer thread and processes
+     * them.
+     * 
+     * @param packets The published list of packets from ListenFromServer.
+     */
+    private synchronized void handlePackets(List<Packet> packets)
+    {
+        int type;
+        for(Packet p: packets)
+        {
+            type = p.getType();
+            switch(type)
+            {
+                case Packet.MESSAGE:
+                    displayMessage((MessagePacket)p);
+                    break;
+                case Packet.WHOISIN:
+                    // Update list of users
+                    // WhoIsInPacket userList = (WhoIsInPacket)p;
+                    break;
+                case Packet.CHATLIST:
+                    // Call a method for displaying chats
+                    
+                    break;
+                case Packet.OPERATIONSTATUS:
+                    operationStatusHandler((OperationStatusPacket)p);
+                    break;
+                case Packet.JOINLEAVE:
+                    // Update the specific chat that we joined or left
+                    break;
+                case Packet.USERNOTIFY:
+                    break;
+                case Packet.CHATNOTIFY:
+                    break;
+                case Packet.BOOT:
+                    break;
+                case Packet.CHANGEROLE:
+                    break;
+                default:
+                    System.err.println("Invalid packet received.");
+                    break;
+            }    
+        }
+    }
+    
+    /**
+     * Displays a chat message in the GUI.
+     * 
+     * @param m The MessagePacket containing the message to display.
+     */
+    private void displayMessage(MessagePacket m)
+    {
+        Chat srcChat = null;
+        User srcUser = null;
+        
+        // Get the source chat
+        for(Chat c : chatList.keySet())
+        {
+            if(c.getID() == m.getChatID())
+            {
+                srcChat = c;
+                break;
+            }
+        }
+        
+        if(srcChat == null)
+            return;
+
+        for(User u : srcChat.getConnectedUsers().keySet())
+        {
+            if(u.getID() == m.getUserID())
+            {
+                srcUser = u;
+                break;
+            }
+        }
+        
+        if(srcUser == null)
+            return;
+        
+        gui.displayUserMessage(m.getMessage(), srcUser.getName());
+    }
+    
+    /**
+     * Handles the success or failure of an issued operation.
+     * 
+     * @param op The OperationStatusPacket containing the operation result.
+     * @todo Split this into reasonably-sized methods...
+     */
+    private void operationStatusHandler(OperationStatusPacket op)
+    {
+        int opType = waitingOp.keySet().iterator().next();
+        Packet p = waitingOp.get(opType);
+        
+        // Must be an invalid packet...
+        if(op.getOperation() != opType)
+            return;
+        
+        // Welcome to the switch statement from Hell
+        switch(opType)
+        {
+            case OperationStatusPacket.OP_CRUD:
+                // Operation succeeded
+                if(op.getStatus() == 1)
+                {
+                    final int waitingPacketType = p.getType();
+                    if(waitingPacketType == Packet.UPDATECHAT)
+                    {
+                        UpdateChatsPacket up = (UpdateChatsPacket)p;
+                        final int chatOpType = up.getUpdate();
+                        switch(chatOpType)
+                        {
+                            case UpdateChatsPacket.CREATE:
+                                // call an gui.updateChat method
+                                break;
+                            case UpdateChatsPacket.UPDATE:
+                                // call a gui.createChat method
+                                break;
+                            case UpdateChatsPacket.REMOVE:
+                                // call a gui.deleteChat method
+                                break;
+                        }
+                    }
+                    else if(p.getType() == Packet.BOOT)
+                    {
+                        // call a gui.removeUser method
+                    }
+                }
+                else
+                {
+                    // Display an error message. Lol
+                }
+                break;
+            case OperationStatusPacket.OP_LOGIN:
+                if(op.getStatus() == 1)
+                {
+                    // Login succeeded. Call the GUI method
+                    gui.loginValid(op.getUserID(), true);
+                }
+                else
+                    gui.loginValid(-1, false);
+                break; 
+        }
+        waitingOp.clear();
+    }
+    
     /**
      * Receives packets from the server and handles them appropriately.
      * 
-     * Loosely Based upon the work of Paul-Benoit Larochelle (see link below).
-     * @see http://www.dreamincode.net/forums/topic/259777-a-simple-chat-program-with-clientserver-gui-optional/
+     * @todo Make this into a SwingWorker for publishing updates to the GUI. The
+     *       client will likely be running on that thread as well, so it can
+     *       still go through the client.
      */
-    private class ListenFromServer extends Thread 
+    private class ListenFromServer extends SwingWorker<Void, Packet>
     {
         /**
          * A PacketBuffer to read packets from the server.
@@ -482,81 +516,44 @@ public class Client  {
         }
             
         @Override
-        public void run() 
+        protected Void doInBackground() 
         {
             int     type;
             Packet  p;
-            
             while(connected)
             {
-                // This should actually never happen since we're in blocking mode
-                // But you never know
                 if(this.packetBuf.read() != PacketBuffer.FINISHED)
                 {
                     if(this.packetBuf.getState() == PacketBuffer.DISCONNECTED)
                     {
                         if(!logout)
                         {
-                            display("Status Update : Disconnected from chat. Press Enter to continue.");
                             connected = false;
+                            done();
                         }
-                        return;
+                        return null;
                     }
                     else
-                    {
                         continue;
-                    }
                 }
                 
+                // Get the packet and publish it to the Client for processing
                 p = this.packetBuf.getPacket();
-                type = p.getType();
-                        
-                switch(type)
-                {
-                    case Packet.MESSAGE:
-                        displayMessage((MessagePacket)p);
-                        break;
-                    case Packet.WHOISIN:
-                        WhoIsInPacket userList = (WhoIsInPacket)p;
-                        if(userList.whichList() == WhoIsInPacket.WAITING)
-                        {
-                            System.out.println("[WAITING USERS]");
-                            List<User> waitingUsers = userList.getUsers();
-                            for(User u : waitingUsers)
-                            {
-                                System.out.print('\t');
-                                System.out.println("Name: " + u.getName() + "; ID: " + u.getID());
-                            }
-                            System.out.println("[END]");
-                        }
-                        else
-                            users = userList.getUsers();
-                        break;
-                    case Packet.JOINED:
-                        addUser((JoinedPacket)p);
-                        break;
-                    case Packet.LEFT:
-                        removeUser((LeftPacket)p);
-                        break;
-                    case Packet.GRANTACCESS:
-                        updateStatus((GrantAccessPacket)p);
-                        break;
-                    case Packet.CHATLIST:
-                        ChatListPacket chatList = (ChatListPacket)p;
-                        System.out.println("[OPEN CHATS]");
-                        List<Chat> openChats = chatList.getChats();
-                        for(Chat c : openChats)
-                        {
-                            System.out.print('\t');
-                            System.out.println("Name: " + c.getName() + "; ID: " + c.getID());
-                        }
-                        System.out.println("[END]");
-                        break;
-                }
+                publish(p);
+//                type = p.getType();
+
                 this.packetBuf.clearState();
             }
+            return null;
         }
         
+        @Override
+        protected void process(List<Packet> packets)
+        {
+            // Lets the Client's code, which is hopefully running on the EDT, process the packets
+            handlePackets(packets);
+        }
+                
         /**
          * Adds a new user to the user list or sets this client's userID.
          * 
@@ -589,43 +586,6 @@ public class Client  {
 //                }
 //            }
 //        }
-        
-        /**
-         * Displays the message, its sender and its sender's role.
-         * 
-         * @param message A MessagePacket containing the message.
-         */
-        private void displayMessage(MessagePacket message)
-        {
-            for(User u : users)
-            {
-                if(u.getID() == message.getUserID())
-                {
-                    display(u + ": " + message.getMessage());
-                    break;
-                }
-            }
-        }
     }
-    
-    public int getUserRole()
-        {
-            return userRole;
-        }
-        
-        public int getUserID()
-        {
-            return userID;
-        }
-        
-        public String getUserName()
-        {
-            return username;
-        }
-        
-        public int getChatID()
-        {
-            return chatID;
-        }
 }
 

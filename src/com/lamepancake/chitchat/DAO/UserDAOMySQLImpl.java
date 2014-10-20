@@ -5,6 +5,7 @@
  */
 package com.lamepancake.chitchat.DAO;
 
+import com.lamepancake.chitchat.ServerUser;
 import com.lamepancake.chitchat.User;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -69,9 +70,9 @@ public class UserDAOMySQLImpl extends MySQLDAOBase implements UserDAO {
     }
     
     @Override
-    public List<User> getAllUsers() throws SQLException
+    public List<ServerUser> getAllUsers() throws SQLException
     {
-        List<User> users;
+        List<ServerUser> users;
         int id;
         String name;
         String password;
@@ -81,7 +82,7 @@ public class UserDAOMySQLImpl extends MySQLDAOBase implements UserDAO {
         users = new ArrayList<>();
         while(queryResults.next())
         {
-            User newUser = new User();
+            ServerUser newUser = new ServerUser();
             id = queryResults.getInt("userId");
             name = queryResults.getString("username");
             password = queryResults.getString("password");
@@ -94,9 +95,9 @@ public class UserDAOMySQLImpl extends MySQLDAOBase implements UserDAO {
     }
     
     @Override
-    public User getByID(int id) throws SQLException
+    public ServerUser getByID(int id) throws SQLException
     {
-        User u = new User();
+        ServerUser u = new ServerUser();
         final int userID;
         final String username;
         final String password;
@@ -118,9 +119,9 @@ public class UserDAOMySQLImpl extends MySQLDAOBase implements UserDAO {
     }
     
     @Override
-    public User getByName(String name) throws SQLException
+    public ServerUser getByName(String name) throws SQLException
     {
-        User u = new User();
+        ServerUser u = new ServerUser();
         final int userID;
         final String username;
         final String password;
@@ -147,8 +148,12 @@ public class UserDAOMySQLImpl extends MySQLDAOBase implements UserDAO {
         createUser.setString(1, u.getName());
         createUser.setString(2, u.getPassword());
         createUser.executeUpdate();
-        queryResults = query.executeQuery("SELECT MAX(`userId`) FROM `user`)");
-        return queryResults.getInt(0);
+        queryResults = query.executeQuery("SELECT MAX(`userId`) FROM `user`");
+        
+        // Must advance the pointer along to avoid "Before start of result set"
+        queryResults.next();
+        
+        return queryResults.getInt(1);
     }
     
     @Override

@@ -21,6 +21,16 @@ public class OperationStatusPacket extends Packet
      */
     public static final int OP_CRUD = 1;
     
+    
+    /**
+     * Flag for indicating failure.
+     */
+    public static final int FAIL = 0;
+    
+    /**
+     * Flag for indicating success.
+     */
+    public static final int SUCCESS = 1;
     /**
      * 1 if success, 0 if failure.
      */
@@ -46,9 +56,9 @@ public class OperationStatusPacket extends Packet
     public OperationStatusPacket(int userID, int flag, int operation)
     {
         super(OPERATIONSTATUS, 12);
+        this.userID = userID;
         this.flag = flag;
         this.operation = operation;
-        this.userID = userID;
     }
 
     /**
@@ -68,9 +78,9 @@ public class OperationStatusPacket extends Packet
     public ByteBuffer serialise()
     {
         ByteBuffer buf = super.serialise();
-        buf.putInt(userID);
+        buf.putInt(this.userID);
         buf.putInt(this.flag);
-        buf.putInt(operation);
+        buf.putInt(this.operation);
         
         buf.rewind();
         
@@ -83,7 +93,7 @@ public class OperationStatusPacket extends Packet
      */
     public int getStatus()
     {
-        return flag;
+        return this.flag;
     }
     
     /**
