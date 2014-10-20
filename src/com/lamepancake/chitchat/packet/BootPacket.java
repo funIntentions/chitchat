@@ -18,9 +18,10 @@ import java.nio.ByteBuffer;
  * @author shane
  */
 public class BootPacket extends Packet{
-    
+        
     private final int bootedID;
     private final int chatID;
+    private final int booterID;
     
     /**
      * Construct a new BootPacket to boot the specified user from the chat.
@@ -28,11 +29,12 @@ public class BootPacket extends Packet{
      * @param chat   The chat from which to boot the user.
      * @param booted The user being booted from the chat.
      */
-    public BootPacket(Chat chat, User booted)
+    public BootPacket(Chat chat, User booted, User booter)
     {
         super(BOOT, HEADER_SIZE + 8);
         this.chatID = chat.getID();
         this.bootedID = booted.getID();
+        this.booterID = booter.getID();
     }
      
     /**
@@ -41,11 +43,12 @@ public class BootPacket extends Packet{
      * @param chatID   The ID of the chat from which to boot the user.
      * @param bootedID The ID of the user being booted from the chat. 
      */
-    public BootPacket(int chatID, int bootedID)
+    public BootPacket(int chatID, int bootedID, int booterID)
     {
         super(BOOT, HEADER_SIZE + 8);
         this.chatID = chatID;
         this.bootedID = bootedID;
+        this.booterID = booterID;
     }
     
     /**
@@ -59,6 +62,7 @@ public class BootPacket extends Packet{
         super(header);
         this.chatID = data.getInt();
         this.bootedID = data.getInt();
+        this.booterID = data.getInt();
     }
     
     @Override
@@ -67,6 +71,7 @@ public class BootPacket extends Packet{
         ByteBuffer buf = super.serialise();
         buf.putInt(this.chatID);
         buf.putInt(this.bootedID);
+        buf.putInt(this.booterID);
         return buf;
     }
     
@@ -86,5 +91,14 @@ public class BootPacket extends Packet{
     public int getBootedID()
     {
         return this.bootedID;
+    }
+    
+    /**
+     * The ID of the person sending the boot packet.
+     * @return 
+     */
+    public int getBooterID()
+    {
+        return this.booterID;
     }
 }

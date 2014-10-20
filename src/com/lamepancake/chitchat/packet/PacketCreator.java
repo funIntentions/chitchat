@@ -28,13 +28,16 @@ public class PacketCreator {
      */
     public static WhoIsInPacket createWhoIsIn(Map<User, Boolean> chatUsers, int chatID, int userID)
     {
-        // Each boolean in the map is one byte, so set the length to this size initially
-        int dataLen = chatUsers.size();
-        final WhoIsInPacket ret;
+        int dataLen;
 
+        // The client is creating a request packet, so there is no list
+        if(chatUsers == null)
+            return new WhoIsInPacket(chatID, userID);
+        
+        // Each boolean in the map is one byte, so set the length to this size initially
+        dataLen = chatUsers.size();
         // Also make space for the chatID, number of users, and userID, which are all ints
         dataLen += 12;
-        
         for(User u : chatUsers.keySet())
         {
             // Strings are encoded in UTF_16LE, so make space for the length * 2
@@ -44,8 +47,7 @@ public class PacketCreator {
             dataLen += 12;
         }
         
-        ret = new WhoIsInPacket(chatUsers, dataLen, chatID, userID);
-        return ret;
+        return new WhoIsInPacket(chatUsers, dataLen, chatID, userID);
     }
     
     /**
@@ -54,9 +56,9 @@ public class PacketCreator {
      * @param booted THe user who is being booted.
      * @return a new BootPacket
      */
-    public static BootPacket createBoot(Chat chat, User booted)      
+    public static BootPacket createBoot(Chat chat, User booted, User booter)      
     {
-        return new BootPacket(chat, booted);
+        return new BootPacket(chat, booted, booter);
     }
     
     /**

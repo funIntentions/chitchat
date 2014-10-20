@@ -1,9 +1,7 @@
 package com.lamepancake.chitchat;
 
-import java.nio.channels.SocketChannel;
-
 /**
- *
+ * Represents a chat user.
  * @author shane
  */
 public class User {
@@ -11,12 +9,12 @@ public class User {
     public static final int UNSPEC  = -1;
     public static final int ADMIN   = 0;
     public static final int USER    = 1;
+    public static final int WAITING = 2;
     
     private String name;
     private String password;
     private int    role;
     private int    id;
-    private SocketChannel socket;
     
     /**
      * Constructs an empty User.
@@ -117,11 +115,6 @@ public class User {
     public int getID()
     {
         return this.id;
-    }
-    
-    public void setSocket(SocketChannel s)
-    {
-        socket = s;
     }
     
     @Override

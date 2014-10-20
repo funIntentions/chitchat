@@ -21,23 +21,46 @@ import java.nio.ByteBuffer;
  */
 public class UserNotifyPacket extends Packet
 {
+    /**
+     * The user joined the chat (came online).
+     */
+    public static final int JOINED = 0;
     
+    /**
+     * The user left the chat (went online).
+     */
+    public static final int LEFT = 1;
+    
+    /**
+     * The user was promoted or demoted.
+     */
+    public static final int PROMOTED = 2;
+    
+    /**
+     * The user was booted from the chat (no longer has a role).
+     */
+    public static final int BOOTED = 3;
+
     /**
      * The id of the chat that this will be sent to.
      */
     private final int chatID;
+    
     /**
      * The id of the user that has been changed.
      */
     private final int userID;
+    
     /**
      * The role of the user.
      */
     private final int userRole;
+
     /**
      * Indicates whether the user joined(0), left(1), or promoted(2).
      */
     private final int flag;
+
     
     public UserNotifyPacket(int userid, int chatid, int role, int flag)
     {

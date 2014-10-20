@@ -146,6 +146,7 @@ public class WhoIsInPacket extends Packet {
 
         if(this.users == null)
         {
+            buf.putInt(0);
             buf.rewind();
             return buf;
         }

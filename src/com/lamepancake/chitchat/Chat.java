@@ -5,6 +5,10 @@
  */
 package com.lamepancake.chitchat;
 
+import com.lamepancake.chitchat.DAO.ChatDAO;
+import com.lamepancake.chitchat.DAO.ChatDAOMySQLImpl;
+import com.lamepancake.chitchat.DAO.ChatRoleDAO;
+import com.lamepancake.chitchat.DAO.ChatRoleDAOMySQLImpl;
 import com.lamepancake.chitchat.packet.BootPacket;
 import com.lamepancake.chitchat.packet.ChangeRolePacket;
 import com.lamepancake.chitchat.packet.JoinLeavePacket;
@@ -12,13 +16,9 @@ import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.PacketCreator;
 import com.lamepancake.chitchat.packet.WhoIsInPacket;
-import java.io.IOException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -28,9 +28,11 @@ public class Chat
 {
     private final int chatID;
     private String chatName;
+    private ChatRoleDAO crDao;
+    private ChatDAO cDao;
     
     /**
-     * A map relating sockets to users who are in the chat.
+     * A map of users and their online status.
      */
     private final Map<User, Boolean> users;
     
@@ -40,36 +42,89 @@ public class Chat
         this.chatID = -1;
         this.users = new HashMap<>();
     }
-    
+
+    /**
+     * Creates a new chat.
+     * 
+     * @param name
+     * @param id 
+     */
     public Chat(String name, int id)
     {
         this.chatName = name;
         this.chatID = id;
         this.users = new HashMap<>();
+        
+        try {
+            cDao = ChatDAOMySQLImpl.getInstance();
+            crDao = ChatRoleDAOMySQLImpl.getInstance();
+        } catch (SQLException se) {
+            System.err.println("Chat constructor: could not get database access: " + se.getMessage());
+        }
     }
     
     public void handlePacket(Packet packet)
     {
         
     }
-    
-    public void bootUser(BootPacket b)
+    /**
+     * 
+     * @param b 
+     */
+    private void bootUser(BootPacket b)
     {
-        PacketCreator.createUserNotify();
+        int affectedUserID = b.getBootedID();
+        Packet p;
+        
+        // Remove the user from the map
+        for(User u: users.keySet())
+        {
+            if(u.getID() == affectedUserID)
+            {
+                users.remove(u);
+                break;
+            }
+        }
+
+        p = PacketCreator.createUserNotify(affectedUserID, this.chatID, User.UNSPEC, Packet.BOOT);
+        broadcast(b.getBooterID(), p, false);
     }
     
-    public void promoteUser(ChangeRolePacket r)
+    private void promoteUser(ChangeRolePacket r)
     {
-        r.getChatID();
-        r.getRole();
-        r.getUserID();
-        PacketCreator.createUserNotify();
+        Packet p = PacketCreator.createUserNotify(r.getUserID(), r.getChatID(), r.getRole(), Packet.CHANGEROLE);
+        for(User u : users.keySet())
+        {
+            if(u.getID() == r.getUserID())
+            {
+                ((ServerUser)u).notifyClient(r);
+                break;
+            }
+        }
+        broadcast(r.getUserID(), p, false);
     }
     
-    public void updateState(JoinLeavePacket jl)
+    private void updateState(JoinLeavePacket jl)
     {
-        PacketCreator.createJoinLeave();
-        PacketCreator.createUserNotify();
+        final Packet p;
+        int role = User.UNSPEC;
+        // If the operation is Join
+        //      Subscribe the user
+        //      Send a UserNotifyPacket to everyone telling them about the change
+        //      Send the JoinLeavePacket back to the user to tell them they joined
+        // If the operation is Leave
+        //      Unsubscribe the user
+        //      Send a UserNotifyPacket to everyone telling them about the change
+
+        for(User u : users.keySet())
+            if(u.getID() == jl.getUserID())
+            {
+                role = u.getRole();
+                break;
+            }
+        
+        p = PacketCreator.createUserNotify(jl.getUserID(), this.chatID, role, jl.getFlag());
+        broadcast(jl.getUserID(), p, false);
     }
     
     public Map<User, Boolean> getConnectedUsers()
@@ -91,59 +146,21 @@ public class Chat
     {
         return chatID;
     }
-    
-    /**
-     * Determine if a user is in this chat.
-     * @param userID the id of the user.
-     * @return true if the user is in the chat, false if they are not.
-     */
-//    public boolean HasUser(int userID)
-//    {
-//        Set<SelectionKey>       userChannels;
-//                
-//        userChannels = users.keySet();
-//        
-//        for(SelectionKey curKey : userChannels)
-//        {
-//            User user = users.get(curKey);
-//            
-//            if (user.getID() == userID)
-//            {
-//                return true;
-//            }
-//        }
-//        
-//        return false;
-//    }
-//    
+ 
     /**
      * Sends a chat message to all other users in the chat.
      * 
-     * @param key     The SelectionKey associated with the sender.
      * @param message The message to be sent.
      * 
      * @todo Handle case where packet doesn't send completely
      */
-    private void sendMessage(SelectionKey key, MessagePacket message)
-    {
-        Set<SelectionKey>       userChannels;
-        User                    client;
-        
-        userChannels = users.keySet();
-        client       = users.get(key);
-               
+    private void sendMessage(MessagePacket message)
+    {      
         // If they're the only person in the chat, don't bother sending the message
-        if(userChannels.size() <= 1)
+        if(users.size() <= 1)
             return;
-        
-        // Sending a message without logging in? Nope
-        if(client == null)
-            return;
-        // Pretending to be someone else? Also nope
-        else if(client.getID() != message.getUserID())
-            message.setUserID(client.getID());
          
-        broadcast(key, message, false, message.getChatID());
+        broadcast(message.getUserID(), message, false);
     }
     
     /**
@@ -180,31 +197,22 @@ public class Chat
     /**
      * Broadcasts the passed in message to all connected users.
      * 
-     * @param key The key associated with the sending user.
-     * @param p The packet to be broadcasted.
-     * @param broadcast True if you want to include the sending user in the broadcast, false otherwise.
+     * @param senderID The key associated with the sending user.
+     * @param p        The packet to be broadcasted.
+     * @param sendBack Whether the user should have the packet sent back to them.
      */
-    private void broadcast(SelectionKey key, Packet p, Boolean broadcast, int chatID)
+    private void broadcast(int senderID, Packet p, boolean sendBack)
     {        
-        Set<SelectionKey> userChannels = users.keySet();
-        
-        for(SelectionKey curKey : userChannels)
+        for(User u : users.keySet())
         {
-            User user = users.get(curKey);
-            
-            if (user.getRole() != User.UNSPEC)
+            Boolean isOnline = users.get(u);
+            if (isOnline && u.getRole() != User.WAITING)
             {
-                // Don't notify the message sending user what they have sent
-                if(curKey.equals(key))
-                    if(!broadcast)
-                        continue;
-
-                try {
-                    SocketChannel channel = (SocketChannel)curKey.channel();
-                    channel.write(p.serialise());              
-                } catch (IOException e) {
-                    System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
-                }   
+                // Don't send the packet back to the snder unless they want that
+                if(u.getID() == senderID && !sendBack)
+                    continue;
+                
+                ((ServerUser)u).notifyClient(p);
             }
         }
     }
