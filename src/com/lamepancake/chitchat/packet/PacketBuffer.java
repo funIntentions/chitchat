@@ -211,6 +211,9 @@ public class PacketBuffer {
             case Packet.OPERATIONSTATUS:
                 this.packet = new OperationStatusPacket(this.packetHeader, this.packetData);
                 break;
+            case Packet.LOGOUT:
+                this.packet = new LogoutPacket(this.packetHeader, this.packetData);
+                break;
             
         }
     }
