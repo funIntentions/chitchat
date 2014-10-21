@@ -98,6 +98,7 @@ public class Client {
             this.password = password;
             this.userID = -1;
             this.isWaiting = true;
+            this.clientUser = new User();
             this.clientUser.setID(userID);
             this.clientUser.setName(username);
             this.clientUser.setPassword(password);
@@ -198,7 +199,7 @@ public class Client {
      */
     public void sendLogin(final String uname, final String pass)
     {
-        final LoginPacket l = PacketCreator.createLogin(username, password);
+        final LoginPacket l = PacketCreator.createLogin(uname, pass);
         waitingOp.clear();
         waitingOp.put(OperationStatusPacket.OP_LOGIN, l);
         sendPacket(l);
