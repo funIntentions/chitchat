@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.lamepancake.chitchat.DAO.*;
+import com.lamepancake.chitchat.packet.ChatNotifyPacket;
 import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.OperationStatusPacket;
 import com.lamepancake.chitchat.packet.PacketCreator;
@@ -39,14 +40,9 @@ import java.util.Iterator;
 public class ChatManager
 {
     
-    private final Map<SelectionKey, User> lobby;
+    private final Map<SelectionKey, ServerUser> lobby;
     
     private final Map<Integer, Chat> chats;
-    
-    /**
-     * The server will continue until this variable becomes false.
-     */
-    private boolean keepGoing;
         
     /**
      * Initiliases the chat manager and the DAO's.
@@ -85,7 +81,10 @@ public class ChatManager
                     PassPacketToChat(chatID, received);
                 case Packet.REQUESTACCESS:
                     chatID = ((RequestAccessPacket)received).getChatID();
-                    PassPacketToChat(chatID, received);
+                    if(!PassPacketToChat(chatID, received))
+                    {
+                        sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_REQACCESS);
+                    }
                     break;
                 case Packet.MESSAGE:
                     chatID = ((MessagePacket)received).getChatID();
@@ -115,7 +114,7 @@ public class ChatManager
     {
         ChatListPacket outPacket;
         
-        User user = this.lobby.get(clientKey);
+        ServerUser user = this.lobby.get(clientKey);
         
         List<Chat> chatList = new ArrayList<>();
         
@@ -134,13 +133,7 @@ public class ChatManager
 
             outPacket = PacketCreator.createChatList(chatList, roles, user.getID());
              
-            try 
-            {
-                SocketChannel channel = (SocketChannel)clientKey.channel();
-                channel.write(outPacket.serialise());              
-            } catch (IOException e) {
-                System.err.println("ChatManager.sendListOfChats: Could not send message: " + e.getMessage());
-            }
+            user.notifyClient(outPacket);
              
         } catch (SQLException e) 
         {
@@ -152,41 +145,60 @@ public class ChatManager
      * Simply passes a packet among for chat to process.
      * @chatID the id of the chat to pass it to.
      * @param received the packet to pass along.
+     * @return false if the chat doesn't exist, true if it does.
      */
-    private void PassPacketToChat(int chatID, Packet received)
+    private boolean PassPacketToChat(int chatID, Packet received)
     {        
+        if (!this.chats.containsKey(chatID))
+        {
+            return false;
+        }
+        
         Chat chat = this.chats.get(chatID);
         
+        
         chat.handlePacket(received);
+        
+        return true;
     }
     
     /**
      * TODO: Change this so getRole is relative to chats (will be done in chats).
      * @param clientKey The Client to be checked.
+     * @param chatID The id of the chat that the user is being checked for admin status.
      * @param opType The operation the client wants to perform.
      * @return returns true if client is an admin, false otherwise.
      */
-    private boolean verifyAdmin(SelectionKey clientKey, int opType)
+    private boolean isAdmin(SelectionKey clientKey, int chatID, int opType)
     {
-        User user = lobby.get(clientKey);
-        OperationStatusPacket operationStat;
+        ServerUser user = lobby.get(clientKey);
+        int userRole = User.UNSPEC;
         
-        if (user.getRole() != User.ADMIN)
+        try 
         {
-            operationStat = new OperationStatusPacket(user.getID(), opType, 0);
+            userRole = ChatRoleDAOMySQLImpl.getInstance().getUserRoleInChat(chatID, user.getID());
+
+        } catch (SQLException e) 
+        {
+           System.err.println("ChatManager.verifyAdmin: SQL exception thrown: " + e.getMessage());
+           return false;
+        }
         
-            try 
-            {
-                SocketChannel channel = (SocketChannel)clientKey.channel();
-                channel.write(operationStat.serialise());              
-            } catch (IOException e) {
-                System.err.println("ChatManager.login: Could not send message: " + e.getMessage());
-            }
-            
+        if (userRole != User.ADMIN)
+        {
             return false;
         }
         
         return true;
+    }
+    
+    private void sendOperationResult(SelectionKey clientKey, int success, int opType)
+    {
+        ServerUser user = lobby.get(clientKey);
+        OperationStatusPacket operationStat;
+        operationStat = new OperationStatusPacket(user.getID(), success, opType);
+        
+        user.notifyClient(operationStat);
     }
     
     /**
@@ -196,24 +208,33 @@ public class ChatManager
      */
     private void chatCUD(SelectionKey clientKey, UpdateChatsPacket received)
     {
-        OperationStatusPacket operationStat;
-        
-        if (verifyAdmin(clientKey, OperationStatusPacket.OP_CRUD))
+        int type = received.getUpdate();
+
+        switch (type)
         {
-            int type = received.getUpdate();
-            
-            switch (type)
-            {
-                case UpdateChatsPacket.CREATE:
-                    createChat(received);
-                    break;
-                case UpdateChatsPacket.UPDATE:
-                    updateChat(received);
-                    break;
-                case UpdateChatsPacket.REMOVE:
-                    deleteChat(received);
-                    break;
-            }
+            case UpdateChatsPacket.CREATE:
+                createChat(clientKey, received);
+                break;
+            case UpdateChatsPacket.UPDATE:
+                if (isAdmin(clientKey, received.getChatID(), OperationStatusPacket.OP_CRUD))
+                {
+                    updateChat(clientKey, received);
+                }
+                else
+                {
+                    sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
+                }
+                break;
+            case UpdateChatsPacket.REMOVE:
+                if (isAdmin(clientKey,received.getChatID(), OperationStatusPacket.OP_CRUD))
+                {
+                    deleteChat(clientKey, received);
+                }
+                else
+                {
+                    sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
+                }
+                break;
         }
        
     }
@@ -222,21 +243,32 @@ public class ChatManager
      * Deletes a chat, removing it from the database and chat list.
      * @param chatInfo 
      */
-    private void deleteChat(UpdateChatsPacket chatInfo)
+    private void deleteChat(SelectionKey clientKey, UpdateChatsPacket chatInfo)
     {
-        Chat chat = this.chats.get(chatInfo.getChatID());
+        Chat chat;
         
-        if (chat == null)
+        if (!this.chats.containsKey(chatInfo.getChatID()))
+        {
+            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
             return;
+        }
+        
+        chat = this.chats.get(chatInfo.getChatID());
+        
         
         try 
         {
             ChatDAOMySQLImpl.getInstance().delete(chat);
             this.chats.remove(chat.getID());
+            
+            sendOperationResult(clientKey, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_CRUD);
+            
+            notifyUsersOfChatUpdate(chat, UpdateChatsPacket.REMOVE);
 
         } catch (SQLException e) 
         {
             System.err.println("ChatManager.deleteChat: SQL exception thrown: " + e.getMessage());
+            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
         }
     }
     
@@ -244,107 +276,106 @@ public class ChatManager
      * Updates a chat, changing it's name.
      * @param chatInfo Contains the new 
      */
-    private void updateChat(UpdateChatsPacket chatInfo)
+    private void updateChat(SelectionKey clientKey, UpdateChatsPacket chatInfo)
     {
-        Chat chat = this.chats.get(chatInfo.getChatID());
+        Chat chat;
         
-        if (chat == null)
+        if (!this.chats.containsKey(chatInfo.getChatID()))
+        {
+            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
             return;
+        }
+        
+        chat = this.chats.get(chatInfo.getChatID());
+                
+        if (isChatNameTaken(chatInfo.getName()))
+        {
+            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
+            return;
+        }
         
         try 
         {
             chat.setName(chatInfo.getName());
             ChatDAOMySQLImpl.getInstance().update(chat);
-
+            
+            sendOperationResult(clientKey, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_CRUD);
+            
+            notifyUsersOfChatUpdate(chat, UpdateChatsPacket.UPDATE);
+            
         } catch (SQLException e) 
         {
             System.err.println("ChatManager.updateChat: SQL exception thrown: " + e.getMessage());
+            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
         }
     }
     
-    private void createChat(UpdateChatsPacket chatInfo)
+    private void createChat(SelectionKey clientKey, UpdateChatsPacket chatInfo)
     {
+        User user = this.lobby.get(clientKey);
+        
+        if (isChatNameTaken(chatInfo.getName()))
+        {
+            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
+            return;
+        }
+        
         try 
         {
+            // Create chat.
             Chat chat = new Chat(chatInfo.getName());
             chat.setName(chatInfo.getName());
             int chatID = ChatDAOMySQLImpl.getInstance().create(chat);
             this.chats.put(chatID, chat);
-
+            
+            //Make user admin for chat.
+            ChatRoleDAOMySQLImpl.getInstance().updateRole(chatID, user.getID(), User.ADMIN);
+            
+            sendOperationResult(clientKey, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_CRUD);
+            
+            notifyUsersOfChatUpdate(chat, UpdateChatsPacket.CREATE);
+            
         } catch (SQLException e) 
         {
             System.err.println("ChatManager.createChat: SQL exception thrown: " + e.getMessage());
+            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
         }
     }
     
-        /**
-     * Creates a WhoIsInPacket and sends it to the requesting client.
-     * 
-     * @param clientKey The SelectionKey associated with this client.
-     * @param list      The user list to send (WhoIsInPacket.CONNECTED or WhoIsInPacket.WAITING).
-     */
-    private void sendUserLobbyList(Map<SelectionKey, User> lobby, SelectionKey clientKey, int list)
+    private boolean isChatNameTaken(String name)
     {
-        ArrayList<User>             userList;
-        Set<SelectionKey>           keys;
-        WhoIsInPacket               packet;
-        Map<SelectionKey, User>     userMap;
-        int                size = 4; // One extra int for the number of users
-                
-        userList = new ArrayList<>(lobby.size());
-        keys = lobby.keySet();
-        userMap = lobby;
+        Iterator it = this.chats.entrySet().iterator();
+        Chat existingChat;
         
+        // check if name is unique
+        while (it.hasNext()) 
+        {
+            Map.Entry pairs = (Map.Entry)it.next();
+            existingChat = (Chat)pairs.getValue();
+            
+            if (existingChat.getName().equalsIgnoreCase(name))
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    
+    private void notifyUsersOfChatUpdate(Chat chat, int flag)
+    {
+        Set<SelectionKey>           keys;
+        keys = lobby.keySet();
+        
+        ChatNotifyPacket notify = PacketCreator.createChatNotify(chat.getID(), chat.getName(), flag);
         
         for (SelectionKey key : keys)
         {
-            User u = userMap.get(key);
-
-            // Add space for the user's name and three ints (name length, role, id)
-            size += u.getName().length() * 2;
-            size += 12;
+            ServerUser user = this.lobby.get(key);
             
-            userList.add(u);
+            user.notifyClient(notify);
         }
-        
-//        packet = new WhoIsInPacket(userList, size, list, 1); // one is temp?
-//        try {
-//            ((SocketChannel)clientKey.channel()).write(packet.serialise());
-//        } catch (IOException e) {
-//            System.err.println("Server.sendUserList: Could not send list: " + e.getMessage());
-//        }
-    }
-        
-    /**
-     * Sets user role.
-     * @param key
-     * @param userInfo 
-     */
-    private void setUserRole(Map<SelectionKey, User> map, SelectionKey key, ChangeRolePacket userInfo)
-    {
-        User waitingUser = map.get(key);
-        waitingUser.setRole(userInfo.getRole());
-        
-        //announceJoin(key, waitingUser);
-    }
-    
-    /**
-     * Removes a user from the chat.
-     * 
-     * @param selected The selected user to remove.
-     * @param userInfo The packet being sent to them.
-     */
-    private void bootUserFromChat(SelectionKey selected, BootPacket userInfo)
-    {
-        // inform the user they have been booted from the chat.
-        try {
-            SocketChannel channel = (SocketChannel)selected.channel();
-            channel.write(userInfo.serialise());              
-        } catch (IOException e) {
-            System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
-        }
-        
-        remove(selected, userInfo.getChatID());
     }
     
     /**
@@ -442,91 +473,4 @@ public class ChatManager
         lobby.put(key, null);
     }
     
-    /**
-     * Removes a user from the list, cleans up its socket, and notifies other users.
-     * 
-     * @param sel The selection key identifying the user.
-     */
-    private void remove(SelectionKey sel, int chatID)
-    {
-//        Set<SelectionKey> userChannels;
-//        int id;
-//        JoinLeavePacket left;
-//        
-//        Chat chat = this.chats.get(chatID); // the 1 is just temporary.
-//        Map<SelectionKey, User> users = chat.getConnectedUsers();
-//        
-//        if (users.containsKey(sel))
-//        {
-//            userChannels = users.keySet();
-//            id           = users.get(sel).getID();
-//            users.remove(sel);
-//        }
-//        else 
-//        {
-//            userChannels = this.lobby.keySet();
-//            id           = this.lobby.get(sel).getID();
-//            this.lobby.remove(sel);
-//        }
-//        
-//        left = new JoinLeavePacket(id, chatID, JoinLeavePacket.LEAVE);
-//        
-//        recycledIDs.add(id);
-//
-//        sel.cancel();
-//        sel.attach(null);
-//
-//        try{
-//            sel.channel().close();
-//        } catch(IOException e) {
-//            System.err.println("Server.remove: Could not close channel: " + e.getMessage());
-//        }
-//               
-//        // No one left in the chat; no one to notify
-//        if(userChannels.isEmpty())
-//            return;
-//        
-//        for(SelectionKey curKey : userChannels)
-//        {
-//            try {
-//                SocketChannel channel = (SocketChannel)curKey.channel();
-//                channel.write(left.serialise());              
-//            } catch (IOException e) {
-//                System.err.println("Server.sendMessage: Could not send message: " + e.getMessage());
-//            }
-//        }
-//    }
-//
-//    /**
-//     * Creates a ChatListPacket and sends it to the requesting client.
-//     * 
-//     * @param clientKey  The SelectionKey associated with this client.
-//     */
-//    private void sendChatList(SelectionKey clientKey)
-//    {
-//        ArrayList<Chat>         chatList = new ArrayList<>();
-//        Set<Integer>            keys;
-//        ChatListPacket          packet;
-//        int                     size = 4;
-//        
-//        keys = this.chats.keySet();
-//        for (Integer key : keys)
-//        {
-//            Chat c = chats.get(key);
-//
-//            // Add space for the user's name and three ints (name length, role, id)
-//            size += c.getName().length() * 2;
-//            size += 8;
-//            
-//            chatList.add(c);
-//        }
-//        
-//        packet = new ChatListPacket(chatList, size);
-//        try {
-//            ((SocketChannel)clientKey.channel()).write(packet.serialise());
-//        } catch (IOException e) {
-//            System.err.println("Server.sendChatList: Could not send list: " + e.getMessage());
-//        }
-    }
-       
 }

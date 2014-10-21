@@ -21,6 +21,10 @@ public class OperationStatusPacket extends Packet
      */
     public static final int OP_CRUD = 1;
     
+    /**
+     * Packet indicates status of a chat access request.
+     */
+    public static final int OP_REQACCESS = 2;
     
     /**
      * Flag for indicating failure.
