@@ -70,6 +70,11 @@ public abstract class Packet {
     public static final int UPDATECHAT= 13;
     
     /**
+     * Sent from a client to the server to indicate that they're leaving all chats.
+     */
+    public static final int LOGOUT = 14;
+    
+    /**
      * The header size of a packet.
      */
     public static final int HEADER_SIZE = 8;
