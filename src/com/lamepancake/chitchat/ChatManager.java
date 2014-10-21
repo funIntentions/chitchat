@@ -30,7 +30,6 @@ import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.OperationStatusPacket;
 import com.lamepancake.chitchat.packet.PacketCreator;
 import com.lamepancake.chitchat.packet.RequestAccessPacket;
-import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.util.Iterator;
 
@@ -487,7 +486,18 @@ public class ChatManager
                 sendLoginOperationFailure(key);
             }
         }
+<<<<<<< Updated upstream
         
+=======
+
+        try 
+        {
+            SocketChannel channel = (SocketChannel)key.channel();
+            channel.write(operationStat.serialise()); 
+        } catch (IOException e) {
+            System.err.println("ChatManager.login: Could not send message: " + e.getMessage());
+        }
+>>>>>>> Stashed changes
     }
     
     /**

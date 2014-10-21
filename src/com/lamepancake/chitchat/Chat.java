@@ -67,6 +67,7 @@ public class Chat
     {
         
     }
+
     /**
      * 
      * @param b 
@@ -104,26 +105,38 @@ public class Chat
         broadcast(r.getUserID(), p, false);
     }
     
+    /**
+     * Removes or adds a User to the list of subscribed users and notifies other
+     * Users in the chat.
+     * @param jl The JoinLeave packet specifying whether the user is joining or
+     *           leaving.
+     */
     private void updateState(JoinLeavePacket jl)
     {
         final Packet p;
-        int role = User.UNSPEC;
-        // If the operation is Join
-        //      Subscribe the user
-        //      Send a UserNotifyPacket to everyone telling them about the change
-        //      Send the JoinLeavePacket back to the user to tell them they joined
-        // If the operation is Leave
-        //      Unsubscribe the user
-        //      Send a UserNotifyPacket to everyone telling them about the change
-
+        User affected = null;
+        
         for(User u : users.keySet())
+        {
             if(u.getID() == jl.getUserID())
             {
-                role = u.getRole();
+                affected = u;
                 break;
             }
+        }
         
-        p = PacketCreator.createUserNotify(jl.getUserID(), this.chatID, role, jl.getFlag());
+        if(affected == null)
+            return;
+        
+        if(jl.getFlag() == JoinLeavePacket.JOIN)
+        {
+            users.put(affected, Boolean.TRUE);
+            ((ServerUser)affected).notifyClient(jl);
+        }
+        else
+            users.put(affected, Boolean.FALSE);
+        
+        p = PacketCreator.createUserNotify(jl.getUserID(), this.chatID, affected.getRole(), jl.getFlag());
         broadcast(jl.getUserID(), p, false);
     }
     
@@ -171,7 +184,23 @@ public class Chat
      */
     private void sendUserList(WhoIsInPacket w)
     {
-        PacketCreator.createWhoIsIn(users, chatID, w.getUserID());
+        User sender = null;
+        final Packet p;
+
+        for(User u : users.keySet())
+        {
+            if(w.getUserID() == u.getID())
+            {
+                sender = u;
+                break;
+            }
+        }
+        
+        if(sender == null)
+            return;
+      
+        p = PacketCreator.createWhoIsIn(users, chatID, w.getUserID());
+        ((ServerUser)sender).notifyClient(p);
     }
     
     /**
