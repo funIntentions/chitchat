@@ -45,4 +45,13 @@ public class LogoutPacket extends Packet {
         buf.rewind();
         return buf;
     }
+    
+    /**
+     * Gets the userID.
+     * @return the userID of the user logging out.
+     */
+    public int getID()
+    {
+        return userID;
+    }
 }

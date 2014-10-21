@@ -25,6 +25,7 @@ import java.util.Set;
 
 import com.lamepancake.chitchat.DAO.*;
 import com.lamepancake.chitchat.packet.ChatNotifyPacket;
+import com.lamepancake.chitchat.packet.LogoutPacket;
 import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.OperationStatusPacket;
 import com.lamepancake.chitchat.packet.PacketCreator;
@@ -39,9 +40,14 @@ import java.util.Iterator;
  */
 public class ChatManager
 {
-    
+    /**
+     * Contains all users currently logged in.
+     */
     private final Map<SelectionKey, ServerUser> lobby;
     
+    /**
+     * Contains all chats currently available.
+     */
     private final Map<Integer, Chat> chats;
         
     /**
@@ -60,6 +66,11 @@ public class ChatManager
         this.chats = new HashMap<>();
     }
     
+    /**
+     * Decides how to handle incoming packets.
+     * @param clientKey The client who sent the received packet.
+     * @param received The packet that has been received.
+     */
     public void handlePacket(SelectionKey clientKey, Packet received)
     {
         int type = received.getType();
@@ -69,6 +80,9 @@ public class ChatManager
             {
                 case Packet.LOGIN:
                     login(clientKey, (LoginPacket)received);
+                    break;
+                case Packet.LOGOUT:
+                    logoutUser(clientKey, (LogoutPacket)received);
                     break;
                 case Packet.CHATLIST:
                     sendListOfChats(clientKey, (ChatListPacket)received);
@@ -103,6 +117,16 @@ public class ChatManager
                     PassPacketToChat(chatID, received);
                     break;
             }
+    }
+    
+    /**
+     * Removes a user from the lobby, logging them out.
+     * @param clientKey the client to be logged out.
+     * @param packet the packet containing the users ID.
+     */
+    private void logoutUser(SelectionKey clientKey, LogoutPacket packet)
+    {
+        this.lobby.remove(clientKey);
     }
     
     /**
@@ -192,6 +216,12 @@ public class ChatManager
         return true;
     }
     
+    /**
+     * Tells a ServerUser to notify a client with an operation result.
+     * @param clientKey The client it's to be end to.
+     * @param success If the operation was a success or a failure.
+     * @param opType The type of operation.
+     */
     private void sendOperationResult(SelectionKey clientKey, int success, int opType)
     {
         ServerUser user = lobby.get(clientKey);
@@ -310,6 +340,11 @@ public class ChatManager
         }
     }
     
+    /**
+     * Creates a new chat. Promotes the creator as the chats admin.
+     * @param clientKey The chat's creator.
+     * @param chatInfo Info for the chat being created.
+     */
     private void createChat(SelectionKey clientKey, UpdateChatsPacket chatInfo)
     {
         User user = this.lobby.get(clientKey);
@@ -342,6 +377,11 @@ public class ChatManager
         }
     }
     
+    /**
+     * Checks to see if a chat name is already being used.
+     * @param name The name to check for.
+     * @return true if it's already in use, false otherwise.
+     */
     private boolean isChatNameTaken(String name)
     {
         Iterator it = this.chats.entrySet().iterator();
@@ -362,7 +402,11 @@ public class ChatManager
         return false;
     }
     
-    
+    /**
+     * Notifies all users that a particular chat has been updated.
+     * @param chat The chat that's been updated.
+     * @param flag The type of update that happened.
+     */
     private void notifyUsersOfChatUpdate(Chat chat, int flag)
     {
         Set<SelectionKey>           keys;
@@ -387,33 +431,34 @@ public class ChatManager
     private void login(SelectionKey key, LoginPacket loginInfo)
     {
         
-        ServerUser user;
+        ServerUser user = null;
         OperationStatusPacket operationStat;
         
-        if(lobby.get(key) != null) // user does exist
+        try 
         {
-            try 
+            user = UserDAOMySQLImpl.getInstance().getByName(loginInfo.getUsername());
+
+        } catch (SQLException e) 
+        {
+            System.err.println("ChatManager.login: SQL exception thrown: " + e.getMessage());
+            operationStat = new OperationStatusPacket(0,
+                                                      OperationStatusPacket.FAIL,
+                                                      OperationStatusPacket.OP_LOGIN);
+            return;
+        }
+        
+        if(user != null) // user does exist
+        {
+            if (user.getPassword().equals(loginInfo.getPassword())) // match passwords
             {
-                user = UserDAOMySQLImpl.getInstance().getByName(loginInfo.getUsername());
-                
-                if (user.getPassword().equals(loginInfo.getPassword())) // match passwords
-                {
-                    user.setSocket((SocketChannel)key.channel());
-                    lobby.put(key, user);
-                    operationStat = new OperationStatusPacket(user.getID(), 
-                                                              OperationStatusPacket.SUCCESS,
-                                                              OperationStatusPacket.OP_LOGIN);
-                }
-                else
-                {
-                    operationStat = new OperationStatusPacket(0,
-                                                              OperationStatusPacket.FAIL,
-                                                              OperationStatusPacket.OP_LOGIN);
-                }
-                
-            } catch (SQLException e) 
+                user.setSocket((SocketChannel)key.channel());
+                lobby.put(key, user);
+                operationStat = new OperationStatusPacket(user.getID(), 
+                                                          OperationStatusPacket.SUCCESS,
+                                                          OperationStatusPacket.OP_LOGIN);
+            }
+            else
             {
-                System.err.println("ChatManager.login: SQL exception thrown: " + e.getMessage());
                 operationStat = new OperationStatusPacket(0,
                                                           OperationStatusPacket.FAIL,
                                                           OperationStatusPacket.OP_LOGIN);
