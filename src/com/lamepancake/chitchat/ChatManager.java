@@ -218,7 +218,7 @@ public class ChatManager
     
     /**
      * Tells a ServerUser to notify a client with an operation result.
-     * @param clientKey The client it's to be end to.
+     * @param clientKey The client it's to be sent to.
      * @param success If the operation was a success or a failure.
      * @param opType The type of operation.
      */
@@ -229,6 +229,24 @@ public class ChatManager
         operationStat = new OperationStatusPacket(user.getID(), success, opType);
         
         user.notifyClient(operationStat);
+    }
+    
+    /**
+     * Sends a operation login result when a user login fails.
+     * @param clientKey The client it's to be sent to.
+     */
+    private void sendLoginOperationFailure(SelectionKey clientKey)
+    {
+        OperationStatusPacket operationStat;
+        operationStat = new OperationStatusPacket(-1, OperationStatusPacket.FAIL, OperationStatusPacket.OP_LOGIN);
+        
+        try 
+        {
+            SocketChannel channel = (SocketChannel)clientKey.channel();
+            channel.write(operationStat.serialise()); 
+        } catch (IOException e) {
+            System.err.println("ChatManager.sendLoginOperationResult: Could not send message: " + e.getMessage());
+        }
     }
     
     /**
@@ -432,7 +450,6 @@ public class ChatManager
     {
         
         ServerUser user = null;
-        OperationStatusPacket operationStat;
         
         try 
         {
@@ -441,9 +458,7 @@ public class ChatManager
         } catch (SQLException e) 
         {
             System.err.println("ChatManager.login: SQL exception thrown: " + e.getMessage());
-            operationStat = new OperationStatusPacket(0,
-                                                      OperationStatusPacket.FAIL,
-                                                      OperationStatusPacket.OP_LOGIN);
+            sendLoginOperationFailure(key);
             return;
         }
         
@@ -452,16 +467,12 @@ public class ChatManager
             if (user.getPassword().equals(loginInfo.getPassword())) // match passwords
             {
                 user.setSocket((SocketChannel)key.channel());
-                lobby.put(key, user);
-                operationStat = new OperationStatusPacket(user.getID(), 
-                                                          OperationStatusPacket.SUCCESS,
-                                                          OperationStatusPacket.OP_LOGIN);
+                this.lobby.put(key, user);
+                sendOperationResult(key, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN);   
             }
             else
             {
-                operationStat = new OperationStatusPacket(0,
-                                                          OperationStatusPacket.FAIL,
-                                                          OperationStatusPacket.OP_LOGIN);
+                sendLoginOperationFailure(key);
             }
         }
         else // user doesn't exists
@@ -470,25 +481,13 @@ public class ChatManager
             { 
                 user = createUser(key, loginInfo);
                 UserDAOMySQLImpl.getInstance().create(user);
-                operationStat = new OperationStatusPacket(user.getID(),
-                                                          OperationStatusPacket.SUCCESS,
-                                                          OperationStatusPacket.OP_LOGIN);
-                
+                sendOperationResult(key, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN);                                
             } catch (SQLException e) {
                 System.err.println("ChatManager.login: SQL exception thrown: " + e.getMessage());
-                operationStat = new OperationStatusPacket(0, 
-                                                          OperationStatusPacket.FAIL,
-                                                          OperationStatusPacket.OP_LOGIN);
+                sendLoginOperationFailure(key);
             }
         }
         
-        try 
-        {
-            SocketChannel channel = (SocketChannel)key.channel();
-            channel.write(operationStat.serialise()); 
-        } catch (IOException e) {
-            System.err.println("ChatManager.login: Could not send message: " + e.getMessage());
-        }
     }
     
     /**
