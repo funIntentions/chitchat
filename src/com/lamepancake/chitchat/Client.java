@@ -70,6 +70,8 @@ public class Client {
     
     private ClientGUI gui;
     
+    private User clientUser;
+    
     /**
      * An operation for which we're awaiting confirmation.
      * 
@@ -96,6 +98,9 @@ public class Client {
             this.password = password;
             this.userID = -1;
             this.isWaiting = true;
+            this.clientUser.setID(userID);
+            this.clientUser.setName(username);
+            this.clientUser.setPassword(password);
 
             chatList = new HashMap<Chat, Integer>();
             connected = true;
@@ -179,7 +184,10 @@ public class Client {
      */
     public void sendJoinLeave(int chatID, int joining)
     {
-        sendPacket(PacketCreator.createJoinLeave(userID, chatID, joining));
+        final JoinLeavePacket j = PacketCreator.createJoinLeave(userID, chatID, joining);
+        waitingOp.clear();
+        
+        sendPacket(j);
     }
     
     /**
@@ -203,7 +211,10 @@ public class Client {
      */
     public void sendRequestAccess(int chatID)
     {
-        sendPacket(PacketCreator.createRequestAccess(userID, chatID));
+        final RequestAccessPacket ra = PacketCreator.createRequestAccess(userID, chatID);
+        waitingOp.clear();
+        waitingOp.put(OperationStatusPacket.OP_REQACCESS, ra);
+        sendPacket(ra);
     }
     
     /**
@@ -216,7 +227,10 @@ public class Client {
     {
         if(userRole == User.ADMIN)
         {
-            sendPacket(PacketCreator.createBoot(chat, user, user));
+            final BootPacket b = PacketCreator.createBoot(chat, user, clientUser);
+            waitingOp.clear();
+            waitingOp.put(OperationStatusPacket.OP_CRUD, b);
+            sendPacket(b);
         }
     }
     
@@ -224,7 +238,40 @@ public class Client {
     {
         if(userRole == User.ADMIN)
         {
-            sendPacket(PacketCreator.createChangeRole(userid, chatid, role));
+            final ChangeRolePacket cr = PacketCreator.createChangeRole(userid, chatid, role);
+            waitingOp.clear();
+            waitingOp.put(OperationStatusPacket.OP_CRUD, cr);
+            sendPacket(cr);
+        }
+    }
+    
+    public void sendCreateChat(String chatname, int chatID)
+    {
+        final UpdateChatsPacket uc = PacketCreator.createUpdateChats(chatname, chatID, 0);
+        waitingOp.clear();
+        waitingOp.put(OperationStatusPacket.OP_CRUD, uc);
+        sendPacket(uc);
+    }
+    
+    public void sendUpdateChat(int chatid, String chatname)
+    {
+        if(userRole == User.ADMIN)
+        {
+            final UpdateChatsPacket uc = PacketCreator.createUpdateChats(chatname, chatid, 1);
+            waitingOp.clear();
+            waitingOp.put(OperationStatusPacket.OP_CRUD, uc);
+            sendPacket(uc);
+        }
+    }
+    
+    public void sendDeleteChat(int chatid)
+    {
+        if(userRole == User.ADMIN)
+        {
+            final UpdateChatsPacket uc = PacketCreator.createUpdateChats(null, chatid, -1);
+            waitingOp.clear();
+            waitingOp.put(OperationStatusPacket.OP_CRUD, uc);
+            sendPacket(uc);
         }
     }
     

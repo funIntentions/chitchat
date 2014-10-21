@@ -142,6 +142,11 @@ public class ClientGUI extends JFrame implements ActionListener {
         }
     }
     
+    public void createChat()
+    {
+        
+    }
+    
     /**
      * Resets the buttons on the GUI if the connection fails.
      */
@@ -198,8 +203,6 @@ public class ClientGUI extends JFrame implements ActionListener {
             }
 
             //client = new Client(this);
-            
-            this.remove(loginPage);
             this.add(chatPanel);
 
 
@@ -290,8 +293,5 @@ public class ClientGUI extends JFrame implements ActionListener {
             });
         }
     }
-    
-    public void receiveFromMediator(String input) {
-        tf.setText(input);
-    }
+
 }
