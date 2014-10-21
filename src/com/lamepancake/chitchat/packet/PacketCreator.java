@@ -133,6 +133,16 @@ public class PacketCreator {
     }
     
     /**
+     * Returns a new LoginPacket.
+     * @param userID the ID of the user logging out.
+     * @return a new LoginPacket.
+     */
+    public static LogoutPacket createLogout(int userID)
+    {
+        return new LogoutPacket(userID);
+    }
+    
+    /**
      * Returns a new MessagePacket.
      * @param message The message to be sent.
      * @param userID the id of the user who sent it.
