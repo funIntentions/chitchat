@@ -139,15 +139,17 @@ public class ChatDAOMySQLImpl extends MySQLDAOBase implements ChatDAO {
     
     @Override
     public int create(Chat c) throws SQLException
-    {        
+    {   
+        int id = -1;
         createChatStatement.clearParameters();
         createChatStatement.setString(1, c.getName());
         createChatStatement.executeUpdate();
         
+        queryResults = query.executeQuery("SELECT MAX(`chatId`) FROM `chat`");
         if(queryResults.next())
-            queryResults = query.executeQuery("SELECT MAX(`chatId`) FROM `chat`");
-
-        return queryResults.getInt(0);
+            id = queryResults.getInt(1);
+        
+        return id;
     }
     
     @Override
