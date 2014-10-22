@@ -93,6 +93,11 @@ public class ChatListPacket extends Packet
         return this.roles;
     }
     
+    public Map<Chat, Integer> getChatList()
+    {
+        return this.chatList;
+    }
+    
     @Override
     public ByteBuffer serialise()
     {

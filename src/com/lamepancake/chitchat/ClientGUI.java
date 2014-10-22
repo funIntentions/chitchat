@@ -10,6 +10,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import java.util.Map;
+import javax.swing.DefaultListModel;
+import javax.swing.ListModel;
 
 /**
  *
@@ -326,6 +329,22 @@ public class ClientGUI extends javax.swing.JFrame {
         });
     }
     
+    public void populateChatList(String[] chats)
+    {
+        for(int i = 0; i < chats.length; i++)
+        {
+            ((DefaultListModel)ListChatLists.getModel()).addElement(chats[i]);
+        }
+    }
+    
+    public void populateUserList(String[] users)
+    {
+        for(int i = 0; i < users.length; i++)
+        {
+            ((DefaultListModel)ListUsersLists.getModel()).addElement(users[i]);
+        }
+    }
+    
     /**
      * Tells the GUI whether the login attempt failed or succeeded.
      * 
@@ -339,7 +358,11 @@ public class ClientGUI extends javax.swing.JFrame {
             @Override
             public void run() {
                 if(valid)
+                {
                     initComponents();
+                    ListChatLists.setModel(new DefaultListModel());
+                    ListUsersLists.setModel(new DefaultListModel());
+                }
                 else 
                     showLoginDialog();
             }
