@@ -144,7 +144,9 @@ public class ChatDAOMySQLImpl extends MySQLDAOBase implements ChatDAO {
         createChatStatement.setString(1, c.getName());
         createChatStatement.executeUpdate();
         
-        queryResults = query.executeQuery("SELECT MAX(`chatId`) FROM `chat`");
+        if(queryResults.next())
+            queryResults = query.executeQuery("SELECT MAX(`chatId`) FROM `chat`");
+
         return queryResults.getInt(0);
     }
     
