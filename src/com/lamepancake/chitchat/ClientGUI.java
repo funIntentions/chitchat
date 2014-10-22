@@ -71,6 +71,7 @@ public class ClientGUI extends javax.swing.JFrame {
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
+        jMenuItem1 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -172,6 +173,18 @@ public class ClientGUI extends javax.swing.JFrame {
         jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Chat");
+
+        jMenuItem1.setText("New Chat");
+        jMenuItem1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                jMenuItem1MousePressed(evt);
+            }
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jMenuItem1MouseClicked(evt);
+            }
+        });
+        jMenu2.add(jMenuItem1);
+
         jMenuBar1.add(jMenu2);
 
         setJMenuBar(jMenuBar1);
@@ -204,6 +217,29 @@ public class ClientGUI extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jMenuItem1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenuItem1MouseClicked
+        // TODO add your handling code here:
+        System.out.println("New Chat. MouseClicked");
+    }//GEN-LAST:event_jMenuItem1MouseClicked
+
+    private void jMenuItem1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenuItem1MousePressed
+        // TODO add your handling code here:
+        final JTextField tfChatName = new JTextField("");
+        Object[] options = {"Chat Name: ", tfChatName};
+        
+        int option = JOptionPane.showConfirmDialog(null, options, "New Chat", JOptionPane.OK_CANCEL_OPTION);
+        
+        if(option == JOptionPane.OK_OPTION)
+        {
+            client.sendCreateChat(tfChatName.getText(), -1);
+        } 
+        else 
+        {
+            System.out.println("Login canceled");
+        }
+        
+    }//GEN-LAST:event_jMenuItem1MousePressed
 
     /**
      * @param args the command line arguments
@@ -299,6 +335,7 @@ public class ClientGUI extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
