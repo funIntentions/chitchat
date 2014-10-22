@@ -393,20 +393,31 @@ public class ClientGUI extends javax.swing.JFrame {
         });
     }
     
-    public void populateChatList(String[] chats)
+    public void populateChatList(final String[] chats)
     {
-        for(int i = 0; i < chats.length; i++)
-        {
-            ((DefaultListModel)ListChatLists.getModel()).addElement(chats[i]);
-        }
+        SwingUtilities.invokeLater(new Runnable() {
+            
+            @Override
+            public void run(){
+                for(int i = 0; i < chats.length; i++)
+                {
+                    ((DefaultListModel)ListChatLists.getModel()).addElement(chats[i]);
+                }
+            }
+        });
     }
     
-    public void populateUserList(String[] users)
+    public void populateUserList(final String[] users)
     {
-        for(int i = 0; i < users.length; i++)
-        {
-            ((DefaultListModel)ListUsersLists.getModel()).addElement(users[i]);
-        }
+        SwingUtilities.invokeLater(new Runnable() {    
+            @Override
+            public void run(){
+                for(int i = 0; i < users.length; i++)
+                {
+                    ((DefaultListModel)ListUsersLists.getModel()).addElement(users[i]);
+                }
+            }
+        });
     }
     
     /**
