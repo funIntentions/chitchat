@@ -3,7 +3,6 @@ package com.lamepancake.chitchat;
 import com.lamepancake.chitchat.packet.*;
 import java.net.*;
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.*;
 import javax.swing.SwingWorker;
@@ -27,17 +26,7 @@ public class Client {
     /**
      * A GUI, if the client has one.
      */
-    //private ClientGUI cg;
-    
-    /**
-     * The client's username.
-     */
-    private final String username;
-    
-    /**
-     * The client's password.
-     */
-    private final String password;
+    private final ClientGUI gui;
         
     /**
      * The ID identifying this client within the chat.
@@ -68,8 +57,6 @@ public class Client {
     
     private int chatID;
     
-    private ClientGUI gui;
-    
     private User clientUser;
     
     /**
@@ -87,36 +74,21 @@ public class Client {
      * The Client won't try to connect to the server and start accepting input until
      * its start() method is called.
      * 
-     * @param s         The socket.
-     * @param username  The client's username.
-     * @param password  The client's password.
+     * @param s   The socket.
+     * @param gui
      */
-    public Client(String username, String password, SocketChannel s) 
+    public Client(ClientGUI gui, SocketChannel s) 
     {
-            this.username = username;
             this.socket = s;
-            this.password = password;
             this.userID = -1;
             this.isWaiting = true;
             this.clientUser = new User();
             this.clientUser.setID(userID);
-            this.clientUser.setName(username);
-            this.clientUser.setPassword(password);
-
+            this.gui = gui;
+            
             chatList = new HashMap<Chat, Integer>();
             connected = true;
             logout = false;
-    }
-
-    /**
-     * Sets the GUI for this Client.
-     * 
-     * This method must be called for the client to functino properly.
-     * @param gui The ClientGUI for this Client to use.
-     */
-    private void setGUI(ClientGUI gui)
-    {
-        this.gui = gui;
     }
     
     /**
@@ -313,12 +285,6 @@ public class Client {
         String server;
         int port;
         SocketChannel s = parseCmdArgs(args);
-        
-        Client c = new Client("Shane", "SuperPass", s);
-        
-        // Set up our wonderful coupling
-        ClientGUI clientGUI = new ClientGUI(c);
-        c.setGUI(clientGUI);
     }
 
     /**
@@ -327,12 +293,10 @@ public class Client {
      * @param args The command line arguments.
      * @return     A new Client object or null if one or more arguments were incorrect.
      */
-    private static SocketChannel parseCmdArgs(String[] args)
+    public static SocketChannel parseCmdArgs(String[] args)
     {
         int     portNumber  = 1500;
         String  serverName  = "localhost";
-        String  name        = "Anonymous";
-        String  pw          = "Anon";
 
         // depending of the number of arguments provided we fall through
         switch(args.length) {
@@ -349,9 +313,7 @@ public class Client {
                     System.out.println("Usage is: > java Client [username] [portNumber] [serverAddress]");
                     return null;
                 }
-            // username
-            case 1: 
-                name = args[0];
+
             // default values
             case 0:
                 break;
@@ -375,26 +337,6 @@ public class Client {
 //                return false;
         }
         return socket;
-    }
-    
-    public int getUserRole()
-    {
-        return userRole;
-    }
-
-    public int getUserID()
-    {
-        return userID;
-    }
-
-    public String getUserName()
-    {
-        return username;
-    }
-
-    public int getChatID()
-    {
-        return chatID;
     }
     
     /**
@@ -528,7 +470,7 @@ public class Client {
                 }
                 else
                 {
-                    // Display an error message. Lol
+                    // Display an error message. ClientGUI
                 }
                 break;
             case OperationStatusPacket.OP_LOGIN:

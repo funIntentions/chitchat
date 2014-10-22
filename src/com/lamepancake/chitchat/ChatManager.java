@@ -31,6 +31,7 @@ import com.lamepancake.chitchat.packet.OperationStatusPacket;
 import com.lamepancake.chitchat.packet.PacketCreator;
 import com.lamepancake.chitchat.packet.RequestAccessPacket;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Iterator;
 
 /**
@@ -476,15 +477,7 @@ public class ChatManager
         }
         else // user doesn't exists
         {
-            try 
-            { 
-                user = createUser(key, loginInfo);
-                UserDAOMySQLImpl.getInstance().create(user);
-                sendOperationResult(key, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN);                                
-            } catch (SQLException e) {
-                System.err.println("ChatManager.login: SQL exception thrown: " + e.getMessage());
-                sendLoginOperationFailure(key);
-            }
+            createUser(key, loginInfo);
         }
     }
     
@@ -494,16 +487,24 @@ public class ChatManager
      * @param loginInfo The login info used to create the new user.
      * @return the newly created User.
      */
-    private ServerUser createUser(SelectionKey key, LoginPacket loginInfo)
+    private void createUser(SelectionKey key, LoginPacket loginInfo)
     {
+        
         ServerUser user = new ServerUser();
         user.setName(loginInfo.getUsername()).setPassword(loginInfo.getPassword());
-        
         user.setSocket((SocketChannel)key.channel());
+
+        try 
+        { 
+            int id = UserDAOMySQLImpl.getInstance().create(user);
+            user.setID(id);
+            lobby.put(key, user);
+            sendOperationResult(key, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN);                                
+        } catch (SQLException e) {
+            System.err.println("ChatManager.login: SQL exception thrown: " + e.getMessage());
+            sendLoginOperationFailure(key);
+        }
         
-        lobby.put(key, user);
-        
-        return user;
     }
     
     /**
