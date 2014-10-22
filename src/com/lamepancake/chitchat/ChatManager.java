@@ -486,18 +486,6 @@ public class ChatManager
                 sendLoginOperationFailure(key);
             }
         }
-<<<<<<< Updated upstream
-        
-=======
-
-        try 
-        {
-            SocketChannel channel = (SocketChannel)key.channel();
-            channel.write(operationStat.serialise()); 
-        } catch (IOException e) {
-            System.err.println("ChatManager.login: Could not send message: " + e.getMessage());
-        }
->>>>>>> Stashed changes
     }
     
     /**
