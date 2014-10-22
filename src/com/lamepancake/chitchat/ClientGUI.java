@@ -10,6 +10,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import java.util.Map;
+import javax.swing.DefaultListModel;
+import javax.swing.ListModel;
 
 /**
  *
@@ -79,6 +82,8 @@ public class ClientGUI extends javax.swing.JFrame {
         MenuFile = new javax.swing.JMenu();
         MenuChat = new javax.swing.JMenu();
         MenuItemCreateChat = new javax.swing.JMenuItem();
+        MenuItemUpdateChat = new javax.swing.JMenuItem();
+        MenuItemDeleteChat = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -190,6 +195,27 @@ public class ClientGUI extends javax.swing.JFrame {
         });
         MenuChat.add(MenuItemCreateChat);
 
+        MenuItemUpdateChat.setText("Update Chat");
+        MenuItemUpdateChat.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                MenuItemUpdateChatMousePressed(evt);
+            }
+        });
+        MenuChat.add(MenuItemUpdateChat);
+
+        MenuItemDeleteChat.setText("Delete Chat");
+        MenuItemDeleteChat.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                MenuItemDeleteChatMousePressed(evt);
+            }
+        });
+        MenuItemDeleteChat.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                MenuItemDeleteChatActionPerformed(evt);
+            }
+        });
+        MenuChat.add(MenuItemDeleteChat);
+
         MenuBarTop.add(MenuChat);
 
         setJMenuBar(MenuBarTop);
@@ -245,6 +271,47 @@ public class ClientGUI extends javax.swing.JFrame {
         }
         
     }//GEN-LAST:event_MenuItemCreateChatMousePressed
+
+    private void MenuItemDeleteChatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MenuItemDeleteChatActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_MenuItemDeleteChatActionPerformed
+
+    private void MenuItemUpdateChatMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_MenuItemUpdateChatMousePressed
+        // TODO add your handling code here:
+        final JTextField tfChatName = new JTextField("");
+        final JTextField tfChatID = new JTextField("");
+        Object[] options = {"Chat Name: ", tfChatName ,"Chat ID: ", tfChatID};
+        
+        int option = JOptionPane.showConfirmDialog(null, options, "Update Chat", JOptionPane.OK_CANCEL_OPTION);
+        
+        if(option == JOptionPane.OK_OPTION)
+        {
+            client.sendUpdateChat(Integer.parseInt(tfChatID.getText()), tfChatName.getText());
+        } 
+        else 
+        {
+            System.out.println("Login canceled");
+        }
+        
+    }//GEN-LAST:event_MenuItemUpdateChatMousePressed
+
+    private void MenuItemDeleteChatMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_MenuItemDeleteChatMousePressed
+        // TODO add your handling code here:
+        final JTextField tfChatID = new JTextField("");
+        Object[] options = {"Chat ID: ", tfChatID};
+        
+        int option = JOptionPane.showConfirmDialog(null, options, "Delete Chat", JOptionPane.OK_CANCEL_OPTION);
+        
+        if(option == JOptionPane.OK_OPTION)
+        {
+            client.sendDeleteChat(Integer.parseInt(tfChatID.getText()));
+        } 
+        else 
+        {
+            System.out.println("Login canceled");
+        }
+        
+    }//GEN-LAST:event_MenuItemDeleteChatMousePressed
 
     /**
      * @param args the command line arguments
@@ -326,6 +393,22 @@ public class ClientGUI extends javax.swing.JFrame {
         });
     }
     
+    public void populateChatList(String[] chats)
+    {
+        for(int i = 0; i < chats.length; i++)
+        {
+            ((DefaultListModel)ListChatLists.getModel()).addElement(chats[i]);
+        }
+    }
+    
+    public void populateUserList(String[] users)
+    {
+        for(int i = 0; i < users.length; i++)
+        {
+            ((DefaultListModel)ListUsersLists.getModel()).addElement(users[i]);
+        }
+    }
+    
     /**
      * Tells the GUI whether the login attempt failed or succeeded.
      * 
@@ -339,7 +422,11 @@ public class ClientGUI extends javax.swing.JFrame {
             @Override
             public void run() {
                 if(valid)
+                {
                     initComponents();
+                    ListChatLists.setModel(new DefaultListModel());
+                    ListUsersLists.setModel(new DefaultListModel());
+                }
                 else 
                     showLoginDialog();
             }
@@ -354,6 +441,8 @@ public class ClientGUI extends javax.swing.JFrame {
     private javax.swing.JMenu MenuChat;
     private javax.swing.JMenu MenuFile;
     private javax.swing.JMenuItem MenuItemCreateChat;
+    private javax.swing.JMenuItem MenuItemDeleteChat;
+    private javax.swing.JMenuItem MenuItemUpdateChat;
     private javax.swing.JPanel PanelChatLog;
     private javax.swing.JPanel PanelLists;
     private javax.swing.JPanel PanelMessage;

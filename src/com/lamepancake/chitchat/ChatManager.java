@@ -382,7 +382,7 @@ public class ChatManager
             
             //Make user admin for chat.
             ChatRoleDAOMySQLImpl.getInstance().addUser(chatID, user.getID(), User.ADMIN);
-            
+
             sendOperationResult(clientKey, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_CRUD);
             
             notifyUsersOfChatUpdate(chat, UpdateChatsPacket.CREATE);

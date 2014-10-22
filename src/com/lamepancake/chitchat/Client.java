@@ -384,6 +384,58 @@ public class Client {
         return socket;
     }
     
+    private void processChatList(ChatListPacket p)
+    {
+        Map<Chat, Integer> chats = p.getChatList();
+        Set<Chat> keys = chats.keySet();
+        
+        String[] chatListList = new String[keys.size()];
+        int i = 0;
+        
+        for(Chat c : keys)
+        {
+            switch(chats.get(c))
+            {
+                case User.ADMIN:
+                    chatListList[i] = c.getID() + " " + c.getName() + ", Scrum Master";
+                case User.USER:
+                    chatListList[i] = c.getID() + " " + c.getName() + ", Developer";
+                case User.WAITING:
+                    chatListList[i] = c.getID() + " " + c.getName() + ", Waiting";    
+                case User.UNSPEC:
+                    chatListList[i] = c.getID() + " " + c.getName() + ", Unspecified"; 
+                default:
+                    chatListList[i] = c.getID() + " " + c.getName() + ", Unspecified";    
+            }
+            i++;
+        }
+        
+        gui.populateChatList(chatListList);
+    }
+
+    private void processUserList(WhoIsInPacket p)
+    {
+        Map<User, Boolean> users = p.getUsers();
+        Set<User> keys = users.keySet();
+        
+        String[] userListList = new String[keys.size()];
+        int i = 0;
+        
+        for(User u : keys)
+        {
+            if(users.get(u))
+            {
+                userListList[i] = u.getName() + ", online";
+            }
+            else
+            {
+                userListList[i] = u.getName() + ", offline";
+            }
+            i++;
+        }
+        gui.populateUserList(userListList);
+    }
+    
     /**
      * Receives a list of packets from the ListenFromServer thread and processes
      * them.
@@ -402,11 +454,12 @@ public class Client {
                     displayMessage((MessagePacket)p);
                     break;
                 case Packet.WHOISIN:
-                    // Update list of users
+                    processUserList((WhoIsInPacket)p);
                     // WhoIsInPacket userList = (WhoIsInPacket)p;
                     break;
                 case Packet.CHATLIST:
                     // Call a method for displaying chats
+                    processChatList((ChatListPacket)p);
                     break;
                 case Packet.OPERATIONSTATUS:
                     operationStatusHandler((OperationStatusPacket)p);
@@ -576,7 +629,7 @@ public class Client {
             }
             return null;
         }
-        
+                
         @Override
         protected void process(List<Packet> packets)
         {
