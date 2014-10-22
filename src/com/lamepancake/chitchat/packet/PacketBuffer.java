@@ -154,9 +154,14 @@ public class PacketBuffer {
     {
         try {
             if(this.socket.read(this.packetData) == -1)
+            {
                 this.state = DISCONNECTED;
+                return false;
+            }
         } catch (IOException e) {
-            System.out.println("PacketBuffer.readData: Problem during reading: " + e.getMessage());
+            System.err.println("PacketBuffer.readData: Problem during reading: " + e.getMessage());
+            this.state = DISCONNECTED;
+            return false;
         }
         
         return this.packetData.remaining() == 0;

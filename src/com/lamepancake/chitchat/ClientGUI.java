@@ -21,17 +21,24 @@ public class ClientGUI extends javax.swing.JFrame {
     /**
      * Creates new form test
      */
-    public ClientGUI() {
-        final JTextField tfUsername = new JTextField("");
-        final JPasswordField tfPassword = new JPasswordField("");
-        Object[] options = {"Username: ", tfUsername, "Password: ", tfPassword};
-        
+    public ClientGUI() {        
         SocketChannel s = Client.parseCmdArgs(new String[] {"localhost", "1500"});
-        
         client = new Client(this, s);
         client.start();
         
-        int option = JOptionPane.showConfirmDialog(null, options, "Login", JOptionPane.OK_CANCEL_OPTION);
+        showLoginDialog();
+    }
+
+    /**
+     * Displays the login dialog and sends the login info to the server.
+     */
+    private void showLoginDialog()
+    {
+        final JTextField tfUsername = new JTextField("");
+        final JPasswordField tfPassword = new JPasswordField("");
+        final Object[] options = {"Username: ", tfUsername, "Password: ", tfPassword};
+        final int option = JOptionPane.showConfirmDialog(null, options, "Login", JOptionPane.OK_CANCEL_OPTION);
+
         if(option == JOptionPane.OK_OPTION)
         {
             client.sendLogin(tfUsername.getText(), new String(tfPassword.getPassword()));
@@ -42,7 +49,7 @@ public class ClientGUI extends javax.swing.JFrame {
             System.out.println("Login canceled");
         }
     }
-
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -109,14 +116,12 @@ public class ClientGUI extends javax.swing.JFrame {
         TextAreaChatLog1.setText("Humpfrey: Top of the morning to ya.\na\ndf\na\nsdf\na\nsdf\na\nsd\nf\nasdf\nasdf\n\nasd\nf\nas\ndf\nasdf\na\nsd\nf\nasdf\n\nasd\nf\n\nasdf\na\nsdf\nasdf\nas\ndf\nas\ndf\nasd\nf\nasdf\nas\ndf\nas\nf\n\na\nsdf\nas\ndf\nas\ndf\nasd");
         TextAreaChatLog1.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
         ScrollPaneChatLog1.setViewportView(TextAreaChatLog1);
-
         TabbedPaneChatLog.addTab("ChitChatCat", ScrollPaneChatLog1);
 
         TextAreaChatLog2.setColumns(20);
         TextAreaChatLog2.setRows(5);
         TextAreaChatLog2.setText("Ted: yo dawg\nLightning Storm: what up slaya?");
         ScrollPaneChatLog2.setViewportView(TextAreaChatLog2);
-
         TabbedPaneChatLog.addTab("ChitChatBat", ScrollPaneChatLog2);
 
         javax.swing.GroupLayout PanelChatLogLayout = new javax.swing.GroupLayout(PanelChatLog);
@@ -267,6 +272,23 @@ public class ClientGUI extends javax.swing.JFrame {
     }
 
     /**
+     * Displays an error message.
+     * 
+     * @param errorStr The string to display in the error message.
+     */
+    public void displayError(final String errorStr)
+    {
+        final javax.swing.JFrame thisFrame = this;
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JOptionPane.showMessageDialog(thisFrame, errorStr, "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+    }
+    
+    /**
      * Displays the message and its sender.
      * 
      * @param message The message to display.
@@ -305,25 +327,21 @@ public class ClientGUI extends javax.swing.JFrame {
     }
     
     /**
-     * Tells the GUI whether the login attempt c.failed or succeeded.
+     * Tells the GUI whether the login attempt failed or succeeded.
      * 
      * @param userID The user's ID if the login succeeded.
      * @param valid Whether the login was valid.
      */
     public void loginValid(final int userID, final boolean valid)
     {
-        // Queue
+        // Show the full GUI on success or re-prompt on failure
         SwingUtilities.invokeLater( new Runnable() {
             @Override
             public void run() {
                 if(valid)
-                {
                     initComponents();
-                }
                 else 
-                {
-                    System.out.println("Failed :(");
-                }
+                    showLoginDialog();
             }
         });
     }

@@ -2,11 +2,16 @@ package com.lamepancake.chitchat;
 
 /**
  * Represents a chat user.
+ * 
+ * <b>IMPORTANT NOTE:</b> The role with the least privileges in a chat is that
+ * with the highest number. This rule must be observed when creating new roles
+ * as the restrict() method relies on it.
+ * 
  * @author shane
  */
 public class User {
- 
-    public static final int UNSPEC  = -1;
+
+    public static final int UNSPEC  = Integer.MAX_VALUE;
     public static final int ADMIN   = 0;
     public static final int USER    = 1;
     public static final int WAITING = 2;
@@ -137,5 +142,17 @@ public class User {
         }
         
         return this.name + (roleString == null ? "" : " " + roleString);
+    }
+    
+    /**
+     * Determines whether the user has the minimum required role in a given chat.
+     * 
+     * @param userRole The user's role in the given chat.
+     * @param minRole  The minimum required role for the privilege in the chat.
+     * @return 
+     */
+    public static boolean restrict(final int userRole, final int minRole)
+    {
+        return (minRole - userRole) >= 0;
     }
 }

@@ -31,7 +31,6 @@ import com.lamepancake.chitchat.packet.OperationStatusPacket;
 import com.lamepancake.chitchat.packet.PacketCreator;
 import com.lamepancake.chitchat.packet.RequestAccessPacket;
 import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.Iterator;
 
 /**
@@ -273,7 +272,7 @@ public class ChatManager
                     sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
                 }
                 break;
-            case UpdateChatsPacket.REMOVE:
+            case UpdateChatsPacket.DELETE:
                 if (isAdmin(clientKey,received.getChatID(), OperationStatusPacket.OP_CRUD))
                 {
                     deleteChat(clientKey, received);
@@ -311,7 +310,7 @@ public class ChatManager
             
             sendOperationResult(clientKey, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_CRUD);
             
-            notifyUsersOfChatUpdate(chat, UpdateChatsPacket.REMOVE);
+            notifyUsersOfChatUpdate(chat, UpdateChatsPacket.DELETE);
 
         } catch (SQLException e) 
         {
@@ -382,7 +381,7 @@ public class ChatManager
             this.chats.put(chatID, chat);
             
             //Make user admin for chat.
-            ChatRoleDAOMySQLImpl.getInstance().updateRole(chatID, user.getID(), User.ADMIN);
+            ChatRoleDAOMySQLImpl.getInstance().addUser(chatID, user.getID(), User.ADMIN);
             
             sendOperationResult(clientKey, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_CRUD);
             

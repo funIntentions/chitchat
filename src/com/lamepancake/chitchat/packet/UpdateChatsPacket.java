@@ -6,16 +6,16 @@ import java.nio.charset.StandardCharsets;
 /**
  * Sent by an admin or user to perform CRUD operations on chats.
  * 
- * For UPDATE and REMOVE operations, the sender must be an admin in the chat.
- * For CREATE operations, the server will check whether the chat exists and
- * attempt to create a new one with the creating user as admin if not.
- * 
- * This packet requires the server to respond with an OperationStatusPacket.
+ * For UPDATE and DELETE operations, the sender must be an admin in the chat.
+ For CREATE operations, the server will check whether the chat exists and
+ attempt to create a new one with the creating user as admin if not.
+ 
+ This packet requires the server to respond with an OperationStatusPacket.
  * @author dan
  */
 public class UpdateChatsPacket extends Packet {
     
-    public static final int REMOVE  = -1;
+    public static final int DELETE  = -1;
     public static final int CREATE   = 0;
     public static final int UPDATE    = 1;
     
@@ -29,7 +29,7 @@ public class UpdateChatsPacket extends Packet {
      * 
      * @param name   The name of the chat to update, create or delete.
      * @param id     The ID of the chat to update, create or delete.
-     * @param update The operation to perform (UpdateChatsPacket.REMOVE, CREATE, UPDATE).
+     * @param update The operation to perform (UpdateChatsPacket.DELETE, CREATE, UPDATE).
      */
     public UpdateChatsPacket(String name, int id, int update)
     {
@@ -93,8 +93,8 @@ public class UpdateChatsPacket extends Packet {
     
     /**
      * Gets the operation to perform on the chat.
-     * @return The operation (UpdateChatsPacket.REMOVE, UpdateChatsPacket.UPDATE,
-     *         UpdateChatsPacket.CREATE) to perform on the chat.
+     * @return The operation (UpdateChatsPacket.DELETE, UpdateChatsPacket.UPDATE,
+         UpdateChatsPacket.CREATE) to perform on the chat.
      */
     public int getUpdate()
     {

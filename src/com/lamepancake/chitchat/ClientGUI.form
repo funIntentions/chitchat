@@ -177,6 +177,7 @@
               <SubComponents>
                 <Component class="javax.swing.JTextArea" name="TextAreaChatLog1">
                   <Properties>
+                    <Property name="editable" type="boolean" value="false"/>
                     <Property name="columns" type="int" value="20"/>
                     <Property name="rows" type="int" value="5"/>
                     <Property name="text" type="java.lang.String" value="Humpfrey: Top of the morning to ya.&#xa;a&#xa;df&#xa;a&#xa;sdf&#xa;a&#xa;sdf&#xa;a&#xa;sd&#xa;f&#xa;asdf&#xa;asdf&#xa;&#xa;asd&#xa;f&#xa;as&#xa;df&#xa;asdf&#xa;a&#xa;sd&#xa;f&#xa;asdf&#xa;&#xa;asd&#xa;f&#xa;&#xa;asdf&#xa;a&#xa;sdf&#xa;asdf&#xa;as&#xa;df&#xa;as&#xa;df&#xa;asd&#xa;f&#xa;asdf&#xa;as&#xa;df&#xa;as&#xa;f&#xa;&#xa;a&#xa;sdf&#xa;as&#xa;df&#xa;as&#xa;df&#xa;asd"/>
@@ -203,6 +204,7 @@
               <SubComponents>
                 <Component class="javax.swing.JTextArea" name="TextAreaChatLog2">
                   <Properties>
+                    <Property name="editable" type="boolean" value="false"/>
                     <Property name="columns" type="int" value="20"/>
                     <Property name="rows" type="int" value="5"/>
                     <Property name="text" type="java.lang.String" value="Ted: yo dawg&#xa;Lightning Storm: what up slaya?"/>

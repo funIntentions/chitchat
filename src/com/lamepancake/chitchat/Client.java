@@ -26,24 +26,12 @@ public class Client {
     /**
      * A GUI, if the client has one.
      */
-    private final ClientGUI gui;
-        
-    /**
-     * The ID identifying this client within the chat.
-     */
-    private int userID;
+    private final ClientGUI gui;    
     
     /**
-     * This client's role in the chat.
+     * The list of chats and the user's role in each.
      */
-    private int userRole;
-      
     private Map<Chat, Integer> chatList;
-
-    /**
-     * Whether the user is in chat or waiting for access.
-     */
-    private boolean isWaiting;
 
     /**
      * Whether the user is still connected to the server.
@@ -54,10 +42,11 @@ public class Client {
      * Whether the user has logged out or not.
      */
     private volatile boolean logout;
-    
-    private int chatID;
-    
-    private User clientUser;
+
+    /**
+     * The User object representing this client.
+     */
+    private final User clientUser;
     
     /**
      * An operation for which we're awaiting confirmation.
@@ -66,27 +55,36 @@ public class Client {
      * requiring confirmation may be issued while waiting for an operation.
      */
     private final Map<Integer, Packet> waitingOp = new HashMap<>(1);
+    
+    /**
+     * Stores a list of operation ID's and their associated completion callbacks.
+     * 
+     * When the client issues a request which requires confirmation (a database
+     * operation, request for access to a chat, login attempt, etc), it sets a
+     * callback function to be run when the corresponding OperationStatusPacket
+     * arrives.
+     */
+    //private final Map<Integer, Runnable> completionCallbacks;
 
     /**
-     * Constructs a new Client with the given server information and authentication
-     * details.
+     * Constructs a new Client with the given server information and 
+     * authentication details.
      * 
-     * The Client won't try to connect to the server and start accepting input until
-     * its start() method is called.
+     * The Client won't try to connect to the server and start accepting input
+     * until its start() method is called.
      * 
-     * @param s   The socket.
-     * @param gui
+     * @todo Make the client call open() on the socket rather than the GUI.
+     * 
+     * @param s   The socket on which to send and receive information.
+     * @param gui The GUI for displaying information.
      */
     public Client(ClientGUI gui, SocketChannel s) 
     {
             this.socket = s;
-            this.userID = -1;
-            this.isWaiting = true;
             this.clientUser = new User();
-            this.clientUser.setID(userID);
             this.gui = gui;
             
-            chatList = new HashMap<Chat, Integer>();
+            chatList = new HashMap<>();
             connected = true;
             logout = false;
     }
@@ -98,54 +96,29 @@ public class Client {
      */
     public boolean start() 
     {
-
-        String msg = "Connection accepted ";
-        display(msg);
-        msg = "Status Update : Waiting to be added to chat.";
-        display(msg);
-
         // creates the Thread to listen from the server 
         new ListenFromServer().execute();
         return true;
     }
-    
-    /**
-     * Whether the user is waiting to enter the chat.
-     * 
-     * @return <code>true</code> if the user is waiting, <code>false</code> otherwise.
-     */
-    public boolean waiting()
-    {
-        return isWaiting;
-    }
-
-    /**
-     * Displays a message to the console or the GUI if present.
-     */
-    private void display(String msg) 
-    {
-        System.out.println(msg);
-        //pass to gui
-    }
 
     /**
      * Sends a packet to the server.
+     * 
+     * @param packet The packet to be sent.
      */
-    private void sendPacket(Packet msg) 
+    private void sendPacket(Packet packet) 
     {
+        //make sure the user is connected to the server
+        if(!connected)
+            return;
+        
         try 
-        {
-            //make sure the user is connected to the server
-            if(!connected)
-            {
-                return;
-            }
-            
-            socket.write(msg.serialise());
+        {            
+            socket.write(packet.serialise());
         } 
         catch(IOException e) 
         {
-            display("Could not send message: " + e.getMessage());
+            gui.displayError(e.getMessage());
         }
     }
     
@@ -157,9 +130,9 @@ public class Client {
      */
     public void sendJoinLeave(int chatID, int joining)
     {
-        final JoinLeavePacket j = PacketCreator.createJoinLeave(userID, chatID, joining);
+        final JoinLeavePacket j = PacketCreator.createJoinLeave(clientUser.getID(), chatID, joining);
         waitingOp.clear();
-        
+        // Wait for something else?...
         sendPacket(j);
     }
     
@@ -184,9 +157,9 @@ public class Client {
      */
     public void sendRequestAccess(int chatID)
     {
-        final RequestAccessPacket ra = PacketCreator.createRequestAccess(userID, chatID);
-        waitingOp.clear();
-        waitingOp.put(OperationStatusPacket.OP_REQACCESS, ra);
+        final RequestAccessPacket ra = PacketCreator.createRequestAccess(this.clientUser.getID(), chatID);
+        this.waitingOp.clear();
+        this.waitingOp.put(OperationStatusPacket.OP_REQACCESS, ra);
         sendPacket(ra);
     }
     
@@ -198,59 +171,120 @@ public class Client {
      */
     public void sendBoot(Chat chat, User user)
     {
-        if(userRole == User.ADMIN)
-        {
-            final BootPacket b = PacketCreator.createBoot(chat, user, clientUser);
-            waitingOp.clear();
-            waitingOp.put(OperationStatusPacket.OP_CRUD, b);
-            sendPacket(b);
-        }
+        if(!restrict(chat.getID(), User.ADMIN))
+            return;
+
+        final BootPacket b = PacketCreator.createBoot(chat, user, clientUser);
+        this.waitingOp.clear();
+        this.waitingOp.put(OperationStatusPacket.OP_CRUD, b);
+        sendPacket(b);
     }
     
+    /**
+     * Tells the server to change the given user's role in the specified chat
+     * to a new role.
+     * @param userid The User whose role is to be changed.
+     * @param chatid The Chat where the new role will be applied.
+     * @param role   The role to assign to the User.
+     */
     public void sendChangeRole(int userid, int chatid, int role)
     {
-        if(userRole == User.ADMIN)
-        {
-            final ChangeRolePacket cr = PacketCreator.createChangeRole(userid, chatid, role);
-            waitingOp.clear();
-            waitingOp.put(OperationStatusPacket.OP_CRUD, cr);
-            sendPacket(cr);
-        }
+        if(!restrict(chatid, User.ADMIN))
+            return;
+
+        final ChangeRolePacket cr = PacketCreator.createChangeRole(userid, chatid, role);
+        this.waitingOp.clear();
+        this.waitingOp.put(OperationStatusPacket.OP_CRUD, cr);
+        sendPacket(cr);
     }
     
-    public void sendCreateChat(String chatname, int chatID)
+    /**
+     * Tells the server to create a new chat with the given name.
+     * 
+     * @param chatname The name of the new chat.
+     * @param id       Ignored.
+     */
+    public void sendCreateChat(String chatname, int id)
     {
-        final UpdateChatsPacket uc = PacketCreator.createUpdateChats(chatname, chatID, 0);
-        waitingOp.clear();
-        waitingOp.put(OperationStatusPacket.OP_CRUD, uc);
+        final UpdateChatsPacket uc = PacketCreator.createUpdateChats(chatname, id, UpdateChatsPacket.CREATE);
+        this.waitingOp.clear();
+        this.waitingOp.put(OperationStatusPacket.OP_CRUD, uc);
         sendPacket(uc);
     }
     
+    /**
+     * Tells the server to change the given chat's name to the new name.
+     * 
+     * @param chatid   The ID of the chat to change.
+     * @param chatname The new name for the chat.
+     */
     public void sendUpdateChat(int chatid, String chatname)
     {
-        if(userRole == User.ADMIN)
-        {
-            final UpdateChatsPacket uc = PacketCreator.createUpdateChats(chatname, chatid, 1);
-            waitingOp.clear();
-            waitingOp.put(OperationStatusPacket.OP_CRUD, uc);
-            sendPacket(uc);
-        }
+        if(!restrict(chatid, User.ADMIN))
+            return;
+
+        final UpdateChatsPacket uc = PacketCreator.createUpdateChats(chatname, chatid, UpdateChatsPacket.UPDATE);
+        this.waitingOp.clear();
+        this.waitingOp.put(OperationStatusPacket.OP_CRUD, uc);
+        sendPacket(uc);
     }
     
+    /**
+     * Tells the server to delete the given chat.
+     * 
+     * @param chatid The ID of the chat to remove.
+     */
     public void sendDeleteChat(int chatid)
     {
-        if(userRole == User.ADMIN)
-        {
-            final UpdateChatsPacket uc = PacketCreator.createUpdateChats(null, chatid, -1);
-            waitingOp.clear();
-            waitingOp.put(OperationStatusPacket.OP_CRUD, uc);
-            sendPacket(uc);
-        }
+        if(!restrict(chatid, User.ADMIN))
+            return;
+
+        final UpdateChatsPacket uc = PacketCreator.createUpdateChats("", chatid, UpdateChatsPacket.DELETE);
+        this.waitingOp.clear();
+        this.waitingOp.put(OperationStatusPacket.OP_CRUD, uc);
+        sendPacket(uc);
     }
     
+    /**
+     * Sends a message to other users in the given chat.
+     * 
+     * @param chatID The ID of the chat.
+     * @param msg    The message to send.
+     */
     public void sendMessage(int chatID, String msg)
     {
-        sendPacket(PacketCreator.createMessage(msg, userID, chatID));
+        sendPacket(PacketCreator.createMessage(msg, this.clientUser.getID(), chatID));
+    }
+    
+    
+    /**
+     * Determines if the user has the required access rights for a given task.
+     * 
+     * @param chatID The ID of the chat in which to check the role.
+     * @param role   The minimum role that users must have to do the action.
+     * @return       Whether the user has the minimum role.
+     */
+    private boolean restrict(int chatID, int role)
+    {
+        Chat chat = null;
+        Integer roleInChat;
+        for(Chat c : chatList.keySet())
+        {
+            if(c.getID() == chatID)
+            {
+                chat = c;
+                break;
+            }
+        }
+         
+        if(chat == null)
+            return false;
+
+        roleInChat= chatList.get(chat);
+        if(roleInChat == null)
+            return false;
+        
+        return User.restrict(roleInChat, role);
     }
     
     /**
@@ -264,29 +298,40 @@ public class Client {
             /*if(cg != null)
                     cg.connectionFailed();*/
     }
-    
-    /**
-     * The main entry point for a client.
-     * 
-     * To use the Client in console mode, use one of the following commands:
-     * 
-     * > java Client
-     * > java Client username
-     * > java Client username portNumber
-     * > java Client username portNumber serverAddress
-     * 
-     * The default values for username, portNumber and serverAddress are "Anonymous",
-     * 1500 and "localhost", repsectively.
-     * 
-     * @param args The command line arguments as described above.
-     */
-    public static void main(String[] args)
-    {
-        String server;
-        int port;
-        SocketChannel s = parseCmdArgs(args);
-    }
 
+    /**
+         * Adds a new user to the user list or sets this client's userID.
+         * 
+         * If the JoinedPacket contains an empty username field, then it designates
+         * this user's ID and role.
+         * 
+         * @param joined The JoinedPacket containing the new user's information.
+         */
+//        private void addUser(JoinedPacket joined)
+//        {
+//            User u = joined.getUser();
+//            display("[ " + u + " has joined the chat ]");
+//            users.add(u);
+//        }
+//        
+//        /**
+//         * Removes from the list the user who left the chat.
+//         * @param left The LeftPacket containing the user's ID.
+//         */
+//        private void removeUser(LeftPacket left)
+//        {
+//            for(int i = 0; i < users.size(); i++)
+//            {
+//                User u = users.get(i);
+//                if(u.getID() == left.getUserID())
+//                {
+//                    display("[ " + u + " has left the chat ]");
+//                    users.remove(i);
+//                    break;
+//                }
+//            }
+//        }
+    
     /**
      * Parses the command arguments and creates a client.
      * 
@@ -362,7 +407,6 @@ public class Client {
                     break;
                 case Packet.CHATLIST:
                     // Call a method for displaying chats
-                    
                     break;
                 case Packet.OPERATIONSTATUS:
                     operationStatusHandler((OperationStatusPacket)p);
@@ -458,7 +502,7 @@ public class Client {
                             case UpdateChatsPacket.UPDATE:
                                 // call a gui.createChat method
                                 break;
-                            case UpdateChatsPacket.REMOVE:
+                            case UpdateChatsPacket.DELETE:
                                 // call a gui.deleteChat method
                                 break;
                         }
@@ -487,11 +531,9 @@ public class Client {
     }
     
     /**
-     * Receives packets from the server and handles them appropriately.
+     * Receives packets from the server and sends them to the Client for handling.
      * 
-     * @todo Make this into a SwingWorker for publishing updates to the GUI. The
-     *       client will likely be running on that thread as well, so it can
-     *       still go through the client.
+     * @todo Properly handle disconnection from the server.
      */
     private class ListenFromServer extends SwingWorker<Void, Packet>
     {
@@ -530,8 +572,6 @@ public class Client {
                 // Get the packet and publish it to the Client for processing
                 p = this.packetBuf.getPacket();
                 publish(p);
-//                type = p.getType();
-
                 this.packetBuf.clearState();
             }
             return null;
@@ -540,42 +580,9 @@ public class Client {
         @Override
         protected void process(List<Packet> packets)
         {
-            // Lets the Client's code, which is hopefully running on the EDT, process the packets
+            // Lets the client's code handle any packets that have arrived
             handlePackets(packets);
         }
-                
-        /**
-         * Adds a new user to the user list or sets this client's userID.
-         * 
-         * If the JoinedPacket contains an empty username field, then it designates
-         * this user's ID and role.
-         * 
-         * @param joined The JoinedPacket containing the new user's information.
-         */
-//        private void addUser(JoinedPacket joined)
-//        {
-//            User u = joined.getUser();
-//            display("[ " + u + " has joined the chat ]");
-//            users.add(u);
-//        }
-//        
-//        /**
-//         * Removes from the list the user who left the chat.
-//         * @param left The LeftPacket containing the user's ID.
-//         */
-//        private void removeUser(LeftPacket left)
-//        {
-//            for(int i = 0; i < users.size(); i++)
-//            {
-//                User u = users.get(i);
-//                if(u.getID() == left.getUserID())
-//                {
-//                    display("[ " + u + " has left the chat ]");
-//                    users.remove(i);
-//                    break;
-//                }
-//            }
-//        }
     }
 }
 
