@@ -8,6 +8,7 @@ package com.lamepancake.chitchat.packet;
 import com.lamepancake.chitchat.User;
 import java.util.Map;
 import com.lamepancake.chitchat.Chat;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -75,31 +76,40 @@ public class PacketCreator {
     
     /**
      * Returns a new ChatListPacket
-     * @param chats The list of all of the chats the user subscribes to.
-     * @param roles A map of roles that are mapped to the chats the user subscribes to.
+     * @param chats  The list of all of the chats.
+     * @param roles  Maps the chat ID to the given role that the user has in the chat.
      * @param userid The id of the user.
      * @return a new ChatListPacket.
      */
     public static ChatListPacket createChatList(List<Chat> chats, Map<Integer, Integer> roles, int userid)
     {
-        int dataLen = chats.size() * 8; // Role, chatid
-        final ChatListPacket list;
+        int dataLen = (chats.size() * 8) + 8; // Space for chat IDs, roles, the number of chats, and the user ID
+        Map<Chat, Integer> chatList = new HashMap<>();
         
-        dataLen += 4; //Number of chats
+        // Create the map of chats to roles
         for(Chat c : chats)
         {
+            Integer r = roles.get(c.getID());
+            if(r != null)
+            {
+                r = roles.get(c.getID());
+            }
+            else
+            {
+                r = User.UNSPEC;
+            }
+            chatList.put(c, r);
+            
             dataLen += c.getName().length() * 2; //Chat Name          
             dataLen += 4; //legnth of the name
         }
-            
-        dataLen += 4; //UserId for who receive it
         
-        return new ChatListPacket(chats, dataLen, roles, userid);
+        return new ChatListPacket(chatList, dataLen, userid);
     }
     
-    public static ChatListPacket createChatList()
+    public static ChatListPacket createChatList(int userID)
     {
-        return new ChatListPacket();
+        return new ChatListPacket(userID);
     }
     
     /**

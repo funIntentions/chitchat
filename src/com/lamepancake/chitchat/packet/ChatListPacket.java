@@ -1,11 +1,9 @@
 package com.lamepancake.chitchat.packet;
 
 import com.lamepancake.chitchat.Chat;
-import com.lamepancake.chitchat.User;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -22,34 +20,30 @@ import java.util.Map;
  */
 public class ChatListPacket extends Packet
 {
-    private List<Chat> chats;
-    private Map<Integer, Integer> roles;
     private Map<Chat, Integer> chatList;
+    private final int userID;
     
-    public ChatListPacket()
+    /**
+     * Creates a client-side ChatListPacket.
+     * @param userid THe ID of the user requesting the chat.
+     */
+    public ChatListPacket(final int userid)
     {
-        this(null, 0, null, 0);
+        this(null, 8, userid);
     }
     
-    public ChatListPacket(List<Chat> chats, int chatLength, Map<Integer, Integer> role, int roleLength)
+    /**
+     * Creates a new ChatListPacket.
+     * 
+     * @param chatRoles  A map of chats to the role that the requesting user has.
+     * @param roleLength The number of chats in the list. 
+     * @param userID     The ID of the user requesting list.
+     */
+    public ChatListPacket(Map<Chat, Integer> chatRoles, int roleLength, int userID)
     {
-        super(CHATLIST, chatLength);
-        this.chats = chats;
-        this.roles = role;
-        
-        for(Chat c : chats)
-        {
-            Integer r = roles.get(c.getID());
-            if(r != null)
-            {
-                r = roles.get(c.getID());
-            }
-            else
-            {
-                r = User.UNSPEC;
-            }
-            chatList.put(c, r);
-        }
+        super(CHATLIST, roleLength);
+        this.chatList = chatRoles;
+        this.userID = userID;
     }
     
     /**
@@ -61,11 +55,16 @@ public class ChatListPacket extends Packet
     public ChatListPacket(ByteBuffer header, ByteBuffer data)
     {
         super(header);
-        if(this.getLength() != HEADER_SIZE)
+        int len;
+        
+        this.userID = data.getInt();
+        this.chatList = null;
+        len = data.getInt();
+        
+        if(len > 0)
         {
-            int numChats = data.getInt();
-
-            for(int i = 0; i < numChats; i++)
+            this.chatList = new HashMap<>();
+            for(int i = 0; i < len; i++)
             {
                 int     nameLen  = data.getInt();
                 int     id;
@@ -83,16 +82,6 @@ public class ChatListPacket extends Packet
         }
     }
     
-    public List<Chat> getChats()
-    {
-        return this.chats;
-    }
-    
-    public Map<Integer, Integer> getRoles()
-    {
-        return this.roles;
-    }
-    
     public Map<Chat, Integer> getChatList()
     {
         return this.chatList;
@@ -102,23 +91,18 @@ public class ChatListPacket extends Packet
     public ByteBuffer serialise()
     {
         ByteBuffer buf = super.serialise();
-
-        if(this.chats == null)
-        {
-            buf.rewind();
-            return buf;
-        }
         
-        // Structure is: {numChats}{chatName}{chatID}{userID}{role}
-        buf.putInt(this.chats.size());
-        for(Chat c : this.chats)
+        // Structure is: {userID}{numChats}[{namelength}{chatName}{chatID}{role}]
+        buf.putInt(this.userID);
+        buf.putInt(this.chatList.size());
+        for(Chat c : this.chatList.keySet())
         {
             String chatname = c.getName();
 
             buf.putInt(chatname.length() * 2);
             buf.put(chatname.getBytes(StandardCharsets.UTF_16LE));
             buf.putInt(c.getID());
-            buf.putInt(roles.get(c.getID()));
+            buf.putInt(chatList.get(c));
         }
         buf.rewind();
         

@@ -391,6 +391,10 @@ public class Client {
         return socket;
     }
     
+    /**
+     * Processes the list of chats received from the server.
+     * @param p The ChatListPacket containing the chats.
+     */
     private void processChatList(ChatListPacket p)
     {
         Map<Chat, Integer> chats = p.getChatList();
@@ -424,6 +428,10 @@ public class Client {
         gui.populateChatList(chatListList);
     }
 
+    /**
+     * Processes the WhoIsInPacket for a given chat.
+     * @param p The WhoIsInPacket containing the list of users.
+     */
     private void processUserList(WhoIsInPacket p)
     {
         Map<User, Boolean> users = p.getUsers();
@@ -434,14 +442,7 @@ public class Client {
         
         for(User u : keys)
         {
-            if(users.get(u))
-            {
-                userListList[i] = u.getName() + ", online";
-            }
-            else
-            {
-                userListList[i] = u.getName() + ", offline";
-            }
+            userListList[i] = u.getName() + ", " + (users.get(u) ? "online" : "offline");
             i++;
         }
         gui.populateUserList(userListList);
