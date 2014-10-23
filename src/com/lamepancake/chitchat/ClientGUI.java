@@ -5,6 +5,7 @@
  */
 package com.lamepancake.chitchat;
 
+import java.awt.event.MouseEvent;
 import java.nio.channels.SocketChannel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
@@ -62,6 +63,14 @@ public class ClientGUI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jPopupMenuChatOptions = new javax.swing.JPopupMenu();
+        jMenuItemJoin = new javax.swing.JMenuItem();
+        jMenuItemLeave = new javax.swing.JMenuItem();
+        jPopupMenuUserOptions = new javax.swing.JPopupMenu();
+        jMenuItemBootUser = new javax.swing.JMenuItem();
+        jMenuChangeRole = new javax.swing.JMenu();
+        jMenuItemUserRole = new javax.swing.JMenuItem();
+        jMenuItemAdminRole = new javax.swing.JMenuItem();
         PanelMessage = new javax.swing.JPanel();
         PanelMessageScroll = new javax.swing.JScrollPane();
         TextAreaMessage = new javax.swing.JTextArea();
@@ -84,6 +93,25 @@ public class ClientGUI extends javax.swing.JFrame {
         MenuItemCreateChat = new javax.swing.JMenuItem();
         MenuItemUpdateChat = new javax.swing.JMenuItem();
         MenuItemDeleteChat = new javax.swing.JMenuItem();
+
+        jMenuItemJoin.setText("Join Chat");
+        jPopupMenuChatOptions.add(jMenuItemJoin);
+
+        jMenuItemLeave.setText("Leave Chat");
+        jPopupMenuChatOptions.add(jMenuItemLeave);
+
+        jMenuItemBootUser.setText("Boot User");
+        jPopupMenuUserOptions.add(jMenuItemBootUser);
+
+        jMenuChangeRole.setText("Change Role");
+
+        jMenuItemUserRole.setText("Developer");
+        jMenuChangeRole.add(jMenuItemUserRole);
+
+        jMenuItemAdminRole.setText("Scrum Master");
+        jMenuChangeRole.add(jMenuItemAdminRole);
+
+        jPopupMenuUserOptions.add(jMenuChangeRole);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -116,17 +144,21 @@ public class ClientGUI extends javax.swing.JFrame {
 
         TabbedPaneChatLog.setName("Chats"); // NOI18N
 
+        TextAreaChatLog1.setEditable(false);
         TextAreaChatLog1.setColumns(20);
         TextAreaChatLog1.setRows(5);
         TextAreaChatLog1.setText("Humpfrey: Top of the morning to ya.\na\ndf\na\nsdf\na\nsdf\na\nsd\nf\nasdf\nasdf\n\nasd\nf\nas\ndf\nasdf\na\nsd\nf\nasdf\n\nasd\nf\n\nasdf\na\nsdf\nasdf\nas\ndf\nas\ndf\nasd\nf\nasdf\nas\ndf\nas\nf\n\na\nsdf\nas\ndf\nas\ndf\nasd");
         TextAreaChatLog1.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
         ScrollPaneChatLog1.setViewportView(TextAreaChatLog1);
+
         TabbedPaneChatLog.addTab("ChitChatCat", ScrollPaneChatLog1);
 
+        TextAreaChatLog2.setEditable(false);
         TextAreaChatLog2.setColumns(20);
         TextAreaChatLog2.setRows(5);
         TextAreaChatLog2.setText("Ted: yo dawg\nLightning Storm: what up slaya?");
         ScrollPaneChatLog2.setViewportView(TextAreaChatLog2);
+
         TabbedPaneChatLog.addTab("ChitChatBat", ScrollPaneChatLog2);
 
         javax.swing.GroupLayout PanelChatLogLayout = new javax.swing.GroupLayout(PanelChatLog);
@@ -151,6 +183,11 @@ public class ClientGUI extends javax.swing.JFrame {
             public int getSize() { return strings.length; }
             public Object getElementAt(int i) { return strings[i]; }
         });
+        ListChatLists.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                ListChatListsMousePressed(evt);
+            }
+        });
         ScrollPanelChatLists.setViewportView(ListChatLists);
 
         TabbedPanelLists.addTab("Chat", ScrollPanelChatLists);
@@ -159,6 +196,11 @@ public class ClientGUI extends javax.swing.JFrame {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
             public Object getElementAt(int i) { return strings[i]; }
+        });
+        ListUsersLists.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                ListUsersListsMousePressed(evt);
+            }
         });
         ScrollPaneUsersLists.setViewportView(ListUsersLists);
 
@@ -313,6 +355,31 @@ public class ClientGUI extends javax.swing.JFrame {
         
     }//GEN-LAST:event_MenuItemDeleteChatMousePressed
 
+    private void ListChatListsMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_ListChatListsMousePressed
+        // TODO add your handling code here:
+        if (evt.isPopupTrigger()) 
+        {
+            showChatOptionsPopupMenu(evt, PanelChatLog.getWidth());
+        }
+    }//GEN-LAST:event_ListChatListsMousePressed
+
+    private void ListUsersListsMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_ListUsersListsMousePressed
+        // TODO add your handling code here:
+        if (evt.isPopupTrigger()) 
+        {
+            showUserOptionsPopupMenu(evt, PanelChatLog.getWidth());
+        }
+    }//GEN-LAST:event_ListUsersListsMousePressed
+    
+    private void showChatOptionsPopupMenu(MouseEvent e, int xOffset) 
+    {
+        jPopupMenuChatOptions.show(this, xOffset + e.getX(), jPopupMenuChatOptions.getHeight() + e.getY());
+    }
+    
+    private void showUserOptionsPopupMenu(MouseEvent e, int xOffset) 
+    {
+        jPopupMenuUserOptions.show(this, xOffset + e.getX(), jPopupMenuUserOptions.getHeight() + e.getY());
+    }
     /**
      * @param args the command line arguments
      */
@@ -467,5 +534,13 @@ public class ClientGUI extends javax.swing.JFrame {
     private javax.swing.JTextArea TextAreaChatLog1;
     private javax.swing.JTextArea TextAreaChatLog2;
     private javax.swing.JTextArea TextAreaMessage;
+    private javax.swing.JMenu jMenuChangeRole;
+    private javax.swing.JMenuItem jMenuItemAdminRole;
+    private javax.swing.JMenuItem jMenuItemBootUser;
+    private javax.swing.JMenuItem jMenuItemJoin;
+    private javax.swing.JMenuItem jMenuItemLeave;
+    private javax.swing.JMenuItem jMenuItemUserRole;
+    private javax.swing.JPopupMenu jPopupMenuChatOptions;
+    private javax.swing.JPopupMenu jPopupMenuUserOptions;
     // End of variables declaration//GEN-END:variables
 }

@@ -2,6 +2,54 @@
 
 <Form version="1.3" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JFrameFormInfo">
   <NonVisualComponents>
+    <Container class="javax.swing.JPopupMenu" name="jPopupMenuChatOptions">
+
+      <Layout class="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout">
+        <Property name="useNullLayout" type="boolean" value="true"/>
+      </Layout>
+      <SubComponents>
+        <MenuItem class="javax.swing.JMenuItem" name="jMenuItemJoin">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Join Chat"/>
+          </Properties>
+        </MenuItem>
+        <MenuItem class="javax.swing.JMenuItem" name="jMenuItemLeave">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Leave Chat"/>
+          </Properties>
+        </MenuItem>
+      </SubComponents>
+    </Container>
+    <Container class="javax.swing.JPopupMenu" name="jPopupMenuUserOptions">
+
+      <Layout class="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout">
+        <Property name="useNullLayout" type="boolean" value="true"/>
+      </Layout>
+      <SubComponents>
+        <MenuItem class="javax.swing.JMenuItem" name="jMenuItemBootUser">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Boot User"/>
+          </Properties>
+        </MenuItem>
+        <Menu class="javax.swing.JMenu" name="jMenuChangeRole">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Change Role"/>
+          </Properties>
+          <SubComponents>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemUserRole">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Developer"/>
+              </Properties>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemAdminRole">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Scrum Master"/>
+              </Properties>
+            </MenuItem>
+          </SubComponents>
+        </Menu>
+      </SubComponents>
+    </Container>
     <Menu class="javax.swing.JMenuBar" name="MenuBarTop">
       <Properties>
         <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
@@ -291,6 +339,9 @@
                       </StringArray>
                     </Property>
                   </Properties>
+                  <Events>
+                    <EventHandler event="mousePressed" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="ListChatListsMousePressed"/>
+                  </Events>
                 </Component>
               </SubComponents>
             </Container>
@@ -320,6 +371,9 @@
                       </StringArray>
                     </Property>
                   </Properties>
+                  <Events>
+                    <EventHandler event="mousePressed" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="ListUsersListsMousePressed"/>
+                  </Events>
                 </Component>
               </SubComponents>
             </Container>
