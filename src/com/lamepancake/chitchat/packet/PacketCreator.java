@@ -97,6 +97,11 @@ public class PacketCreator {
         return new ChatListPacket(chats, dataLen, roles, userid);
     }
     
+    public static ChatListPacket createChatList()
+    {
+        return new ChatListPacket();
+    }
+    
     /**
      * Returns a new ChatNotifyPacket
      * @param chat THe chat id.

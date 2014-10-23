@@ -467,7 +467,8 @@ public class ChatManager
             {
                 user.setSocket((SocketChannel)key.channel());
                 this.lobby.put(key, user);
-                sendOperationResult(key, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN);   
+                sendOperationResult(key, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN); 
+                sendListOfChats(key, null);
             }
             else
             {
@@ -498,7 +499,8 @@ public class ChatManager
             int id = UserDAOMySQLImpl.getInstance().create(user);
             user.setID(id);
             lobby.put(key, user);
-            sendOperationResult(key, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN);                                
+            sendOperationResult(key, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN); 
+            sendListOfChats(key, null);
         } catch (SQLException e) {
             System.err.println("ChatManager.login: SQL exception thrown: " + e.getMessage());
             sendLoginOperationFailure(key);

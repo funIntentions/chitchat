@@ -150,6 +150,13 @@ public class Client {
         sendPacket(l);
     }
     
+    public void sendChatList()
+    {
+        final ChatListPacket cl = PacketCreator.createChatList();
+        waitingOp.clear();
+        waitingOp.put(OperationStatusPacket.CHATLIST, cl);
+        sendPacket(cl);
+    }
     /**
      * Send a packet to request access to the given chat.
      * 
