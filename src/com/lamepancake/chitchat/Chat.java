@@ -70,9 +70,30 @@ public class Chat
      * @param packet The packet to process.
      * @todo Implement this...
      */
-    public void handlePacket(Packet packet)
+    public void handlePacket(Packet received)
     {
-        throw new UnsupportedOperationException("Not implemented yet");
+        int type = received.getType();
+        
+        switch(type)
+        {
+            case Packet.BOOT:
+                bootUser((BootPacket)received);
+                break;
+            case Packet.MESSAGE:
+                sendMessage((MessagePacket)received);
+                break;
+            case Packet.JOINLEAVE:
+                updateState((JoinLeavePacket)received);
+                break;
+            case Packet.WHOISIN:
+                sendUserList((WhoIsInPacket)received);
+                break;
+            case Packet.CHANGEROLE:
+                promoteUser((ChangeRolePacket)received);
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown packet type: " + type);
+        }
     }
 
     /**
