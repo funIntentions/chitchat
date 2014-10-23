@@ -63,6 +63,14 @@ public class ChatManager
         
         this.lobby = new HashMap<>();
         this.chats = new HashMap<>();
+        
+        // get stored chats.
+        List<Chat> existingChats = ChatDAOMySQLImpl.getInstance().getAllChats();
+        
+        for (Chat chat : existingChats)
+        {
+            this.chats.put(chat.getID(), chat);
+        }
     }
     
     /**
@@ -74,7 +82,6 @@ public class ChatManager
     {
         int type = received.getType();
         int chatID = -1;
-        
         switch(type)
             {
                 case Packet.LOGIN:

@@ -12,11 +12,17 @@
           <Properties>
             <Property name="text" type="java.lang.String" value="Join Chat"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemJoinActionPerformed"/>
+          </Events>
         </MenuItem>
         <MenuItem class="javax.swing.JMenuItem" name="jMenuItemLeave">
           <Properties>
             <Property name="text" type="java.lang.String" value="Leave Chat"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemLeaveActionPerformed"/>
+          </Events>
         </MenuItem>
       </SubComponents>
     </Container>

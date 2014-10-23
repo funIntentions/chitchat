@@ -5,6 +5,7 @@
  */
 package com.lamepancake.chitchat;
 
+import com.lamepancake.chitchat.packet.JoinLeavePacket;
 import java.awt.event.MouseEvent;
 import java.nio.channels.SocketChannel;
 import javax.swing.JOptionPane;
@@ -93,9 +94,19 @@ public class ClientGUI extends javax.swing.JFrame {
         MenuItemDeleteChat = new javax.swing.JMenuItem();
 
         jMenuItemJoin.setText("Join Chat");
+        jMenuItemJoin.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemJoinActionPerformed(evt);
+            }
+        });
         jPopupMenuChatOptions.add(jMenuItemJoin);
 
         jMenuItemLeave.setText("Leave Chat");
+        jMenuItemLeave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemLeaveActionPerformed(evt);
+            }
+        });
         jPopupMenuChatOptions.add(jMenuItemLeave);
 
         jMenuItemBootUser.setText("Boot User");
@@ -368,6 +379,38 @@ public class ClientGUI extends javax.swing.JFrame {
             showUserOptionsPopupMenu(evt, PanelChatLog.getWidth());
         }
     }//GEN-LAST:event_ListUsersListsMousePressed
+
+    private void jMenuItemJoinActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemJoinActionPerformed
+        // TODO add your handling code here:
+        if (ListChatLists.getSelectedIndex() != -1) 
+        {
+            String chatInfo = ListChatLists.getSelectedValue().toString();
+            
+            String[] info = chatInfo.split(" ");
+            
+            int chatId = Integer.parseInt(info[0]);
+            
+            System.out.println(chatId);
+            
+            client.sendJoinLeave(chatId, JoinLeavePacket.JOIN);
+        }
+    }//GEN-LAST:event_jMenuItemJoinActionPerformed
+
+    private void jMenuItemLeaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLeaveActionPerformed
+        // TODO add your handling code here:
+        if (ListChatLists.getSelectedIndex() != -1) 
+        {
+            String chatInfo = ListChatLists.getSelectedValue().toString();
+            
+            String[] info = chatInfo.split(" ");
+            
+            int chatId = Integer.parseInt(info[0]);
+            
+            System.out.println(chatId);
+            
+            client.sendJoinLeave(chatId, JoinLeavePacket.LEAVE);
+        }
+    }//GEN-LAST:event_jMenuItemLeaveActionPerformed
     
     private void showChatOptionsPopupMenu(MouseEvent e, int xOffset) 
     {

@@ -474,6 +474,7 @@ public class Client {
                     processChatList((ChatListPacket)p);
                     break;
                 case Packet.OPERATIONSTATUS:
+                    System.out.println("operation");
                     operationStatusHandler((OperationStatusPacket)p);
                     break;
                 case Packet.JOINLEAVE:
