@@ -152,7 +152,7 @@ public class Client {
     
     public void sendChatList()
     {
-        final ChatListPacket cl = PacketCreator.createChatList();
+        final ChatListPacket cl = PacketCreator.createChatList(clientUser.getID());
         waitingOp.clear();
         waitingOp.put(OperationStatusPacket.CHATLIST, cl);
         sendPacket(cl);

@@ -130,6 +130,9 @@ public class ChatManager
     
     /**
      * Sends a list of available chats to a connected client.
+     * 
+     * @todo Actually use inPacket.
+     * 
      * @param clientKey
      * @param inPacket 
      */
@@ -139,20 +142,11 @@ public class ChatManager
         
         ServerUser user = this.lobby.get(clientKey);
         
-        List<Chat> chatList = new ArrayList<>();
-        
-        Iterator it = this.chats.entrySet().iterator();
-        
-        while (it.hasNext()) 
-        {
-            Map.Entry pairs = (Map.Entry)it.next();
-            chatList.add((Chat)pairs.getValue());
-            it.remove(); // avoids a ConcurrentModificationException
-        }
-        
+        List<Chat> chatList;        
         try 
         {
             Map<Integer, Integer> roles = ChatRoleDAOMySQLImpl.getInstance().getChats(user);
+            chatList = ChatDAOMySQLImpl.getInstance().getAllChats();
 
             outPacket = PacketCreator.createChatList(chatList, roles, user.getID());
              

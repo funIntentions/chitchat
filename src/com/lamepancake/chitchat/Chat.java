@@ -46,6 +46,7 @@ public class Chat
     /**
      * Creates a new chat.
      * 
+     * @todo Differentiate between client and server chats.
      * @param name
      * @param id 
      */
@@ -63,9 +64,15 @@ public class Chat
         }
     }
     
+    /**
+     * Routes packets to the appropriate function for processing.
+     * 
+     * @param packet The packet to process.
+     * @todo Implement this...
+     */
     public void handlePacket(Packet packet)
     {
-        
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     /**
