@@ -397,15 +397,15 @@ public class Client {
      */
     private void processChatList(ChatListPacket p)
     {
-        Map<Chat, Integer> chats = p.getChatList();
-        Set<Chat> keys = chats.keySet();
+        chatList = p.getChatList();
+        Set<Chat> keys = chatList.keySet();
         
         String[] chatListList = new String[keys.size()];
         int i = 0;
         
         for(Chat c : keys)
         {
-            switch(chats.get(c))
+            switch(chatList.get(c))
             {
                 case User.ADMIN:
                     chatListList[i] = c.getID() + " " + c.getName() + ", Scrum Master";
