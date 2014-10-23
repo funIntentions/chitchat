@@ -405,14 +405,18 @@ public class Client {
             {
                 case User.ADMIN:
                     chatListList[i] = c.getID() + " " + c.getName() + ", Scrum Master";
+                    break;
                 case User.USER:
                     chatListList[i] = c.getID() + " " + c.getName() + ", Developer";
+                    break;
                 case User.WAITING:
-                    chatListList[i] = c.getID() + " " + c.getName() + ", Waiting";    
+                    chatListList[i] = c.getID() + " " + c.getName() + ", Waiting";
+                    break;
                 case User.UNSPEC:
                     chatListList[i] = c.getID() + " " + c.getName() + ", Unspecified"; 
+                    break;
                 default:
-                    chatListList[i] = c.getID() + " " + c.getName() + ", Unspecified";    
+                    chatListList[i] = c.getID() + " " + c.getName() + ", Invalid role";
             }
             i++;
         }
