@@ -9,6 +9,7 @@ import com.lamepancake.chitchat.DAO.ChatDAO;
 import com.lamepancake.chitchat.DAO.ChatDAOMySQLImpl;
 import com.lamepancake.chitchat.DAO.ChatRoleDAO;
 import com.lamepancake.chitchat.DAO.ChatRoleDAOMySQLImpl;
+import com.lamepancake.chitchat.DAO.UserDAOMySQLImpl;
 import com.lamepancake.chitchat.packet.BootPacket;
 import com.lamepancake.chitchat.packet.ChangeRolePacket;
 import com.lamepancake.chitchat.packet.JoinLeavePacket;
@@ -18,6 +19,7 @@ import com.lamepancake.chitchat.packet.PacketCreator;
 import com.lamepancake.chitchat.packet.WhoIsInPacket;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -62,18 +64,26 @@ public class Chat
         } catch (SQLException se) {
             System.err.println("Chat constructor: could not get database access: " + se.getMessage());
         }
+        
+    }
+    
+    public void initUsers(List<User> initialUsers)
+    {
+        for (User user : initialUsers)
+        {
+            this.users.put(user, Boolean.FALSE);
+        }
     }
     
     /**
      * Routes packets to the appropriate function for processing.
      * 
-     * @param packet The packet to process.
+     * @param received The packet to process.
      * @todo Implement this...
      */
     public void handlePacket(Packet received)
     {
         int type = received.getType();
-        
         switch(type)
         {
             case Packet.BOOT:
@@ -141,6 +151,76 @@ public class Chat
      */
     private void updateState(JoinLeavePacket jl)
     {
+        System.out.println(jl.getFlag());
+        if(jl.getFlag() == JoinLeavePacket.JOIN)
+        {
+            System.out.println("hello");
+            join(jl);
+        }
+        else
+        {
+            System.out.println("bye");
+            leave(jl);
+        }
+        
+    }
+    
+    private void join(JoinLeavePacket jl)
+    {
+        int currentRole = User.UNSPEC;
+        
+        User affected = null;
+        
+        for(User u : users.keySet())
+        {
+            if(u.getID() == jl.getUserID())
+            {
+                affected = u;
+                break;
+            }
+        }
+                
+        if (affected == null)
+        {
+            try
+            {
+                currentRole = ChatRoleDAOMySQLImpl.getInstance().getUserRoleInChat(jl.getUserID(), chatID);
+                System.out.println(currentRole);
+                switch (currentRole)
+                {
+                    case User.ADMIN: // chat creator
+                        System.out.println("admin");
+                        affected = UserDAOMySQLImpl.getInstance().getByID(jl.getUserID());
+                        users.put(affected, Boolean.TRUE);
+                        ((ServerUser)affected).notifyClient(jl);
+                        break;
+                    case User.UNSPEC: // not in chat?
+                        System.out.println("unspec");
+                        ChatRoleDAOMySQLImpl.getInstance().addUser(chatID, jl.getUserID(), User.WAITING);
+                       break;
+                    case User.USER:
+                        System.out.println("user");
+                        break;
+                    case User.WAITING:
+                        System.out.println("waiting");
+                        break;
+                }
+            }
+            catch (SQLException e) 
+            {
+                System.err.println("Chat.updateState: SQL exception thrown: " + e.getMessage());
+            }
+        }
+        else
+        {
+            users.put(affected, Boolean.TRUE);
+            ((ServerUser)affected).notifyClient(jl);
+        }    
+    }
+    
+    private void leave(JoinLeavePacket jl)
+    {
+        
         final Packet p;
         User affected = null;
         
@@ -153,16 +233,9 @@ public class Chat
             }
         }
         
-        if(affected == null)
-            return;
+        if (affected == null) return;
         
-        if(jl.getFlag() == JoinLeavePacket.JOIN)
-        {
-            users.put(affected, Boolean.TRUE);
-            ((ServerUser)affected).notifyClient(jl);
-        }
-        else
-            users.put(affected, Boolean.FALSE);
+        users.put(affected, Boolean.FALSE);
         
         p = PacketCreator.createUserNotify(jl.getUserID(), this.chatID, affected.getRole(), jl.getFlag());
         broadcast(jl.getUserID(), p, false);

@@ -69,6 +69,10 @@ public class ChatManager
         
         for (Chat chat : existingChats)
         {
+            List<User> storedUsers = ChatRoleDAOMySQLImpl.getInstance().getUsers(chat);
+            
+            chat.initUsers(storedUsers);
+            
             this.chats.put(chat.getID(), chat);
         }
     }
