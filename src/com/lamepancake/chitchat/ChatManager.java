@@ -68,7 +68,7 @@ public class ChatManager
         
         for (Chat chat : existingChats)
         {
-            List<User> storedUsers = ChatRoleDAOMySQLImpl.getInstance().getUsers(chat);
+            List<ServerUser> storedUsers = ChatRoleDAOMySQLImpl.getInstance().getUsers(chat);
             
             chat.initUsers(storedUsers);
             
@@ -101,29 +101,29 @@ public class ChatManager
                     break;
                 case Packet.BOOT:
                     chatID = ((BootPacket)received).getChatID();
-                    PassPacketToChat(chatID, received);
+                    PassPacketToChat(clientKey, chatID, received);
                 case Packet.REQUESTACCESS:
                     chatID = ((RequestAccessPacket)received).getChatID();
-                    if(!PassPacketToChat(chatID, received))
+                    if(!PassPacketToChat(clientKey, chatID, received))
                     {
                         sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_REQACCESS);
                     }
                     break;
                 case Packet.MESSAGE:
                     chatID = ((MessagePacket)received).getChatID();
-                    PassPacketToChat(chatID, received);
+                    PassPacketToChat(clientKey, chatID, received);
                     break;
                 case Packet.JOINLEAVE:
                     chatID = ((JoinLeavePacket)received).getChatID();
-                    PassPacketToChat(chatID, received);
+                    PassPacketToChat(clientKey, chatID, received);
                     break;
                 case Packet.WHOISIN:
                     chatID = ((WhoIsInPacket)received).getChatID();
-                    PassPacketToChat(chatID, received);
+                    PassPacketToChat(clientKey, chatID, received);
                     break;
                 case Packet.CHANGEROLE:
                     chatID = ((ChangeRolePacket)received).getChatID();
-                    PassPacketToChat(chatID, received);
+                    PassPacketToChat(clientKey, chatID, received);
                     break;
             }
     }
@@ -173,7 +173,7 @@ public class ChatManager
      * @param received the packet to pass along.
      * @return false if the chat doesn't exist, true if it does.
      */
-    private boolean PassPacketToChat(int chatID, Packet received)
+    private boolean PassPacketToChat(SelectionKey sender, int chatID, Packet received)
     {        
         if (!this.chats.containsKey(chatID))
         {
@@ -183,7 +183,7 @@ public class ChatManager
         Chat chat = this.chats.get(chatID);
         
         
-        chat.handlePacket(received);
+        chat.handlePacket(sender, received);
         
         return true;
     }

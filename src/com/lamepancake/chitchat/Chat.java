@@ -17,7 +17,10 @@ import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.PacketCreator;
 import com.lamepancake.chitchat.packet.RequestAccessPacket;
+import com.lamepancake.chitchat.packet.UserNotifyPacket;
 import com.lamepancake.chitchat.packet.WhoIsInPacket;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -69,7 +72,11 @@ public class Chat
         
     }
     
-    public void initUsers(List<User> initialUsers)
+    /**
+     * 
+     * @param initialUsers 
+     */
+    public void initUsers(List<? extends User> initialUsers)
     {
         for (User user : initialUsers)
         {
@@ -113,9 +120,10 @@ public class Chat
      * Routes packets to the appropriate function for processing.
      * 
      * @param received The packet to process.
+     * @param sender   The SelectionKey of the sender.
      * @todo Implement this...
      */
-    public void handlePacket(Packet received)
+    public void handlePacket(SelectionKey sender, Packet received)
     {
         int type = received.getType();
         switch(type)
@@ -127,7 +135,7 @@ public class Chat
                 sendMessage((MessagePacket)received);
                 break;
             case Packet.JOINLEAVE:
-                updateState((JoinLeavePacket)received);
+                updateState(sender, (JoinLeavePacket)received);
                 break;
             case Packet.WHOISIN:
                 sendUserList((WhoIsInPacket)received);
@@ -166,14 +174,23 @@ public class Chat
         broadcast(b.getBooterID(), p, false);
     }
     
+    /**
+     * Adds a User to the database with a status of User.WAITING and 
+     * @param r 
+     */
     private void addWaitingUser(RequestAccessPacket r)
     {
-        Packet p = PacketCreator.createUserNotify(r.getUserID(), r.getChatID(), User.WAITING, Packet.CHANGEROLE);
-        
+        Packet p = PacketCreator.createUserNotify(r.getUserID(), r.getChatID(), User.WAITING, UserNotifyPacket.PROMOTED);
+        Packet newRole = PacketCreator.createChangeRole(chatID, r.getUserID(), User.WAITING);
+        final User requester; 
+
         try 
         {
-            //Make user admin for chat.
+
             ChatRoleDAOMySQLImpl.getInstance().addUser(chatID, r.getUserID(), User.WAITING);
+            requester = UserDAOMySQLImpl.getInstance().getByID(r.getUserID());
+           
+            this.users.put(requester, Boolean.FALSE);
             
         } catch (SQLException e) 
         {
@@ -185,7 +202,7 @@ public class Chat
         {
             if(u.getID() == r.getUserID())
             {
-                ((ServerUser)u).notifyClient(r);
+                ((ServerUser)u).notifyClient(newRole);
                 break;
             }
         }
@@ -224,13 +241,13 @@ public class Chat
      * @param jl The JoinLeave packet specifying whether the user is joining or
      *           leaving.
      */
-    private void updateState(JoinLeavePacket jl)
+    private void updateState(SelectionKey sender, JoinLeavePacket jl)
     {
         System.out.println(jl.getFlag());
         if(jl.getFlag() == JoinLeavePacket.JOIN)
         {
             System.out.println("hello");
-            join(jl);
+            join(sender, jl);
         }
         else
         {
@@ -240,11 +257,12 @@ public class Chat
         
     }
     
-    private void join(JoinLeavePacket jl)
+    private void join(SelectionKey sender, JoinLeavePacket jl)
     {
         int currentRole;
         
         User affected = null;
+        Packet whoisin = PacketCreator.createWhoIsIn(users, chatID, jl.getUserID());
         
         for(User u : users.keySet())
         {
@@ -257,40 +275,13 @@ public class Chat
                 
         if (affected == null)
         {
-            try
-            {
-                currentRole = ChatRoleDAOMySQLImpl.getInstance().getUserRoleInChat(jl.getUserID(), chatID);
-                System.out.println(currentRole);
-                switch (currentRole)
-                {
-                    case User.ADMIN: // chat creator
-                        System.out.println("admin");
-                        affected = UserDAOMySQLImpl.getInstance().getByID(jl.getUserID());
-                        users.put(affected, Boolean.TRUE);
-                        ((ServerUser)affected).notifyClient(jl);
-                        break;
-                    case User.UNSPEC: // not in chat?
-                        System.out.println("unspec");
-                        ChatRoleDAOMySQLImpl.getInstance().addUser(chatID, jl.getUserID(), User.WAITING);
-                       break;
-                    case User.USER:
-                        System.out.println("user");
-                        break;
-                    case User.WAITING:
-                        System.out.println("waiting");
-                        break;
-                }
-            }
-            catch (SQLException e) 
-            {
-                System.err.println("Chat.updateState: SQL exception thrown: " + e.getMessage());
-            }
+            // Error condition
+            return;
         }
-        else
-        {
-            users.put(affected, Boolean.TRUE);
-            ((ServerUser)affected).notifyClient(jl);
-        }    
+
+        ((ServerUser)affected).setSocket((SocketChannel)sender.channel());
+        ((ServerUser)affected).notifyClient(whoisin);
+        users.put(affected, Boolean.TRUE);
     }
     
     private void leave(JoinLeavePacket jl)

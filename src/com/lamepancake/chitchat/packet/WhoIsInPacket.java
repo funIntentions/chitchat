@@ -74,7 +74,7 @@ public class WhoIsInPacket extends Packet {
      */
     public WhoIsInPacket(Map<User, Boolean> users, int length, int chatID, int userID)
     {
-        super(WHOISIN, length + 12);
+        super(WHOISIN, length);
         this.users = users;
         this.chatID = chatID;
         this.userID = userID;
@@ -113,15 +113,7 @@ public class WhoIsInPacket extends Packet {
                 role = data.getInt();
                 id = data.getInt();
                 onlineStatus = data.get();
-                
-                if(onlineStatus == 1)
-                {
-                    users.put(new User().setName(username).setRole(role).setID(id), true); 
-                }
-                else
-                {
-                    users.put(new User().setName(username).setRole(role).setID(id), false);  
-                }
+                users.put(new User().setName(username).setRole(role).setID(id), onlineStatus == 1); 
             }
         }
     }
@@ -151,7 +143,7 @@ public class WhoIsInPacket extends Packet {
             return buf;
         }
         
-        // Structure is: {numUsers}[{nameLength}{name}{role}{id}{onlineStatus}]
+        // Structure is: {chatID}{userID}{numUsers}[{nameLength}{name}{role}{id}{onlineStatus}]
         buf.putInt(this.users.size());
         Set<User> keys = users.keySet();
         
@@ -163,16 +155,7 @@ public class WhoIsInPacket extends Packet {
             buf.put(username.getBytes(StandardCharsets.UTF_16LE));
             buf.putInt(u.getRole());
             buf.putInt(u.getID());
-            Byte b;
-            if(users.get(u))
-            {
-                b = 1;
-            }
-            else
-            {
-                b = 0;
-            }
-            buf.put(b);
+            buf.put(users.get(u) ? (byte)1 : (byte)0);
         }
         
         buf.rewind();

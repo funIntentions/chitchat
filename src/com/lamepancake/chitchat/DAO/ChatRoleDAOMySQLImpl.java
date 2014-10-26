@@ -6,6 +6,7 @@
 package com.lamepancake.chitchat.DAO;
 
 import com.lamepancake.chitchat.Chat;
+import com.lamepancake.chitchat.ServerUser;
 import com.lamepancake.chitchat.User;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -109,9 +110,10 @@ public class ChatRoleDAOMySQLImpl extends MySQLDAOBase implements ChatRoleDAO {
     }
     
     @Override
-    public List<User> getUsers(Chat c) throws SQLException
+    public List<ServerUser> getUsers(Chat c) throws SQLException
     {
-        List<User> userList;
+        List<ServerUser> userList;
+        ServerUser temp;
         int userID;
         int role;
         String username;
@@ -125,10 +127,12 @@ public class ChatRoleDAOMySQLImpl extends MySQLDAOBase implements ChatRoleDAO {
         
         while(queryResults.next())
         {
+            temp = new ServerUser();
             userID = queryResults.getInt("userId");
             username = queryResults.getString("username");
             role = queryResults.getInt("role");
-            userList.add(new User().setID(userID).setRole(role).setName(username));
+            temp.setID(userID).setRole(role).setName(username);
+            userList.add(temp);
         }
         return userList;
     }
