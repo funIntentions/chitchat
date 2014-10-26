@@ -58,12 +58,11 @@ public class ChatListPacket extends Packet
         int len;
         
         this.userID = data.getInt();
-        this.chatList = null;
+        this.chatList = new HashMap<>();
         len = data.getInt();
         
         if(len > 0)
         {
-            this.chatList = new HashMap<>();
             for(int i = 0; i < len; i++)
             {
                 int     nameLen  = data.getInt();
