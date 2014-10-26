@@ -529,6 +529,7 @@ public class Client {
                 case Packet.BOOT:
                     break;
                 case Packet.CHANGEROLE:
+                    changeRole((ChangeRolePacket)p);
                     break;
                 default:
                     System.err.println("Invalid packet received.");
@@ -573,6 +574,36 @@ public class Client {
             return;
         
         gui.displayUserMessage(m.getMessage(), srcUser.getName());
+    }
+    
+    private void changeRole(ChangeRolePacket p)
+    {
+        Set<Chat> keys = chatList.keySet();
+        for(Chat c : keys)
+        {
+            if(c.getID() == p.getChatID())
+            {
+                chatList.replace(c, p.getRole()); 
+                switch(p.getRole())
+                {
+                    case User.ADMIN:
+                        gui.updateChatList(c.getID(), c.getID() + " " + c.getName() + ", Scrum Master");
+                        break;
+                    case User.USER:
+                        gui.updateChatList(c.getID(), c.getID() + " " + c.getName() + ", Developer");
+                        break;
+                    case User.WAITING:
+                        gui.updateChatList(c.getID(), c.getID() + " " + c.getName() + ", Waiting");
+                        break;
+                    case User.UNSPEC:
+                        gui.updateChatList(c.getID(), c.getID() + " " + c.getName() + ", Unspecified"); 
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            }
+        }
     }
     
     private void updateChat(ChatNotifyPacket p)
