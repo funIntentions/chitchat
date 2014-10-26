@@ -13,6 +13,8 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.DefaultListModel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 /**
  *
@@ -345,6 +347,11 @@ public class ClientGUI extends javax.swing.JFrame {
         if(option == JOptionPane.OK_OPTION)
         {
             client.sendCreateChat(tfChatName.getText(), -1);
+            JScrollPane curChatScrollPane = new JScrollPane();
+            JTextArea curChatTextArea = new JTextArea("");
+            curChatScrollPane.add(curChatTextArea);
+            curChatScrollPane.setName(tfChatName.getText());
+            TabbedPaneChatLog.add(curChatScrollPane);            
         } 
         else 
         {

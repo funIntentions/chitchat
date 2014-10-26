@@ -583,7 +583,7 @@ public class Client {
         {
             if(c.getID() == p.getChatID())
             {
-                chatList.replace(c, p.getRole()); 
+                chatList.put(c, p.getRole()); 
                 switch(p.getRole())
                 {
                     case User.ADMIN:
