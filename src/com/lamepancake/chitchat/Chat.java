@@ -92,6 +92,22 @@ public class Chat
         return null;
     }
     
+    public User findUser(int userID)
+    {
+        Set<User>           userSet;
+        userSet = this.users.keySet();
+                
+        for (User user : userSet)
+        {
+            if (user.getID() == userID)
+            {
+                return user;
+            }
+        }
+        
+        return null;
+    }
+    
     /**
      * Routes packets to the appropriate function for processing.
      * 
