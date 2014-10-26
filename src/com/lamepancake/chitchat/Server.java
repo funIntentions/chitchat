@@ -149,7 +149,7 @@ public class Server {
         // Attach a buffer for reading the packets
         clientKey.attach(new PacketBuffer(newClient));
         
-        chatManager.addClient(key);
+        chatManager.addClient(clientKey);
     }
 
     /**

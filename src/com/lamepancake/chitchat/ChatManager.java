@@ -17,7 +17,6 @@ import com.lamepancake.chitchat.packet.WhoIsInPacket;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,7 +84,7 @@ public class ChatManager
     public void handlePacket(SelectionKey clientKey, Packet received)
     {
         int type = received.getType();
-        int chatID = -1;
+        int chatID;
         switch(type)
             {
                 case Packet.LOGIN:
@@ -474,6 +473,7 @@ public class ChatManager
             if (user.getPassword().equals(loginInfo.getPassword())) // match passwords
             {
                 user.setSocket((SocketChannel)key.channel());
+                this.lobby.remove(key);
                 this.lobby.put(key, user);
                 sendOperationResult(key, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN); 
                 sendListOfChats(key, null);
