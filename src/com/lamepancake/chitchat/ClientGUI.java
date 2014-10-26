@@ -519,6 +519,14 @@ public class ClientGUI extends javax.swing.JFrame {
 
     private void ButtonSendMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_ButtonSendMousePressed
         // TODO add your handling code here:
+        JScrollPane pane = (JScrollPane) TabbedPaneChatLog.getSelectedComponent();
+        //JTextArea textArea = (JTextArea) pane.getComponents()[0];
+        
+        String chatName = pane.getName();
+        
+        String message = TextAreaMessage.getText();
+                
+        client.sendMessageToChat(chatName, message);
     }//GEN-LAST:event_ButtonSendMousePressed
 
     
@@ -578,16 +586,24 @@ public class ClientGUI extends javax.swing.JFrame {
      * 
      * @param message The message to display.
      * @param username Name of the user who sent the message.
+     * @param chatName The name of the chat to send to
      * @todo Display this in the correct chat tab (will need chat argument).
      * @todo Deal with exceptions properly.
      */
-    public void displayUserMessage(final String message, final String username)
+    public void displayUserMessage(final String message, final String username, final String chatName)
     {
         // Not on the GUI thread; make a runnable that invokes this later
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                // Display code
+                JScrollPane[] panes = (JScrollPane[]) TabbedPaneChatLog.getComponents();
+                for(int i = 0; i < panes.length; i++)
+                {
+                    if(panes[i].getName().equalsIgnoreCase(chatName))
+                    {
+                        ((JTextArea)panes[i].getComponent(0)).append(username + ": " + message + "\n");
+                    }
+                }
             }
         });
     }
@@ -599,14 +615,22 @@ public class ClientGUI extends javax.swing.JFrame {
      * 
      * @todo Deal with exceptions properly.
      * @param message The message to display.
+     * @param chatName The chat to send to
      */
-    public void displayServerMessage(final String message)
+    public void displayServerMessage(final String message, final String chatName)
     {
         // Not on the GUI thread; make a runnable that invokes this later
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                // Display code
+                JScrollPane[] panes = (JScrollPane[]) TabbedPaneChatLog.getComponents();
+                for(int i = 0; i < panes.length; i++)
+                {
+                    if(panes[i].getName().equalsIgnoreCase(chatName))
+                    {
+                        ((JTextArea)panes[i].getComponent(0)).append(message + "\n");
+                    }
+                }
             }
         });
     }

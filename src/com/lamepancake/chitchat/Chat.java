@@ -91,7 +91,7 @@ public class Chat
                 
         for (User user : userSet)
         {
-            if (user.getName().equals(userName))
+            if (user.getName().equalsIgnoreCase(userName))
             {
                 return user;
             }

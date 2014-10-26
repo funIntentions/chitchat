@@ -170,6 +170,20 @@ public class Client {
         sendPacket(ra);
     }
     
+    public void sendMessageToChat(String chatName, String message)
+    {
+        Set<Chat>           chats;
+        chats = this.chatList.keySet();
+                
+        for (Chat chat : chats)
+        {
+            if (chat.getName().equalsIgnoreCase(chatName))
+            {
+                sendMessage(chat.getID(), message);
+            }
+        }
+    }
+    
     public void changeUserRole(String userName, int role)
     {
         Set<Chat>           chats;
@@ -573,7 +587,7 @@ public class Client {
         if(srcUser == null)
             return;
         
-        gui.displayUserMessage(m.getMessage(), srcUser.getName());
+        gui.displayUserMessage(m.getMessage(), srcUser.getName(), srcChat.getName());
     }
     
     private void changeRole(ChangeRolePacket p)
