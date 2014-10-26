@@ -573,7 +573,7 @@ public class Client {
         if(srcUser == null)
             return;
         
-        gui.displayUserMessage(m.getMessage(), srcUser.getName());
+        gui.displayUserMessage(m.getMessage(), srcUser.getName(), srcChat.getName());
     }
     
     private void changeRole(ChangeRolePacket p)
