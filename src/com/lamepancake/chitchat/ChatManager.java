@@ -94,7 +94,7 @@ public class ChatManager
                     logoutUser(clientKey, (LogoutPacket)received);
                     break;
                 case Packet.CHATLIST:
-                    sendListOfChats(clientKey, (ChatListPacket)received);
+                    sendListOfChats(clientKey);
                     break;
                 case Packet.UPDATECHAT:
                     chatCUD(clientKey, (UpdateChatsPacket)received);
@@ -144,9 +144,8 @@ public class ChatManager
      * @todo Actually use inPacket.
      * 
      * @param clientKey
-     * @param inPacket 
      */
-    private void sendListOfChats(SelectionKey clientKey, ChatListPacket inPacket)
+    private void sendListOfChats(SelectionKey clientKey)
     {
         ChatListPacket outPacket;
         
@@ -157,7 +156,9 @@ public class ChatManager
         {
             Map<Integer, Integer> roles = ChatRoleDAOMySQLImpl.getInstance().getChats(user);
             chatList = ChatDAOMySQLImpl.getInstance().getAllChats();
-
+            
+            System.out.println(chatList);
+            System.out.println(roles);
             outPacket = PacketCreator.createChatList(chatList, roles, user.getID());
              
             user.notifyClient(outPacket);
@@ -434,7 +435,7 @@ public class ChatManager
     private void notifyUsersOfChatUpdate(Chat chat, int flag)
     {
         Set<SelectionKey>           keys;
-        keys = lobby.keySet();
+        keys = this.lobby.keySet();
         
         ChatNotifyPacket notify = PacketCreator.createChatNotify(chat.getID(), chat.getName(), flag);
         
@@ -476,7 +477,7 @@ public class ChatManager
                 this.lobby.remove(key);
                 this.lobby.put(key, user);
                 sendOperationResult(key, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN); 
-                sendListOfChats(key, null);
+                sendListOfChats(key);
             }
             else
             {
@@ -508,7 +509,7 @@ public class ChatManager
             user.setID(id);
             lobby.put(key, user);
             sendOperationResult(key, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN); 
-            sendListOfChats(key, null);
+            sendListOfChats(key);
         } catch (SQLException e) {
             System.err.println("ChatManager.login: SQL exception thrown: " + e.getMessage());
             sendLoginOperationFailure(key);
