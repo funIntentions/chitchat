@@ -242,7 +242,7 @@ public class Chat
     
     private void join(JoinLeavePacket jl)
     {
-        int currentRole = User.UNSPEC;
+        int currentRole;
         
         User affected = null;
         

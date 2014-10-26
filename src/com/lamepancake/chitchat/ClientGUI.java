@@ -13,6 +13,8 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.DefaultListModel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 /**
  *
@@ -89,6 +91,7 @@ public class ClientGUI extends javax.swing.JFrame {
         ListUsersLists = new javax.swing.JList();
         MenuBarTop = new javax.swing.JMenuBar();
         MenuFile = new javax.swing.JMenu();
+        MenuItemLogout = new javax.swing.JMenuItem();
         MenuChat = new javax.swing.JMenu();
         MenuItemCreateChat = new javax.swing.JMenuItem();
         MenuItemUpdateChat = new javax.swing.JMenuItem();
@@ -154,6 +157,11 @@ public class ClientGUI extends javax.swing.JFrame {
         PanelMessageScroll.setViewportView(TextAreaMessage);
 
         ButtonSend.setText("Send");
+        ButtonSend.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                ButtonSendMousePressed(evt);
+            }
+        });
 
         javax.swing.GroupLayout PanelMessageLayout = new javax.swing.GroupLayout(PanelMessage);
         PanelMessage.setLayout(PanelMessageLayout);
@@ -255,6 +263,15 @@ public class ClientGUI extends javax.swing.JFrame {
         MenuBarTop.setBackground(new java.awt.Color(56, 19, 39));
 
         MenuFile.setText("File");
+
+        MenuItemLogout.setText("Logout");
+        MenuItemLogout.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                MenuItemLogoutMousePressed(evt);
+            }
+        });
+        MenuFile.add(MenuItemLogout);
+
         MenuBarTop.add(MenuFile);
 
         MenuChat.setText("Chat");
@@ -339,6 +356,11 @@ public class ClientGUI extends javax.swing.JFrame {
         if(option == JOptionPane.OK_OPTION)
         {
             client.sendCreateChat(tfChatName.getText(), -1);
+            JScrollPane curChatScrollPane = new JScrollPane();
+            JTextArea curChatTextArea = new JTextArea("");
+            curChatScrollPane.add(curChatTextArea);
+            curChatScrollPane.setName(tfChatName.getText());
+            TabbedPaneChatLog.add(curChatScrollPane);            
         } 
         else 
         {
@@ -487,6 +509,18 @@ public class ClientGUI extends javax.swing.JFrame {
             client.sendRequestAccess(chatId);
         }
     }//GEN-LAST:event_jMenuItemRequestAccessActionPerformed
+
+    private void MenuItemLogoutMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_MenuItemLogoutMousePressed
+        // TODO add your handling code here:
+        // currently not set to a chat ID
+        //client.sendMessage(0, TextAreaMessage.getText());
+        
+    }//GEN-LAST:event_MenuItemLogoutMousePressed
+
+    private void ButtonSendMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_ButtonSendMousePressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ButtonSendMousePressed
+
     
     private void showChatOptionsPopupMenu(MouseEvent e, int xOffset) 
     {
@@ -688,6 +722,7 @@ public class ClientGUI extends javax.swing.JFrame {
     private javax.swing.JMenu MenuFile;
     private javax.swing.JMenuItem MenuItemCreateChat;
     private javax.swing.JMenuItem MenuItemDeleteChat;
+    private javax.swing.JMenuItem MenuItemLogout;
     private javax.swing.JMenuItem MenuItemUpdateChat;
     private javax.swing.JPanel PanelChatLog;
     private javax.swing.JPanel PanelLists;

@@ -583,7 +583,7 @@ public class Client {
         {
             if(c.getID() == p.getChatID())
             {
-                chatList.replace(c, p.getRole()); 
+                chatList.put(c, p.getRole()); 
                 switch(p.getRole())
                 {
                     case User.ADMIN:
@@ -717,6 +717,7 @@ public class Client {
                 if(op.getStatus() == 1)
                 {
                     // Login succeeded. Call the GUI method
+                    clientUser.setID(op.getUserID());
                     gui.loginValid(op.getUserID(), true);
                 }
                 else
