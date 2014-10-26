@@ -537,7 +537,48 @@ public class ClientGUI extends javax.swing.JFrame {
             }
         });
     }
-     
+    
+    public void updateChatList(final int chatid, final String chat)
+    {
+        SwingUtilities.invokeLater(new Runnable() {    
+            @Override
+            public void run(){
+                
+                for(int i = 0; i < ListChatLists.getModel().getSize(); i++)
+                {
+                    String[] info = ((String)ListChatLists.getModel().getElementAt(i)).split(" ");
+                    int chatId = Integer.parseInt(info[0]);
+                    
+                    if(chatId == chatid)
+                    {
+                       ((DefaultListModel)ListChatLists.getModel()).setElementAt(chat, i);
+                       break;
+                    }
+                }  
+            }
+        });
+    }
+    
+    public void deleteFromChatList(final int chatid)
+    {
+         SwingUtilities.invokeLater(new Runnable() {    
+            @Override
+            public void run(){
+                for(int i = 0; i < ListChatLists.getModel().getSize(); i++)
+                {
+                    String[] info = ((String)ListChatLists.getModel().getElementAt(i)).split(" ");
+                    int chatId = Integer.parseInt(info[0]);
+                    
+                    if(chatId == chatid)
+                    {
+                       ((DefaultListModel)ListChatLists.getModel()).removeElementAt(i);
+                       break;
+                    }
+                }  
+            }
+        });
+    }
+    
     /**
      * Tells the GUI whether the login attempt failed or succeeded.
      * 

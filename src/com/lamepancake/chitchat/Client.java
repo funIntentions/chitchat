@@ -547,7 +547,38 @@ public class Client {
     
     private void updateChat(ChatNotifyPacket p)
     {
+        Set<Chat> keys = chatList.keySet();
+        Chat updateChat = null;
+        for(Chat c : keys)
+        {
+            if(c.getID() == p.getChatID())
+            {
+                c.setName(p.getChatName());
+                updateChat = c;
+                break;
+            }
+        }
         
+        if(updateChat != null)
+        {
+            switch(chatList.get(updateChat))
+            {
+                case User.ADMIN:
+                    gui.updateChatList(p.getChatID(), p.getChatID() + " " + p.getChatName() + ", Scrum Master");
+                    break;
+                case User.USER:
+                    gui.updateChatList(p.getChatID(), p.getChatID() + " " + p.getChatName() + ", Developer");
+                    break;
+                case User.WAITING:
+                    gui.updateChatList(p.getChatID(), p.getChatID() + " " + p.getChatName() + ", Waiting");
+                    break;
+                case User.UNSPEC:
+                    gui.updateChatList(p.getChatID(), p.getChatID() + " " + p.getChatName() + ", Unspecified"); 
+                    break;
+                default:
+                   break;
+            }
+        }
     }
     
     private void createChat(ChatNotifyPacket p)
@@ -559,7 +590,16 @@ public class Client {
     
     private void deleteChat(ChatNotifyPacket p)
     {
-        
+        Set<Chat> keys = chatList.keySet();
+        for(Chat c : keys)
+        {
+            if(c.getID() == p.getChatID())
+            {
+                chatList.remove(c);
+                break;
+            }
+        }
+        gui.deleteFromChatList(p.getChatID());
     }
     
     /**
