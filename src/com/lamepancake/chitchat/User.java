@@ -82,10 +82,7 @@ public class User {
      * @return
      */
     public User setRole(int newRole)
-    {
-        if(newRole > USER)
-                throw new IllegalArgumentException("role must be -1 <= role <= 1, was " + role);
-        
+    {        
         this.role = newRole;
         return this;
     }

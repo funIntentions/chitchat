@@ -6,6 +6,7 @@
 package com.lamepancake.chitchat.DAO;
 
 import com.lamepancake.chitchat.Chat;
+import com.lamepancake.chitchat.ServerUser;
 import com.lamepancake.chitchat.User;
 import java.sql.SQLException;
 import java.util.List;
@@ -53,7 +54,7 @@ public interface ChatRoleDAO {
      * @return The list of users in this chat.
      * @throws SQLException When a database error occurs.
      */
-    List<User> getUsers(Chat c) throws SQLException;
+    List<ServerUser> getUsers(Chat c) throws SQLException;
     
     /**
      * Gets a list of chats with which a user is associated.
