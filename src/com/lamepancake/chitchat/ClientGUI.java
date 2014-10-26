@@ -65,6 +65,7 @@ public class ClientGUI extends javax.swing.JFrame {
         jPopupMenuChatOptions = new javax.swing.JPopupMenu();
         jMenuItemJoin = new javax.swing.JMenuItem();
         jMenuItemLeave = new javax.swing.JMenuItem();
+        jMenuItemRequestAccess = new javax.swing.JMenuItem();
         jPopupMenuUserOptions = new javax.swing.JPopupMenu();
         jMenuItemBootUser = new javax.swing.JMenuItem();
         jMenuChangeRole = new javax.swing.JMenu();
@@ -108,6 +109,14 @@ public class ClientGUI extends javax.swing.JFrame {
             }
         });
         jPopupMenuChatOptions.add(jMenuItemLeave);
+
+        jMenuItemRequestAccess.setText("Request Access");
+        jMenuItemRequestAccess.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemRequestAccessActionPerformed(evt);
+            }
+        });
+        jPopupMenuChatOptions.add(jMenuItemRequestAccess);
 
         jMenuItemBootUser.setText("Boot User");
         jMenuItemBootUser.addActionListener(new java.awt.event.ActionListener() {
@@ -464,6 +473,20 @@ public class ClientGUI extends javax.swing.JFrame {
             client.changeUserRole(userName, User.ADMIN);
         }
     }//GEN-LAST:event_jMenuItemAdminRoleActionPerformed
+
+    private void jMenuItemRequestAccessActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemRequestAccessActionPerformed
+        // TODO add your handling code here:
+        if (ListChatLists.getSelectedIndex() != -1) 
+        {
+            String chatInfo = ListChatLists.getSelectedValue().toString();
+            
+            String[] info = chatInfo.split(" ");
+            
+            int chatId = Integer.parseInt(info[0]);
+            System.out.println(chatId);
+            client.sendRequestAccess(chatId);
+        }
+    }//GEN-LAST:event_jMenuItemRequestAccessActionPerformed
     
     private void showChatOptionsPopupMenu(MouseEvent e, int xOffset) 
     {
@@ -684,6 +707,7 @@ public class ClientGUI extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemBootUser;
     private javax.swing.JMenuItem jMenuItemJoin;
     private javax.swing.JMenuItem jMenuItemLeave;
+    private javax.swing.JMenuItem jMenuItemRequestAccess;
     private javax.swing.JMenuItem jMenuItemUserRole;
     private javax.swing.JPopupMenu jPopupMenuChatOptions;
     private javax.swing.JPopupMenu jPopupMenuUserOptions;

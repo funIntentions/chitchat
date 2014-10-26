@@ -16,6 +16,7 @@ import com.lamepancake.chitchat.packet.JoinLeavePacket;
 import com.lamepancake.chitchat.packet.MessagePacket;
 import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.PacketCreator;
+import com.lamepancake.chitchat.packet.RequestAccessPacket;
 import com.lamepancake.chitchat.packet.WhoIsInPacket;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -134,6 +135,9 @@ public class Chat
             case Packet.CHANGEROLE:
                 promoteUser((ChangeRolePacket)received);
                 break;
+            case Packet.REQUESTACCESS:
+                addWaitingUser((RequestAccessPacket)received);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown packet type: " + type);
         }
@@ -162,9 +166,47 @@ public class Chat
         broadcast(b.getBooterID(), p, false);
     }
     
+    private void addWaitingUser(RequestAccessPacket r)
+    {
+        Packet p = PacketCreator.createUserNotify(r.getUserID(), r.getChatID(), User.WAITING, Packet.CHANGEROLE);
+        
+        try 
+        {
+            //Make user admin for chat.
+            ChatRoleDAOMySQLImpl.getInstance().addUser(chatID, r.getUserID(), User.WAITING);
+            
+        } catch (SQLException e) 
+        {
+            System.err.println("ChatManager.createChat: SQL exception thrown: " + e.getMessage());
+            return;
+        }
+        
+        for(User u : users.keySet())
+        {
+            if(u.getID() == r.getUserID())
+            {
+                ((ServerUser)u).notifyClient(r);
+                break;
+            }
+        }
+        broadcast(r.getUserID(), p, false);
+    }
+    
     private void promoteUser(ChangeRolePacket r)
     {
         Packet p = PacketCreator.createUserNotify(r.getUserID(), r.getChatID(), r.getRole(), Packet.CHANGEROLE);
+        
+        try 
+        {
+            //Make user admin for chat.
+            ChatRoleDAOMySQLImpl.getInstance().updateRole(chatID, r.getUserID(), r.getRole());
+            
+        } catch (SQLException e) 
+        {
+            System.err.println("ChatManager.createChat: SQL exception thrown: " + e.getMessage());
+            return;
+        }
+        
         for(User u : users.keySet())
         {
             if(u.getID() == r.getUserID())

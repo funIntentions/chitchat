@@ -157,8 +157,6 @@ public class ChatManager
             Map<Integer, Integer> roles = ChatRoleDAOMySQLImpl.getInstance().getChats(user);
             chatList = ChatDAOMySQLImpl.getInstance().getAllChats();
             
-            System.out.println(chatList);
-            System.out.println(roles);
             outPacket = PacketCreator.createChatList(chatList, roles, user.getID());
              
             user.notifyClient(outPacket);
