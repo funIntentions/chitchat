@@ -83,6 +83,6 @@ public class JoinLeavePacket extends Packet
      */
     public int getFlag()
     {
-        return chatID;
+        return flag;
     }
 }
