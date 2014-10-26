@@ -170,6 +170,20 @@ public class Client {
         sendPacket(ra);
     }
     
+    public void sendMessageToChat(String chatName, String message)
+    {
+        Set<Chat>           chats;
+        chats = this.chatList.keySet();
+                
+        for (Chat chat : chats)
+        {
+            if (chat.getName().equalsIgnoreCase(chatName))
+            {
+                sendMessage(chat.getID(), message);
+            }
+        }
+    }
+    
     public void changeUserRole(String userName, int role)
     {
         Set<Chat>           chats;
