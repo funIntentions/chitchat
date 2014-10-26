@@ -23,7 +23,7 @@ public class ChatNotifyPacket extends Packet
     
     public ChatNotifyPacket(int chat, String name, int flag)
     {
-        super(CHATNOTIFY, 4 + name.length() * 2 + 4);
+        super(CHATNOTIFY, 4 + name.length() * 2 + 4 + 4);
         
         chatID = chat;
         chatName = name;

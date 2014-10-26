@@ -380,6 +380,7 @@ public class ChatManager
             chat.setName(chatInfo.getName());
             int chatID = ChatDAOMySQLImpl.getInstance().create(chat);
             this.chats.put(chatID, chat);
+            chat.setID(chatID);
             
             //Make user admin for chat.
             ChatRoleDAOMySQLImpl.getInstance().addUser(chatID, user.getID(), User.ADMIN);
@@ -387,6 +388,8 @@ public class ChatManager
             sendOperationResult(clientKey, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_CRUD);
             
             notifyUsersOfChatUpdate(chat, UpdateChatsPacket.CREATE);
+            
+            ((ServerUser)user).notifyClient(PacketCreator.createChangeRole(chatID, user.getID(), User.ADMIN));
             
         } catch (SQLException e) 
         {

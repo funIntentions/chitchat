@@ -26,7 +26,7 @@ import java.util.Map;
  */
 public class Chat 
 {
-    private final int chatID;
+    private int chatID;
     private String chatName;
     private ChatRoleDAO crDao;
     private ChatDAO cDao;
@@ -186,6 +186,11 @@ public class Chat
     public Integer getID()
     {
         return chatID;
+    }
+    
+    public void setID(int id)
+    {
+        chatID = id;
     }
  
     /**

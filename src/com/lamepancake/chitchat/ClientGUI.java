@@ -528,6 +528,16 @@ public class ClientGUI extends javax.swing.JFrame {
         });
     }
     
+    public void addChatToList(final String chat)
+    {
+         SwingUtilities.invokeLater(new Runnable() {    
+            @Override
+            public void run(){
+                ((DefaultListModel)ListChatLists.getModel()).addElement(chat);
+            }
+        });
+    }
+     
     /**
      * Tells the GUI whether the login attempt failed or succeeded.
      * 

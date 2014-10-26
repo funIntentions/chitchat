@@ -483,6 +483,18 @@ public class Client {
                 case Packet.USERNOTIFY:
                     break;
                 case Packet.CHATNOTIFY:
+                    switch(((ChatNotifyPacket)p).getChangeFlag())
+                    {
+                        case UpdateChatsPacket.CREATE:
+                            createChat((ChatNotifyPacket)p);
+                            break;
+                        case UpdateChatsPacket.DELETE:
+                            deleteChat((ChatNotifyPacket)p);
+                            break;
+                        case UpdateChatsPacket.UPDATE:
+                            updateChat((ChatNotifyPacket)p);
+                            break;
+                    }
                     break;
                 case Packet.BOOT:
                     break;
@@ -531,6 +543,23 @@ public class Client {
             return;
         
         gui.displayUserMessage(m.getMessage(), srcUser.getName());
+    }
+    
+    private void updateChat(ChatNotifyPacket p)
+    {
+        
+    }
+    
+    private void createChat(ChatNotifyPacket p)
+    {
+        chatList.put(new Chat(p.getChatName(), p.getChatID()), User.UNSPEC);
+        String c = p.getChatID() + " " + p.getChatName() + ", Unspecified";
+        gui.addChatToList(c);
+    }
+    
+    private void deleteChat(ChatNotifyPacket p)
+    {
+        
     }
     
     /**
