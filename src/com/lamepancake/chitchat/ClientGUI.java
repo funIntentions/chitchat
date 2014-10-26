@@ -519,6 +519,14 @@ public class ClientGUI extends javax.swing.JFrame {
 
     private void ButtonSendMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_ButtonSendMousePressed
         // TODO add your handling code here:
+        JScrollPane pane = (JScrollPane) TabbedPaneChatLog.getSelectedComponent();
+        //JTextArea textArea = (JTextArea) pane.getComponents()[0];
+        
+        String chatName = pane.getName();
+        
+        String message = TextAreaMessage.getText();
+                
+        client.sendMessageToChat(chatName, message);
     }//GEN-LAST:event_ButtonSendMousePressed
 
     
