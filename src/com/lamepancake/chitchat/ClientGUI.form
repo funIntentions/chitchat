@@ -36,6 +36,9 @@
           <Properties>
             <Property name="text" type="java.lang.String" value="Boot User"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemBootUserActionPerformed"/>
+          </Events>
         </MenuItem>
         <Menu class="javax.swing.JMenu" name="jMenuChangeRole">
           <Properties>
@@ -46,11 +49,17 @@
               <Properties>
                 <Property name="text" type="java.lang.String" value="Developer"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemUserRoleActionPerformed"/>
+              </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItemAdminRole">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Scrum Master"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemAdminRoleActionPerformed"/>
+              </Events>
             </MenuItem>
           </SubComponents>
         </Menu>

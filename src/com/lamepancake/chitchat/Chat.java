@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -73,6 +74,22 @@ public class Chat
         {
             this.users.put(user, Boolean.FALSE);
         }
+    }
+    
+    public User findUser(String userName)
+    {
+        Set<User>           userSet;
+        userSet = this.users.keySet();
+                
+        for (User user : userSet)
+        {
+            if (user.getName().equals(userName))
+            {
+                return user;
+            }
+        }
+        
+        return null;
     }
     
     /**

@@ -170,6 +170,36 @@ public class Client {
         sendPacket(ra);
     }
     
+    public void changeUserRole(String userName, int role)
+    {
+        Set<Chat>           chats;
+        chats = this.chatList.keySet();
+        User foundUser;
+                
+        for (Chat chat : chats)
+        {
+            if ((foundUser = chat.findUser(userName)) != null)
+            {
+                sendChangeRole(foundUser.getID(), chat.getID(), role);
+            }
+        }
+    }
+    
+    public void bootUser(String userName)
+    {
+        Set<Chat>           chats;
+        chats = this.chatList.keySet();
+        User foundUser;
+                
+        for (Chat chat : chats)
+        {
+            if ((foundUser = chat.findUser(userName)) != null)
+            {
+                sendBoot(chat, foundUser);
+            }
+        }
+    }
+    
     /**
      * If we are an admin in the given chat, sends a boot packet to boot the
      * specified user.
@@ -547,7 +577,38 @@ public class Client {
     
     private void updateChat(ChatNotifyPacket p)
     {
+        Set<Chat> keys = chatList.keySet();
+        Chat updateChat = null;
+        for(Chat c : keys)
+        {
+            if(c.getID() == p.getChatID())
+            {
+                c.setName(p.getChatName());
+                updateChat = c;
+                break;
+            }
+        }
         
+        if(updateChat != null)
+        {
+            switch(chatList.get(updateChat))
+            {
+                case User.ADMIN:
+                    gui.updateChatList(p.getChatID(), p.getChatID() + " " + p.getChatName() + ", Scrum Master");
+                    break;
+                case User.USER:
+                    gui.updateChatList(p.getChatID(), p.getChatID() + " " + p.getChatName() + ", Developer");
+                    break;
+                case User.WAITING:
+                    gui.updateChatList(p.getChatID(), p.getChatID() + " " + p.getChatName() + ", Waiting");
+                    break;
+                case User.UNSPEC:
+                    gui.updateChatList(p.getChatID(), p.getChatID() + " " + p.getChatName() + ", Unspecified"); 
+                    break;
+                default:
+                   break;
+            }
+        }
     }
     
     private void createChat(ChatNotifyPacket p)
@@ -559,7 +620,16 @@ public class Client {
     
     private void deleteChat(ChatNotifyPacket p)
     {
-        
+        Set<Chat> keys = chatList.keySet();
+        for(Chat c : keys)
+        {
+            if(c.getID() == p.getChatID())
+            {
+                chatList.remove(c);
+                break;
+            }
+        }
+        gui.deleteFromChatList(p.getChatID());
     }
     
     /**
