@@ -199,7 +199,7 @@ public class ChatManager
     private boolean isAdmin(SelectionKey clientKey, int chatID, int opType)
     {
         ServerUser user = lobby.get(clientKey);
-        int userRole = User.UNSPEC;
+        int userRole;
         
         try 
         {
@@ -455,7 +455,7 @@ public class ChatManager
     private void login(SelectionKey key, LoginPacket loginInfo)
     {
         
-        ServerUser user = null;
+        ServerUser user;
         
         try 
         {

@@ -83,8 +83,8 @@ public class ChatRoleDAOMySQLImpl extends MySQLDAOBase implements ChatRoleDAO {
     public void addUser(int chatID, int userID, int role) throws SQLException
     {
         addChatUserStatement.clearParameters();
-        addChatUserStatement.setInt(1, userID);
-        addChatUserStatement.setInt(2, chatID);
+        addChatUserStatement.setInt(1, chatID);
+        addChatUserStatement.setInt(2, userID);
         addChatUserStatement.setInt(3, role);
         addChatUserStatement.executeUpdate();
     }
