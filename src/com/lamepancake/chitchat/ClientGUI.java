@@ -6,6 +6,7 @@
 package com.lamepancake.chitchat;
 
 import com.lamepancake.chitchat.packet.JoinLeavePacket;
+import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.nio.channels.SocketChannel;
 import javax.swing.JOptionPane;
@@ -185,11 +186,14 @@ public class ClientGUI extends javax.swing.JFrame {
 
         TabbedPaneChatLog.setName("Chats"); // NOI18N
 
+        ScrollPaneChatLog1.setName(""); // NOI18N
+
         TextAreaChatLog1.setEditable(false);
         TextAreaChatLog1.setColumns(20);
         TextAreaChatLog1.setRows(5);
         TextAreaChatLog1.setText("Humpfrey: Top of the morning to ya.\na\ndf\na\nsdf\na\nsdf\na\nsd\nf\nasdf\nasdf\n\nasd\nf\nas\ndf\nasdf\na\nsd\nf\nasdf\n\nasd\nf\n\nasdf\na\nsdf\nasdf\nas\ndf\nas\ndf\nasd\nf\nasdf\nas\ndf\nas\nf\n\na\nsdf\nas\ndf\nas\ndf\nasd");
         TextAreaChatLog1.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
+        TextAreaChatLog1.setName("ChitChatCat"); // NOI18N
         ScrollPaneChatLog1.setViewportView(TextAreaChatLog1);
 
         TabbedPaneChatLog.addTab("ChitChatCat", ScrollPaneChatLog1);
@@ -278,11 +282,11 @@ public class ClientGUI extends javax.swing.JFrame {
 
         MenuItemCreateChat.setText("New Chat");
         MenuItemCreateChat.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                MenuItemCreateChatMouseClicked(evt);
-            }
             public void mousePressed(java.awt.event.MouseEvent evt) {
                 MenuItemCreateChatMousePressed(evt);
+            }
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                MenuItemCreateChatMouseClicked(evt);
             }
         });
         MenuChat.add(MenuItemCreateChat);
@@ -520,12 +524,15 @@ public class ClientGUI extends javax.swing.JFrame {
     private void ButtonSendMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_ButtonSendMousePressed
         // TODO add your handling code here:
         JScrollPane pane = (JScrollPane) TabbedPaneChatLog.getSelectedComponent();
-        //JTextArea textArea = (JTextArea) pane.getComponents()[0];
+        
+        String message = TextAreaMessage.getText();
         
         String chatName = pane.getName();
         
-        String message = TextAreaMessage.getText();
-                
+        User user = client.getUser();
+        
+        displayUserMessage(message, user.getName(), chatName);
+        
         client.sendMessageToChat(chatName, message);
     }//GEN-LAST:event_ButtonSendMousePressed
 
@@ -593,16 +600,25 @@ public class ClientGUI extends javax.swing.JFrame {
     public void displayUserMessage(final String message, final String username, final String chatName)
     {
         // Not on the GUI thread; make a runnable that invokes this later
+        
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                JScrollPane[] panes = (JScrollPane[]) TabbedPaneChatLog.getComponents();
+                Component[] panes = TabbedPaneChatLog.getComponents();
                 for(int i = 0; i < panes.length; i++)
                 {
-                    if(panes[i].getName().equalsIgnoreCase(chatName))
+                    JScrollPane pane;
+                    if (panes[i] instanceof JScrollPane)
                     {
-                        ((JTextArea)panes[i].getComponent(0)).append(username + ": " + message + "\n");
+                        pane = (JScrollPane)panes[i];
+                        
+                        if(pane.getComponent(0) instanceof JTextArea && pane.getName().equals(chatName))
+                        {
+
+                            ((JTextArea)pane.getComponent(0)).append(username + ": " + message + "\n");
+                        }
                     }
+                    
                 }
             }
         });
@@ -626,7 +642,7 @@ public class ClientGUI extends javax.swing.JFrame {
                 JScrollPane[] panes = (JScrollPane[]) TabbedPaneChatLog.getComponents();
                 for(int i = 0; i < panes.length; i++)
                 {
-                    if(panes[i].getName().equalsIgnoreCase(chatName))
+                    if(panes[i].getName().equals(chatName))
                     {
                         ((JTextArea)panes[i].getComponent(0)).append(message + "\n");
                     }

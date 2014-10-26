@@ -100,7 +100,12 @@ public class Client {
         new ListenFromServer().execute();
         return true;
     }
-
+    
+    public User getUser()
+    {
+        return clientUser;
+    }
+    
     /**
      * Sends a packet to the server.
      * 
