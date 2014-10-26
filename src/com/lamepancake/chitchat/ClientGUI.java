@@ -110,14 +110,29 @@ public class ClientGUI extends javax.swing.JFrame {
         jPopupMenuChatOptions.add(jMenuItemLeave);
 
         jMenuItemBootUser.setText("Boot User");
+        jMenuItemBootUser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemBootUserActionPerformed(evt);
+            }
+        });
         jPopupMenuUserOptions.add(jMenuItemBootUser);
 
         jMenuChangeRole.setText("Change Role");
 
         jMenuItemUserRole.setText("Developer");
+        jMenuItemUserRole.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemUserRoleActionPerformed(evt);
+            }
+        });
         jMenuChangeRole.add(jMenuItemUserRole);
 
         jMenuItemAdminRole.setText("Scrum Master");
+        jMenuItemAdminRole.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemAdminRoleActionPerformed(evt);
+            }
+        });
         jMenuChangeRole.add(jMenuItemAdminRole);
 
         jPopupMenuUserOptions.add(jMenuChangeRole);
@@ -389,9 +404,7 @@ public class ClientGUI extends javax.swing.JFrame {
             String[] info = chatInfo.split(" ");
             
             int chatId = Integer.parseInt(info[0]);
-            
-            System.out.println(chatId);
-            
+                        
             client.sendJoinLeave(chatId, JoinLeavePacket.JOIN);
         }
     }//GEN-LAST:event_jMenuItemJoinActionPerformed
@@ -405,12 +418,52 @@ public class ClientGUI extends javax.swing.JFrame {
             String[] info = chatInfo.split(" ");
             
             int chatId = Integer.parseInt(info[0]);
-            
-            System.out.println(chatId);
-            
+                        
             client.sendJoinLeave(chatId, JoinLeavePacket.LEAVE);
         }
     }//GEN-LAST:event_jMenuItemLeaveActionPerformed
+
+    private void jMenuItemBootUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemBootUserActionPerformed
+        // TODO add your handling code here:
+        if (ListUsersLists.getSelectedIndex() != -1)
+        {
+            String userInfo = ListUsersLists.getSelectedValue().toString();
+            
+            String[] info = userInfo.split(",");
+            
+            String userName = info[0];
+            
+            client.bootUser(userName);
+        }
+    }//GEN-LAST:event_jMenuItemBootUserActionPerformed
+
+    private void jMenuItemUserRoleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemUserRoleActionPerformed
+        // TODO add your handling code here:
+        if (ListUsersLists.getSelectedIndex() != -1)
+        {
+            String userInfo = ListUsersLists.getSelectedValue().toString();
+            
+            String[] info = userInfo.split(",");
+            
+            String userName = info[0];
+            
+            client.changeUserRole(userName, User.USER);
+        }
+    }//GEN-LAST:event_jMenuItemUserRoleActionPerformed
+
+    private void jMenuItemAdminRoleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAdminRoleActionPerformed
+        // TODO add your handling code here:
+        if (ListUsersLists.getSelectedIndex() != -1)
+        {
+            String userInfo = ListUsersLists.getSelectedValue().toString();
+            
+            String[] info = userInfo.split(",");
+            
+            String userName = info[0];
+            
+            client.changeUserRole(userName, User.ADMIN);
+        }
+    }//GEN-LAST:event_jMenuItemAdminRoleActionPerformed
     
     private void showChatOptionsPopupMenu(MouseEvent e, int xOffset) 
     {
