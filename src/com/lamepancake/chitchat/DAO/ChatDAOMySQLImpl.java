@@ -109,7 +109,7 @@ public class ChatDAOMySQLImpl extends MySQLDAOBase implements ChatDAO {
             return null;
         
         chatID = queryResults.getInt("chatId");
-        name = queryResults.getString("name");;
+        name = queryResults.getString("name");
         
         c = new Chat(name, chatID);
 
