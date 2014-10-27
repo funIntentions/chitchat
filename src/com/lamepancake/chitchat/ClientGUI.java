@@ -16,6 +16,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.DefaultListModel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JViewport;
 
 /**
  *
@@ -336,10 +337,16 @@ public class ClientGUI extends javax.swing.JFrame {
         if(option == JOptionPane.OK_OPTION)
         {
             client.sendCreateChat(tfChatName.getText(), -1);
-            JScrollPane curChatScrollPane = new JScrollPane();
+
             JTextArea curChatTextArea = new JTextArea();
-            curChatTextArea.setText("Welcome" + client.getUser().getName() + "\n");
-            curChatScrollPane.add(curChatTextArea);
+            curChatTextArea.setEditable(true);
+            curChatTextArea.setVisible(true);
+            curChatTextArea.setText("Welcome " + client.getUser().getName() + "!\n");
+            //curChatScrollPane.add(curChatTextArea);
+            //curChatScrollPane.setVisible(true);
+            //curChatScrollPane.setName(tfChatName.getText());
+            
+            JScrollPane curChatScrollPane = new JScrollPane(curChatTextArea);
             curChatScrollPane.setName(tfChatName.getText());
             TabbedPaneChatLog.add(curChatScrollPane);            
         } 
@@ -588,20 +595,27 @@ public class ClientGUI extends javax.swing.JFrame {
                 {
                     if (TabbedPaneChatLog.getComponent(i) instanceof JScrollPane)
                     {                        
-                        Component[] components = ((JScrollPane)TabbedPaneChatLog.getComponent(i)).getComponents();
+                        JViewport viewPort = ((JScrollPane)TabbedPaneChatLog.getComponent(i)).getViewport();
+                        Component[] components = viewPort.getComponents();
                         
                         for(int j = 0; j < components.length; j++)
                         {
-                            if(((JScrollPane)TabbedPaneChatLog.getComponent(i)).getComponent(j) instanceof JTextArea)
+                            if(((JScrollPane)TabbedPaneChatLog.getComponent(i)).getViewport().getComponent(j) instanceof JTextArea)
                             {
                                 if(((JScrollPane)TabbedPaneChatLog.getComponent(i)).getName().equals(chatName))
                                 {
-                                    ((JTextArea)((JScrollPane)TabbedPaneChatLog.getComponent(i)).getComponent(j)).append(username + ": " + message + "\n");
+                                    if(((JTextArea)((JScrollPane)TabbedPaneChatLog.getComponent(i)).getViewport().getComponent(j)).getText() == null || ((JTextArea)((JScrollPane)TabbedPaneChatLog.getComponent(i)).getViewport().getComponent(j)).getText().equals(""))
+                                    {
+                                        ((JTextArea)((JScrollPane)TabbedPaneChatLog.getComponent(i)).getViewport().getComponent(j)).setText(username + ": " + message + "\n");
+                                    }
+                                    else
+                                    {
+                                        ((JTextArea)((JScrollPane)TabbedPaneChatLog.getComponent(i)).getViewport().getComponent(j)).append(username + ": " + message + "\n");
+                                    }
                                 }
                             }
                         }
-                    }
-                    
+                    } 
                 }
             }
         });
@@ -622,13 +636,32 @@ public class ClientGUI extends javax.swing.JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                JScrollPane[] panes = (JScrollPane[]) TabbedPaneChatLog.getComponents();
+                Component[] panes = TabbedPaneChatLog.getComponents();
                 for(int i = 0; i < panes.length; i++)
                 {
-                    if(panes[i].getName().equals(chatName))
-                    {
-                        ((JTextArea)panes[i].getComponent(0)).append(message + "\n");
-                    }
+                    if (TabbedPaneChatLog.getComponent(i) instanceof JScrollPane)
+                    {                        
+                        JViewport viewPort = ((JScrollPane)TabbedPaneChatLog.getComponent(i)).getViewport();
+                        Component[] components = viewPort.getComponents();
+                        
+                        for(int j = 0; j < components.length; j++)
+                        {
+                            if(((JScrollPane)TabbedPaneChatLog.getComponent(i)).getViewport().getComponent(j) instanceof JTextArea)
+                            {
+                                if(((JScrollPane)TabbedPaneChatLog.getComponent(i)).getName().equals(chatName))
+                                {
+                                    if(((JTextArea)((JScrollPane)TabbedPaneChatLog.getComponent(i)).getViewport().getComponent(j)).getText() == null || ((JTextArea)((JScrollPane)TabbedPaneChatLog.getComponent(i)).getViewport().getComponent(j)).getText().equals(""))
+                                    {
+                                        ((JTextArea)((JScrollPane)TabbedPaneChatLog.getComponent(i)).getViewport().getComponent(j)).setText(message + "\n");
+                                    }
+                                    else
+                                    {
+                                        ((JTextArea)((JScrollPane)TabbedPaneChatLog.getComponent(i)).getViewport().getComponent(j)).append(message + "\n");
+                                    }
+                                }
+                            }
+                        }
+                    } 
                 }
             }
         });

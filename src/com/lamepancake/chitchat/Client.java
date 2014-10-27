@@ -149,6 +149,9 @@ public class Client {
      */
     public void sendLogin(final String uname, final String pass)
     {
+        clientUser.setName(uname);
+        clientUser.setPassword(pass);
+        
         final LoginPacket l = PacketCreator.createLogin(uname, pass);
         waitingOp.clear();
         waitingOp.put(OperationStatusPacket.OP_LOGIN, l);
