@@ -512,14 +512,19 @@ public class ClientGUI extends javax.swing.JFrame {
         
         String message = TextAreaMessage.getText();
         
+        if(TextAreaMessage.getText() == null || TextAreaMessage.getText().equals(""))
+        {
+            return;
+        }
+        
         String chatName = pane.getName();
-        
+
         User user = client.getUser();
-        
+
         displayUserMessage(message, user.getName(), chatName);
-        
+
         client.sendMessageToChat(chatName, message);
-        
+
         TextAreaMessage.setText("");
     }//GEN-LAST:event_ButtonSendMousePressed
 
