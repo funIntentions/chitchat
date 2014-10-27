@@ -728,6 +728,21 @@ public class Client {
         gui.deleteFromChatList(p.getChatID());
     }
     
+    private void joinLeaveChat(UserNotifyPacket p)
+    {
+        if(p.getFlag() == 0)
+        {
+            Set<Chat> chatkeys = chatList.keySet();
+            for(Chat c : chatkeys)
+            {
+                if(c.getID() == p.getChatID())
+                {
+                    gui.addTab(c.getName());
+                }
+            }
+        }
+    }
+    
     /**
      * Handles the success or failure of an issued operation.
      * 
