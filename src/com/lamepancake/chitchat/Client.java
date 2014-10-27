@@ -669,6 +669,7 @@ public class Client {
         chatList.put(new Chat(p.getChatName(), p.getChatID()), User.UNSPEC);
         String c = p.getChatID() + " " + p.getChatName() + ", Unspecified";
         gui.addChatToList(c);
+        gui.addTab(p.getChatName());
     }
     
     private void deleteChat(ChatNotifyPacket p)

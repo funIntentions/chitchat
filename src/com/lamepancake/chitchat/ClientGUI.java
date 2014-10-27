@@ -338,17 +338,7 @@ public class ClientGUI extends javax.swing.JFrame {
         {
             client.sendCreateChat(tfChatName.getText(), -1);
 
-            JTextArea curChatTextArea = new JTextArea();
-            curChatTextArea.setEditable(true);
-            curChatTextArea.setVisible(true);
-            curChatTextArea.setText("Welcome " + client.getUser().getName() + "!\n");
-            //curChatScrollPane.add(curChatTextArea);
-            //curChatScrollPane.setVisible(true);
-            //curChatScrollPane.setName(tfChatName.getText());
-            
-            JScrollPane curChatScrollPane = new JScrollPane(curChatTextArea);
-            curChatScrollPane.setName(tfChatName.getText());
-            TabbedPaneChatLog.add(curChatScrollPane);            
+       
         } 
         else 
         {
@@ -357,6 +347,17 @@ public class ClientGUI extends javax.swing.JFrame {
         
     }//GEN-LAST:event_MenuItemCreateChatMousePressed
 
+    public void addTab(String chatname)
+    {
+        JTextArea curChatTextArea = new JTextArea();
+        curChatTextArea.setEditable(true);
+        curChatTextArea.setVisible(true);
+        curChatTextArea.setText("Welcome " + client.getUser().getName() + "!\n");
+            
+        JScrollPane curChatScrollPane = new JScrollPane(curChatTextArea);
+        curChatScrollPane.setName(chatname);
+        TabbedPaneChatLog.add(curChatScrollPane);     
+    }
     private void MenuItemDeleteChatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MenuItemDeleteChatActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_MenuItemDeleteChatActionPerformed
