@@ -730,7 +730,7 @@ public class Client {
     
     private void joinLeaveChat(UserNotifyPacket p)
     {
-        if(p.getFlag() == 0)
+        if(p.getFlag() == 0 && p.getUserID() == clientUser.getID())
         {
             Set<Chat> chatkeys = chatList.keySet();
             for(Chat c : chatkeys)
