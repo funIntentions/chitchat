@@ -80,10 +80,6 @@ public class ClientGUI extends javax.swing.JFrame {
         ButtonSend = new javax.swing.JButton();
         PanelChatLog = new javax.swing.JPanel();
         TabbedPaneChatLog = new javax.swing.JTabbedPane();
-        ScrollPaneChatLog1 = new javax.swing.JScrollPane();
-        TextAreaChatLog1 = new javax.swing.JTextArea();
-        ScrollPaneChatLog2 = new javax.swing.JScrollPane();
-        TextAreaChatLog2 = new javax.swing.JTextArea();
         PanelLists = new javax.swing.JPanel();
         TabbedPanelLists = new javax.swing.JTabbedPane();
         ScrollPanelChatLists = new javax.swing.JScrollPane();
@@ -185,26 +181,6 @@ public class ClientGUI extends javax.swing.JFrame {
         );
 
         TabbedPaneChatLog.setName("Chats"); // NOI18N
-
-        ScrollPaneChatLog1.setName(""); // NOI18N
-
-        TextAreaChatLog1.setEditable(false);
-        TextAreaChatLog1.setColumns(20);
-        TextAreaChatLog1.setRows(5);
-        TextAreaChatLog1.setText("Humpfrey: Top of the morning to ya.\na\ndf\na\nsdf\na\nsdf\na\nsd\nf\nasdf\nasdf\n\nasd\nf\nas\ndf\nasdf\na\nsd\nf\nasdf\n\nasd\nf\n\nasdf\na\nsdf\nasdf\nas\ndf\nas\ndf\nasd\nf\nasdf\nas\ndf\nas\nf\n\na\nsdf\nas\ndf\nas\ndf\nasd");
-        TextAreaChatLog1.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
-        TextAreaChatLog1.setName("ChitChatCat"); // NOI18N
-        ScrollPaneChatLog1.setViewportView(TextAreaChatLog1);
-
-        TabbedPaneChatLog.addTab("ChitChatCat", ScrollPaneChatLog1);
-
-        TextAreaChatLog2.setEditable(false);
-        TextAreaChatLog2.setColumns(20);
-        TextAreaChatLog2.setRows(5);
-        TextAreaChatLog2.setText("Ted: yo dawg\nLightning Storm: what up slaya?");
-        ScrollPaneChatLog2.setViewportView(TextAreaChatLog2);
-
-        TabbedPaneChatLog.addTab("ChitChatBat", ScrollPaneChatLog2);
 
         javax.swing.GroupLayout PanelChatLogLayout = new javax.swing.GroupLayout(PanelChatLog);
         PanelChatLog.setLayout(PanelChatLogLayout);
@@ -768,14 +744,10 @@ public class ClientGUI extends javax.swing.JFrame {
     private javax.swing.JPanel PanelLists;
     private javax.swing.JPanel PanelMessage;
     private javax.swing.JScrollPane PanelMessageScroll;
-    private javax.swing.JScrollPane ScrollPaneChatLog1;
-    private javax.swing.JScrollPane ScrollPaneChatLog2;
     private javax.swing.JScrollPane ScrollPaneUsersLists;
     private javax.swing.JScrollPane ScrollPanelChatLists;
     private javax.swing.JTabbedPane TabbedPaneChatLog;
     private javax.swing.JTabbedPane TabbedPanelLists;
-    private javax.swing.JTextArea TextAreaChatLog1;
-    private javax.swing.JTextArea TextAreaChatLog2;
     private javax.swing.JTextArea TextAreaMessage;
     private javax.swing.JMenu jMenuChangeRole;
     private javax.swing.JMenuItem jMenuItemAdminRole;
