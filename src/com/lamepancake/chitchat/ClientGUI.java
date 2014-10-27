@@ -347,17 +347,43 @@ public class ClientGUI extends javax.swing.JFrame {
         
     }//GEN-LAST:event_MenuItemCreateChatMousePressed
 
-    public void addTab(String chatname)
+    public void addTab(final String chatname)
     {
-        JTextArea curChatTextArea = new JTextArea();
-        curChatTextArea.setEditable(true);
-        curChatTextArea.setVisible(true);
-        curChatTextArea.setText("Welcome " + client.getUser().getName() + "!\n");
-            
-        JScrollPane curChatScrollPane = new JScrollPane(curChatTextArea);
-        curChatScrollPane.setName(chatname);
-        TabbedPaneChatLog.add(curChatScrollPane);     
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JTextArea curChatTextArea = new JTextArea();
+                curChatTextArea.setEditable(true);
+                curChatTextArea.setVisible(true);
+                curChatTextArea.setText("Welcome " + client.getUser().getName() + "!\n");
+
+                JScrollPane curChatScrollPane = new JScrollPane(curChatTextArea);
+                curChatScrollPane.setName(chatname);
+                TabbedPaneChatLog.add(curChatScrollPane);  
+            }
+        });
     }
+    
+    public void removeTab(final String chatname)
+    {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                Component[] panes = TabbedPaneChatLog.getComponents();
+                for(int i = 0; i < panes.length; i++)
+                {
+                    if (TabbedPaneChatLog.getComponent(i) instanceof JScrollPane)
+                    {  
+                        if(((JScrollPane)TabbedPaneChatLog.getComponent(i)).getName().equals(chatname))
+                        {
+                            TabbedPaneChatLog.removeTabAt(i);
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
     private void MenuItemDeleteChatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MenuItemDeleteChatActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_MenuItemDeleteChatActionPerformed
