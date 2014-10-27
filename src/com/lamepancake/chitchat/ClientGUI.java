@@ -337,7 +337,8 @@ public class ClientGUI extends javax.swing.JFrame {
         {
             client.sendCreateChat(tfChatName.getText(), -1);
             JScrollPane curChatScrollPane = new JScrollPane();
-            JTextArea curChatTextArea = new JTextArea("");
+            JTextArea curChatTextArea = new JTextArea();
+            curChatTextArea.setText("Welcome" + client.getUser().getName() + "\n");
             curChatScrollPane.add(curChatTextArea);
             curChatScrollPane.setName(tfChatName.getText());
             TabbedPaneChatLog.add(curChatScrollPane);            
@@ -510,6 +511,8 @@ public class ClientGUI extends javax.swing.JFrame {
         displayUserMessage(message, user.getName(), chatName);
         
         client.sendMessageToChat(chatName, message);
+        
+        TextAreaMessage.setText("");
     }//GEN-LAST:event_ButtonSendMousePressed
 
     
@@ -583,15 +586,19 @@ public class ClientGUI extends javax.swing.JFrame {
                 Component[] panes = TabbedPaneChatLog.getComponents();
                 for(int i = 0; i < panes.length; i++)
                 {
-                    JScrollPane pane;
-                    if (panes[i] instanceof JScrollPane)
-                    {
-                        pane = (JScrollPane)panes[i];
+                    if (TabbedPaneChatLog.getComponent(i) instanceof JScrollPane)
+                    {                        
+                        Component[] components = ((JScrollPane)TabbedPaneChatLog.getComponent(i)).getComponents();
                         
-                        if(pane.getComponent(0) instanceof JTextArea && pane.getName().equals(chatName))
+                        for(int j = 0; j < components.length; j++)
                         {
-
-                            ((JTextArea)pane.getComponent(0)).append(username + ": " + message + "\n");
+                            if(((JScrollPane)TabbedPaneChatLog.getComponent(i)).getComponent(j) instanceof JTextArea)
+                            {
+                                if(((JScrollPane)TabbedPaneChatLog.getComponent(i)).getName().equals(chatName))
+                                {
+                                    ((JTextArea)((JScrollPane)TabbedPaneChatLog.getComponent(i)).getComponent(j)).append(username + ": " + message + "\n");
+                                }
+                            }
                         }
                     }
                     
