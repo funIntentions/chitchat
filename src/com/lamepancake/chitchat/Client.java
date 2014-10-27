@@ -495,9 +495,34 @@ public class Client {
         for(User u : keys)
         {
             userListList[i] = u.getName() + ", " + (users.get(u) ? "online" : "offline");
+            gui.addUserToList(userListList[i]);
             i++;
         }
-        gui.populateUserList(userListList);
+        //gui.populateUserList(userListList);
+    }
+    
+    private void processUserWaitingNotify(UserNotifyPacket p)
+    {
+        //String userInfo = p.
+        Set<Chat>           chats;
+        chats = this.chatList.keySet();
+        String userInfo;
+        
+        for (Chat chat : chats)
+        {
+            if (chat.getID() == p.getChatID())
+            {
+                User user = new User();
+                user.setID(p.getUserID());
+                user.setName(p.getName());
+                user.setRole(p.getUserRole());
+                chat.initUser(user);
+                userInfo = p.getName() + ", " + "waiting";
+                gui.addUserToList(userInfo);
+                break;
+            }
+        }
+        
     }
     
     /**
@@ -533,6 +558,23 @@ public class Client {
                     // Update the specific chat that we joined or left
                     break;
                 case Packet.USERNOTIFY:
+                    UserNotifyPacket userNotify = (UserNotifyPacket)p;
+                    
+                    switch(userNotify.getFlag())
+                    {
+                        case UserNotifyPacket.BOOTED:
+                            break;
+                        case UserNotifyPacket.JOINED:
+                            break;
+                        case UserNotifyPacket.LEFT:
+                            break;
+                        case UserNotifyPacket.PROMOTED:
+                            break;
+                        case UserNotifyPacket.WAITING:
+                            processUserWaitingNotify(userNotify);
+                            break;
+                    }
+                    
                     break;
                 case Packet.CHATNOTIFY:
                     switch(((ChatNotifyPacket)p).getChangeFlag())

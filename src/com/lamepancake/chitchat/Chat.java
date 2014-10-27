@@ -84,6 +84,21 @@ public class Chat
         }
     }
     
+    public void addWaitingUserClient(User user, boolean online)
+    {
+        this.users.put(user, online);
+    }
+    
+    public void initUser(User newUser)
+    {
+        this.users.put(newUser, Boolean.FALSE);
+    }
+    
+    /**
+     * Used on client side.
+     * @param userName
+     * @return 
+     */
     public User findUser(String userName)
     {
         Set<User>           userSet;
@@ -100,6 +115,11 @@ public class Chat
         return null;
     }
     
+    /**
+     * Used on client side. & on Server
+     * @param userID
+     * @return 
+     */
     public User findUser(int userID)
     {
         Set<User>           userSet;
@@ -144,7 +164,7 @@ public class Chat
                 promoteUser((ChangeRolePacket)received);
                 break;
             case Packet.REQUESTACCESS:
-                addWaitingUser((RequestAccessPacket)received);
+                addWaitingUser(sender, (RequestAccessPacket)received);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown packet type: " + type);
@@ -159,6 +179,7 @@ public class Chat
     {
         int affectedUserID = b.getBootedID();
         Packet p;
+        String name = null;
         
         // Remove the user from the map
         for(User u: users.keySet())
@@ -166,11 +187,18 @@ public class Chat
             if(u.getID() == affectedUserID)
             {
                 users.remove(u);
+                name = u.getName();
                 break;
             }
         }
+        
+        if (name == null)
+        {
+            System.err.println("Chat.addWaitingUser: name was null... what?");
+            return;
+        }
 
-        p = PacketCreator.createUserNotify(affectedUserID, this.chatID, User.UNSPEC, Packet.BOOT);
+        p = PacketCreator.createUserNotify(name, affectedUserID, this.chatID, User.UNSPEC, Packet.BOOT);
         broadcast(b.getBooterID(), p, false);
     }
     
@@ -178,23 +206,29 @@ public class Chat
      * Adds a User to the database with a status of User.WAITING and 
      * @param r 
      */
-    private void addWaitingUser(RequestAccessPacket r)
+    private void addWaitingUser(SelectionKey sender, RequestAccessPacket r)
     {
-        Packet p = PacketCreator.createUserNotify(r.getUserID(), r.getChatID(), User.WAITING, UserNotifyPacket.PROMOTED);
         Packet newRole = PacketCreator.createChangeRole(chatID, r.getUserID(), User.WAITING);
         final User requester; 
-
+        String name = null;
+        
+        if (findUser(r.getUserID()) != null)
+        {
+            System.out.println("Already Waiting.");
+            return;
+        }
+        
         try 
         {
-
+            
             ChatRoleDAOMySQLImpl.getInstance().addUser(chatID, r.getUserID(), User.WAITING);
             requester = UserDAOMySQLImpl.getInstance().getByID(r.getUserID());
-           
+            
             this.users.put(requester, Boolean.FALSE);
             
         } catch (SQLException e) 
         {
-            System.err.println("ChatManager.createChat: SQL exception thrown: " + e.getMessage());
+            System.err.println("ChatManager.addWaitingUser: SQL exception thrown: " + e.getMessage());
             return;
         }
         
@@ -202,16 +236,26 @@ public class Chat
         {
             if(u.getID() == r.getUserID())
             {
+                ((ServerUser)u).setSocket((SocketChannel) sender.channel());
                 ((ServerUser)u).notifyClient(newRole);
+                name = u.getName();
                 break;
             }
         }
+        
+        if (name == null)
+        {
+            System.err.println("Chat.addWaitingUser: name was null... what?");
+            return;
+        }
+        
+        Packet p = PacketCreator.createUserNotify(name, r.getUserID(), r.getChatID(), User.WAITING, UserNotifyPacket.WAITING);
         broadcast(r.getUserID(), p, false);
     }
     
     private void promoteUser(ChangeRolePacket r)
     {
-        Packet p = PacketCreator.createUserNotify(r.getUserID(), r.getChatID(), r.getRole(), Packet.CHANGEROLE);
+        String name = null;
         
         try 
         {
@@ -220,7 +264,7 @@ public class Chat
             
         } catch (SQLException e) 
         {
-            System.err.println("ChatManager.createChat: SQL exception thrown: " + e.getMessage());
+            System.err.println("Chat.promoteUser: SQL exception thrown: " + e.getMessage());
             return;
         }
         
@@ -229,9 +273,19 @@ public class Chat
             if(u.getID() == r.getUserID())
             {
                 ((ServerUser)u).notifyClient(r);
+                name = u.getName();
                 break;
             }
         }
+        
+        if (name == null)
+        {
+            System.err.println("Chat.promoteUser: name was null... what?");
+            return;
+        }
+        
+        Packet p = PacketCreator.createUserNotify(name, r.getUserID(), r.getChatID(), r.getRole(), Packet.CHANGEROLE);
+        
         broadcast(r.getUserID(), p, false);
     }
     
@@ -258,11 +312,9 @@ public class Chat
     }
     
     private void join(SelectionKey sender, JoinLeavePacket jl)
-    {
-        int currentRole;
-        
+    {   
+        Packet whoisin;
         User affected = null;
-        Packet whoisin = PacketCreator.createWhoIsIn(users, chatID, jl.getUserID());
         
         for(User u : users.keySet())
         {
@@ -273,15 +325,21 @@ public class Chat
             }
         }
                 
-        if (affected == null)
+        if (affected == null || users.get(affected))
         {
             // Error condition
+            System.out.println("Already Joined or Doesn't Exist.");
             return;
         }
+        
+        users.remove(affected);
+        users.put(affected, Boolean.TRUE);
+        
+        whoisin = PacketCreator.createWhoIsIn(users, chatID, jl.getUserID());
 
         ((ServerUser)affected).setSocket((SocketChannel)sender.channel());
         ((ServerUser)affected).notifyClient(whoisin);
-        users.put(affected, Boolean.TRUE);
+        
     }
     
     private void leave(JoinLeavePacket jl)
@@ -303,7 +361,7 @@ public class Chat
         
         users.put(affected, Boolean.FALSE);
         
-        p = PacketCreator.createUserNotify(jl.getUserID(), this.chatID, affected.getRole(), jl.getFlag());
+        p = PacketCreator.createUserNotify(affected.getName(), jl.getUserID(), this.chatID, affected.getRole(), jl.getFlag());
         broadcast(jl.getUserID(), p, false);
     }
     
@@ -342,6 +400,7 @@ public class Chat
     private void sendMessage(MessagePacket message)
     {      
         // If they're the only person in the chat, don't bother sending the message
+        
         if(users.size() <= 1)
             return;
          

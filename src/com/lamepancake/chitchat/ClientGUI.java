@@ -700,6 +700,16 @@ public class ClientGUI extends javax.swing.JFrame {
         });
     }
     
+    public void addUserToList(final String user)
+    {
+         SwingUtilities.invokeLater(new Runnable() {    
+            @Override
+            public void run(){
+                ((DefaultListModel)ListUsersLists.getModel()).addElement(user);
+            }
+        });
+    }
+    
     public void addChatToList(final String chat)
     {
          SwingUtilities.invokeLater(new Runnable() {    

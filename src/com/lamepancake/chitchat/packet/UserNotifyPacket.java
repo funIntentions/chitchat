@@ -6,6 +6,7 @@
 package com.lamepancake.chitchat.packet;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Sent to all users in a particular chat when another user's status is updated.
@@ -40,6 +41,11 @@ public class UserNotifyPacket extends Packet
      * The user was booted from the chat (no longer has a role).
      */
     public static final int BOOTED = 3;
+    
+    /**
+     * The user was booted from the chat (no longer has a role).
+     */
+    public static final int WAITING = 4;
 
     /**
      * The id of the chat that this will be sent to.
@@ -55,20 +61,27 @@ public class UserNotifyPacket extends Packet
      * The role of the user.
      */
     private final int userRole;
-
+    
+    /**
+     * The name of the user.
+    */
+    private final String userName;
+    
+    
     /**
      * Indicates whether the user joined(0), left(1), or promoted(2).
      */
     private final int flag;
 
     
-    public UserNotifyPacket(int userid, int chatid, int role, int flag)
+    public UserNotifyPacket(String userName, int userid, int chatid, int role, int flag)
     {
-        super(USERNOTIFY, 16);
+        super(USERNOTIFY, 16 + (userName.length() * 2) + 4);
         this.userID = userid;
         this.chatID = chatid;
         this.userRole = role;
         this.flag = flag;
+        this.userName = userName;
     }
 
     public UserNotifyPacket(ByteBuffer packetHeader, ByteBuffer packetData)
@@ -78,6 +91,11 @@ public class UserNotifyPacket extends Packet
         this.chatID = packetData.getInt();
         this.userRole = packetData.getInt();
         this.flag = packetData.getInt();
+        
+        int     nameLen  = packetData.getInt();
+        byte[]  rawName  = new byte[nameLen];
+        packetData.get(rawName);
+        this.userName = new String(rawName, StandardCharsets.UTF_16LE);
     }
     
     @Override
@@ -88,6 +106,9 @@ public class UserNotifyPacket extends Packet
         buf.putInt(this.chatID);
         buf.putInt(this.userRole);
         buf.putInt(this.flag);
+        
+        buf.putInt(this.userName.length() * 2);
+        buf.put(this.userName.getBytes(StandardCharsets.UTF_16LE));
         
         buf.rewind();
         
@@ -128,5 +149,14 @@ public class UserNotifyPacket extends Packet
     public int getFlag()
     {
         return flag;
+    }
+    
+    /**
+     * Gets the name of the user being change.
+     * @return The name of the user
+     */
+    public String getName()
+    {
+        return userName;
     }
 }

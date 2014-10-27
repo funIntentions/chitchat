@@ -206,14 +206,15 @@ public class PacketCreator {
     
     /**
      * Returns a new UserNotifyPacket.
+     * @param userName The name of the user
      * @param userid The id of the user being notified.
      * @param chatid The id of the chat the user is in.
      * @param role The role of the user.
      * @param flag A flag to know what the notify was for.
      * @return a new UserNotifyPacket.
      */
-    public static UserNotifyPacket createUserNotify(int userid, int chatid, int role, int flag)
+    public static UserNotifyPacket createUserNotify(String userName, int userid, int chatid, int role, int flag)
     {
-        return new UserNotifyPacket(userid, chatid, role, flag);
+        return new UserNotifyPacket(userName, userid, chatid, role, flag);
     }
 }

@@ -391,6 +391,8 @@ public class ChatManager
             
             notifyUsersOfChatUpdate(chat, UpdateChatsPacket.CREATE);
             
+            chat.initUser(user);
+            
             ((ServerUser)user).notifyClient(PacketCreator.createChangeRole(chatID, user.getID(), User.ADMIN));
             
         } catch (SQLException e) 
