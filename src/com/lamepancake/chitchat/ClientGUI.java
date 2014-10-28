@@ -557,6 +557,23 @@ public class ClientGUI extends javax.swing.JFrame {
             return;
         }
         
+        Boolean hasTabs = false;
+        Component[] panes = TabbedPaneChatLog.getComponents();
+        for(int i = 0; i < panes.length; i++)
+        {
+            if (TabbedPaneChatLog.getComponent(i) instanceof JScrollPane)
+            {
+                hasTabs = true;
+            }
+        }
+        
+        if(!hasTabs)
+        {
+            TextAreaMessage.setText("");
+            return;
+        }
+        
+        
         String chatName = pane.getName();
 
         User user = client.getUser();
