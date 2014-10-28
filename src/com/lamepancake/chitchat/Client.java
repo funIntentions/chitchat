@@ -646,12 +646,7 @@ public class Client {
                             u.setRole(p.getUserRole());
                             break;
                         case UserNotifyPacket.JOINED:
-                            String name = getChatName(p.getChatID());
-                            if (name != null)
-                            {
-                                gui.addTab(name);
-                                list.put(u, true);
-                            }
+                            list.put(u, true);
                             break;
                         case UserNotifyPacket.LEFT:
                             list.put(u, false);
@@ -698,7 +693,15 @@ public class Client {
                     operationStatusHandler((OperationStatusPacket)p);
                     break;
                 case Packet.JOINLEAVE:
-                    // Update the specific chat that we joined or left
+                    JoinLeavePacket jl = (JoinLeavePacket)p;
+                    if (jl.getFlag() == JoinLeavePacket.JOIN)
+                    {
+                        String name = getChatName(jl.getChatID());
+                        if (name != null)
+                        {
+                            gui.addTab(name);
+                        }
+                    }
                     break;
                 case Packet.USERNOTIFY:
                     final UserNotifyPacket userNotify = (UserNotifyPacket)p;
@@ -840,7 +843,6 @@ public class Client {
         chatList.put(new Chat(p.getChatName(), p.getChatID()), User.UNSPEC);
         String c = p.getChatID() + " " + p.getChatName() + ", Unspecified";
         gui.addChatToList(c);
-        gui.addTab(p.getChatName());
     }
     
     private void deleteChat(ChatNotifyPacket p)
