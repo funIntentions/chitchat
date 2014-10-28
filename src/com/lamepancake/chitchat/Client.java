@@ -389,6 +389,19 @@ public class Client {
         return ret;
     }
     
+    public String getChatName(int chatID)
+    {
+        for(Chat c : chatList.keySet())
+        {
+            if(c.getID() == chatID)
+            {
+                return c.getName();
+            }
+        }
+        
+        return null;
+    }
+    
     /**
      * Determines if the user has the required access rights for a given task.
      * 
@@ -633,7 +646,12 @@ public class Client {
                             u.setRole(p.getUserRole());
                             break;
                         case UserNotifyPacket.JOINED:
-                            list.put(u, true);
+                            String name = getChatName(p.getChatID());
+                            if (name != null)
+                            {
+                                gui.addTab(name);
+                                list.put(u, true);
+                            }
                             break;
                         case UserNotifyPacket.LEFT:
                             list.put(u, false);
