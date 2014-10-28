@@ -14,9 +14,13 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.DefaultListModel;
+import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JViewport;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 /**
  *
@@ -699,6 +703,10 @@ public class ClientGUI extends javax.swing.JFrame {
         });
     }
     
+    /**
+     * Populates the list of chats.
+     * @param chats 
+     */
     public void populateChatList(final String[] chats)
     {
         SwingUtilities.invokeLater(new Runnable() {
@@ -712,7 +720,29 @@ public class ClientGUI extends javax.swing.JFrame {
             }
         });
     }
+
+    /**
+     * Populates the list of users.
+     * @param users 
+     */
+    public void populateUserList(final String[] users)
+    {
+        SwingUtilities.invokeLater(new Runnable() {
+            
+            @Override
+            public void run(){
+                for(int i = 0; i < users.length; i++)
+                {
+                    ((DefaultListModel)ListChatLists.getModel()).addElement(users[i]);
+                }
+            }
+        });
+    }
     
+    /**
+     * 
+     * @param user 
+     */
     public void addUserToList(final String user)
     {
          SwingUtilities.invokeLater(new Runnable() {    
@@ -723,6 +753,10 @@ public class ClientGUI extends javax.swing.JFrame {
         });
     }
     
+    /**
+     * 
+     * @param chat 
+     */
     public void addChatToList(final String chat)
     {
          SwingUtilities.invokeLater(new Runnable() {    
@@ -733,6 +767,11 @@ public class ClientGUI extends javax.swing.JFrame {
         });
     }
     
+    /**
+     * 
+     * @param chatid
+     * @param chat 
+     */
     public void updateChatList(final int chatid, final String chat)
     {
         SwingUtilities.invokeLater(new Runnable() {    
@@ -754,7 +793,11 @@ public class ClientGUI extends javax.swing.JFrame {
         });
     }
     
-    public void deleteFromChatList(final int chatid)
+    /**
+     * Removes the specified chat from the list.
+     * @param toDelete The chat to be deleted.
+     */
+    public void deleteFromChatList(final int toDelete)
     {
          SwingUtilities.invokeLater(new Runnable() {    
             @Override
@@ -764,7 +807,7 @@ public class ClientGUI extends javax.swing.JFrame {
                     String[] info = ((String)ListChatLists.getModel().getElementAt(i)).split(" ");
                     int chatId = Integer.parseInt(info[0]);
                     
-                    if(chatId == chatid)
+                    if(chatId == toDelete)
                     {
                        ((DefaultListModel)ListChatLists.getModel()).removeElementAt(i);
                        break;
@@ -791,6 +834,39 @@ public class ClientGUI extends javax.swing.JFrame {
                     initComponents();
                     ListChatLists.setModel(new DefaultListModel());
                     ListUsersLists.setModel(new DefaultListModel());
+                    
+                    ListChatLists.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+                    ListUsersLists.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+                    
+                    // Whenever the selection is changed in the chatLists, repopulate the
+                    // user list
+                    ListChatLists.addListSelectionListener(new ListSelectionListener() {
+                       
+                        @Override
+                        public void valueChanged(ListSelectionEvent evt)
+                        {
+                            // If they somehow selected nothing, then don't try to do anything
+                            if(((JList)evt.getSource()).getSelectedIndex() == -1)
+                                return;
+                            
+                            final String chatInfo = (String)((JList)evt.getSource()).getSelectedValue();
+                            final String[] split = chatInfo.split(" ");
+                            final String chatName = split[1].substring(0, split[1].indexOf(','));
+                            final String[] usersInChat = client.getUsersAsString(chatName);
+                            
+                            // If there are no users in the given chat, or the chat couldn't be found, then
+                            // get out of there
+                            if(usersInChat == null)
+                                return;
+
+                            final DefaultListModel userModel = (DefaultListModel)ListUsersLists.getModel();
+                            
+                            userModel.removeAllElements();
+                            
+                            for(String s : usersInChat)
+                                userModel.addElement(s);
+                        }
+                    });
                 }
                 else 
                     showLoginDialog();

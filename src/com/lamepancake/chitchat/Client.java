@@ -315,6 +315,47 @@ public class Client {
         sendPacket(PacketCreator.createMessage(msg, this.clientUser.getID(), chatID));
     }
     
+    /**
+     * Gets the list of users as strings in a chat with the given name.
+     * 
+     * @param chatName The name of the chat from which to get the list of users.
+     * @return An array of strings representing the users.
+     */
+    public String[] getUsersAsString(final String chatName)
+    {
+        final String[] users;
+        Chat selected = null;
+        Map<User, Boolean> inChat;
+        final int size;
+        int i = 0;
+        
+        for(Chat c: chatList.keySet())
+        {
+            if(c.getName().equals(chatName))
+            {
+                selected = c;
+                break;
+            }
+        }
+        
+        if(selected == null)
+            return null;
+        
+        inChat = selected.getConnectedUsers();
+        size = inChat.size();
+        
+        // If the user hasn't joined, there will be no entries in the user list;
+        // return null for this
+        if(size == 0)
+            return null;
+        
+        users = new String[size];
+
+        for (User u : inChat.keySet())
+            users[i++] = u.getName() + ", " + (inChat.get(u) ? "online" : "offline");
+
+        return users;
+    }
     
     /**
      * Determines if the user has the required access rights for a given task.
