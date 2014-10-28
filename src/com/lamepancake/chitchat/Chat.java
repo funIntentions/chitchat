@@ -427,6 +427,7 @@ public class Chat
         
         p = PacketCreator.createUserNotify(affected.getName(), jl.getUserID(), this.chatID, affected.getRole(), UserNotifyPacket.LEFT);
         broadcast(jl.getUserID(), p, false, true);
+        ((ServerUser)affected).notifyClient(jl);
     }
     
     /**

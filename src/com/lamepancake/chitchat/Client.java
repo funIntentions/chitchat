@@ -702,6 +702,14 @@ public class Client {
                             gui.addTab(name);
                         }
                     }
+                    else
+                    {
+                        String name = getChatName(jl.getChatID());
+                        if (name != null)
+                        {
+                            gui.removeTab(name);
+                        }
+                    }
                     break;
                 case Packet.USERNOTIFY:
                     final UserNotifyPacket userNotify = (UserNotifyPacket)p;
