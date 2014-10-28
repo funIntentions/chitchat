@@ -350,7 +350,8 @@ public class ClientGUI extends javax.swing.JFrame {
         
         if(option == JOptionPane.OK_OPTION)
         {
-            client.sendCreateChat(tfChatName.getText(), -1);
+            String chatName = tfChatName.getText().replace(" ", "_").replace(",", ".");
+            client.sendCreateChat(chatName, -1);
 
        
         } 
@@ -412,7 +413,8 @@ public class ClientGUI extends javax.swing.JFrame {
         
         if(option == JOptionPane.OK_OPTION)
         {
-            client.sendUpdateChat(Integer.parseInt(tfChatID.getText()), tfChatName.getText());
+            String chatName = tfChatName.getText().replace(" ", "_").replace(",", ".");
+            client.sendUpdateChat(Integer.parseInt(tfChatID.getText()), chatName);
         } 
         else 
         {
