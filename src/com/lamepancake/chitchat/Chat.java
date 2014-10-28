@@ -395,7 +395,8 @@ public class Chat
         // Still need to send them a WhoIsIn regardless 
         whoisin = PacketCreator.createWhoIsIn(users, chatID, jl.getUserID());
         ((ServerUser)affected).setSocket((SocketChannel)sender.channel());
-        ((ServerUser)affected).notifyClient(whoisin);       
+        ((ServerUser)affected).notifyClient(whoisin);
+        ((ServerUser)affected).notifyClient(jl);
     }
     
     /**
