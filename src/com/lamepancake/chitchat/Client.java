@@ -824,10 +824,13 @@ public class Client {
     {
         Set<Chat> keys = chatList.keySet();
         Chat updateChat = null;
+        String oldChat = "";
+        
         for(Chat c : keys)
         {
             if(c.getID() == p.getChatID())
             {
+                oldChat = c.getName();
                 c.setName(p.getChatName());
                 updateChat = c;
                 break;
@@ -1005,22 +1008,48 @@ public class Client {
     {   
         final int chatOpType = up.getUpdate();
         String chatStr = op.getChatID() + " " + up.getName() + ", ";
-        switch(chatOpType)
+        
+        if(chatOpType == UpdateChatsPacket.CREATE)
         {
-            case UpdateChatsPacket.CREATE:
-                chatStr += "Unspecified";
-                chatList.put(new Chat(up.getName(), op.getChatID()), User.UNSPEC);
-                gui.addChatToList(chatStr);
-                break;
-            case UpdateChatsPacket.UPDATE:
-                chatStr += "Scrum Master";
-                gui.updateChatList(up.getChatID(), chatStr);
-                break;
-            case UpdateChatsPacket.DELETE:
-                chatStr += "Scrum Master";
-                gui.deleteFromChatList(up.getChatID());
-                break;
+            chatStr += "Unspecified";
+            chatList.put(new Chat(up.getName(), op.getChatID()), User.UNSPEC);
+            gui.addChatToList(chatStr);
         }
+        else
+        {
+            Set<Chat> keys = chatList.keySet();
+            Chat updateChat = null;
+            String oldChat = "";
+
+            for(Chat c : keys)
+            {
+                if(c.getID() == op.getChatID())
+                {
+                    if(chatOpType == UpdateChatsPacket.UPDATE)
+                    {
+                        oldChat = c.getName();
+                        c.setName(up.getName());
+                    }
+                    updateChat = c;
+                    break;
+                }
+            }
+        
+            switch(chatOpType)
+            {
+                case UpdateChatsPacket.UPDATE:
+                    chatStr += "Scrum Master";
+                    gui.updateChatList(up.getChatID(), chatStr);
+                    gui.updateTab(up.getName(), oldChat);
+                    break;
+                case UpdateChatsPacket.DELETE:
+                    chatStr += "Scrum Master";
+                    chatList.remove(updateChat);
+                    gui.deleteFromChatList(up.getChatID());
+                    break;
+            }
+        }
+        
     }
     
     /**
