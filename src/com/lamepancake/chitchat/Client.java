@@ -135,11 +135,30 @@ public class Client {
      */
     public void sendJoinLeave(int chatID, int joining)
     {
-        final JoinLeavePacket j = PacketCreator.createJoinLeave(clientUser.getID(), chatID, joining);       
+        final JoinLeavePacket j = PacketCreator.createJoinLeave(clientUser.getID(), chatID, joining);
+        Chat leavingChat = null;
         if(joining == JoinLeavePacket.JOIN && !restrict(chatID, User.USER))
         {
             gui.displayError("You cannot join the chat until an admin promotes you.", false);
             return;
+        }
+        else if(joining == JoinLeavePacket.LEAVE)
+        {
+            for(Chat c: chatList.keySet())
+            {
+                if(c.getID() == chatID)
+                {
+                    leavingChat = c;
+                    break;
+                }
+            }
+            if(leavingChat == null)
+            {
+                gui.displayError("Error in leaving chat: chat with ID " + chatID + " does not exist.", false);
+                return;
+            }
+            leavingChat.getConnectedUsers().clear();
+            gui.populateUserList(leavingChat.getName(), usersListAsStrings(leavingChat.getConnectedUsers()));
         }
         sendPacket(j);
     }
