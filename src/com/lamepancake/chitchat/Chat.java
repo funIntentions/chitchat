@@ -14,11 +14,13 @@ import com.lamepancake.chitchat.packet.BootPacket;
 import com.lamepancake.chitchat.packet.ChangeRolePacket;
 import com.lamepancake.chitchat.packet.JoinLeavePacket;
 import com.lamepancake.chitchat.packet.MessagePacket;
+import com.lamepancake.chitchat.packet.OperationStatusPacket;
 import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.PacketCreator;
 import com.lamepancake.chitchat.packet.RequestAccessPacket;
 import com.lamepancake.chitchat.packet.UserNotifyPacket;
 import com.lamepancake.chitchat.packet.WhoIsInPacket;
+import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.sql.SQLException;
@@ -209,7 +211,7 @@ public class Chat
         }
 
         p = PacketCreator.createUserNotify(name, affectedUserID, this.chatID, User.UNSPEC, Packet.BOOT);
-        broadcast(b.getBooterID(), p, false);
+        broadcast(b.getBooterID(), p, false, true);
     }
     
     /**
@@ -218,9 +220,10 @@ public class Chat
      */
     private void addWaitingUser(SelectionKey sender, RequestAccessPacket r)
     {
-        Packet newRole = PacketCreator.createChangeRole(chatID, r.getUserID(), User.WAITING);
-        final User requester; 
-        String name = null;
+        Packet operationStatus;
+        int flag = 1;
+        User requester = null; 
+        String name;
         
         if (findUser(r.getUserID()) != null)
         {
@@ -230,42 +233,52 @@ public class Chat
         
         try 
         {
-            
+            // Attempt to add the user to the database and add them to the chat's
+            // user list
             ChatRoleDAOMySQLImpl.getInstance().addUser(chatID, r.getUserID(), User.WAITING);
             requester = UserDAOMySQLImpl.getInstance().getByID(r.getUserID());
-            
             requester.setRole(User.WAITING);
-            
             this.users.put(requester, Boolean.FALSE);
             
         } catch (SQLException e) 
         {
             System.err.println("ChatManager.addWaitingUser: SQL exception thrown: " + e.getMessage());
-            return;
+            flag = 0;
         }
-        
-        for(User u : users.keySet())
+              
+        operationStatus = PacketCreator.createOperationStatus(r.getUserID(), this.chatID, flag, OperationStatusPacket.OP_REQACCESS);
+        // Notify all other users in the chat that a new user is waiting to join if the database op succeeded
+        if(flag == 1)
         {
-            if(u.getID() == r.getUserID())
-            {
-                ((ServerUser)u).setSocket((SocketChannel) sender.channel());
-                ((ServerUser)u).notifyClient(newRole);
-                name = u.getName();
-                break;
+            // Assign the user a socket and send them the packet confirming their new role
+            ((ServerUser)requester).setSocket((SocketChannel) sender.channel());
+            ((ServerUser)requester).notifyClient(operationStatus);
+            
+            name = requester.getName();
+            Packet p = PacketCreator.createUserNotify(name, r.getUserID(), r.getChatID(), User.WAITING, UserNotifyPacket.WAITING);
+            broadcast(r.getUserID(), p, false, true);
+        }
+        // Don't know why operation failed; user may not exist, send directly over socket
+        else
+        {
+            try {
+                SocketChannel s = (SocketChannel)sender.channel();
+                s.write(operationStatus.serialise());
+            } catch (IOException i) {
+                System.err.println("Chat.addWaitingUser: could not send OperationStatusPacket: " + i.getMessage());
             }
         }
-        
-        if (name == null)
-        {
-            System.err.println("Chat.addWaitingUser: name was null... what?");
-            return;
-        }
-        
-        Packet p = PacketCreator.createUserNotify(name, r.getUserID(), r.getChatID(), User.WAITING, UserNotifyPacket.WAITING);
-        broadcast(r.getUserID(), p, false);
     }
     
-    private void promoteUser( ChangeRolePacket r)
+    /**
+     * Promote or demote a user.
+     * 
+     * Note that the ChatManager will notify the user being promoted/demoted of
+     * the change, since it is the only object that knows whether a user is
+     * actually connected to the server.
+     * @param r 
+     */
+    private void promoteUser(ChangeRolePacket r)
     {
         String name = null;
         
@@ -278,19 +291,7 @@ public class Chat
         {
             System.err.println("Chat.promoteUser: SQL exception thrown: " + e.getMessage());
             return;
-        }
-        
-        for(User u : users.keySet())
-        {
-            // If the user is online, notify them of the change
-            if(u.getID() == r.getUserID() && users.get(u))
-            {
-                ((ServerUser)u).notifyClient(r);
-                name = u.getName();
-                break;
-            }
-        }
-        
+        }        
         if (name == null)
         {
             System.err.println("Chat.promoteUser: name was null... what?");
@@ -299,7 +300,7 @@ public class Chat
         
         Packet p = PacketCreator.createUserNotify(name, r.getUserID(), r.getChatID(), r.getRole(), Packet.CHANGEROLE);
         
-        broadcast(r.getUserID(), p, false);
+        broadcast(r.getUserID(), p, false, true);
     }
     
     /**
@@ -368,7 +369,7 @@ public class Chat
         notify = PacketCreator.createUserNotify(affected.getName(), jl.getUserID(),
                                                 this.chatID, affected.getRole(),
                                                 UserNotifyPacket.JOINED);
-        broadcast(jl.getUserID(), notify, false);
+        broadcast(jl.getUserID(), notify, false, true);
         
     }
     
@@ -399,7 +400,7 @@ public class Chat
         users.put(affected, Boolean.FALSE);
         
         p = PacketCreator.createUserNotify(affected.getName(), jl.getUserID(), this.chatID, affected.getRole(), UserNotifyPacket.LEFT);
-        broadcast(jl.getUserID(), p, false);
+        broadcast(jl.getUserID(), p, false, true);
     }
     
     /**
@@ -446,7 +447,7 @@ public class Chat
         if(users.size() <= 1)
             return;
          
-        broadcast(message.getUserID(), message, false);
+        broadcast(message.getUserID(), message, false, false);
     }
     
     /**
@@ -499,17 +500,21 @@ public class Chat
     /**
      * Broadcasts the passed in message to all connected users.
      * 
-     * @param senderID The key associated with the sending user.
-     * @param p        The packet to be broadcasted.
-     * @param sendBack Whether the user should have the packet sent back to them.
+     * @param senderID      The key associated with the sending user.
+     * @param p             The packet to be broadcasted.
+     * @param sendBack      Whether the user should have the packet sent back to them.
+     * @param notifyWaiting Whether to notify users who have not yet been added.
      */
-    private void broadcast(int senderID, Packet p, boolean sendBack)
+    private void broadcast(int senderID, Packet p, boolean sendBack, boolean notifyWaiting)
     {        
         for(User u : users.keySet())
         {
             Boolean isOnline = users.get(u);
             if (isOnline && u.getRole() != User.WAITING)
             {
+                if(!notifyWaiting && u.getRole() == User.WAITING)
+                    continue;
+
                 // Don't send the packet back to the snder unless they want that
                 if(u.getID() == senderID && !sendBack)
                     continue;

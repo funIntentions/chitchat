@@ -106,7 +106,7 @@ public class ChatManager
                     chatID = ((RequestAccessPacket)received).getChatID();
                     if(!PassPacketToChat(clientKey, chatID, received))
                     {
-                        sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_REQACCESS);
+                        sendOperationResult(clientKey, -1, OperationStatusPacket.FAIL, OperationStatusPacket.OP_REQACCESS);
                     }
                     break;
                 case Packet.MESSAGE:
@@ -123,11 +123,24 @@ public class ChatManager
                     break;
                 case Packet.CHANGEROLE:
                     chatID = ((ChangeRolePacket)received).getChatID();
+                    
+                    // Notify the user of their new role if they're connected
+                    // to the server. If they're not, they'll receive the update
+                    // upon their next login.
+                    final int userID = ((ChangeRolePacket)received).getUserID();
+                    for(ServerUser s : lobby.values())
+                    {
+                        if(s.getID() == userID)
+                        {
+                            s.notifyClient(received);
+                            break;
+                        }
+                    }
                     PassPacketToChat(clientKey, chatID, received);
                     break;
             }
     }
-    
+   
     /**
      * Removes a user from the lobby, logging them out.
      * @param clientKey the client to be logged out.
@@ -224,11 +237,11 @@ public class ChatManager
      * @param success If the operation was a success or a failure.
      * @param opType The type of operation.
      */
-    private void sendOperationResult(SelectionKey clientKey, int success, int opType)
+    private void sendOperationResult(SelectionKey clientKey, int chatID, int success, int opType)
     {
         ServerUser user = lobby.get(clientKey);
         OperationStatusPacket operationStat;
-        operationStat = new OperationStatusPacket(user.getID(), success, opType);
+        operationStat = new OperationStatusPacket(user.getID(), chatID, success, opType);
         
         user.notifyClient(operationStat);
     }
@@ -240,7 +253,7 @@ public class ChatManager
     private void sendLoginOperationFailure(SelectionKey clientKey)
     {
         OperationStatusPacket operationStat;
-        operationStat = new OperationStatusPacket(-1, OperationStatusPacket.FAIL, OperationStatusPacket.OP_LOGIN);
+        operationStat = new OperationStatusPacket(-1, -1, OperationStatusPacket.FAIL, OperationStatusPacket.OP_LOGIN);
         
         try 
         {
@@ -272,7 +285,7 @@ public class ChatManager
                 }
                 else
                 {
-                    sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
+                    sendOperationResult(clientKey, -1, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
                 }
                 break;
             case UpdateChatsPacket.DELETE:
@@ -282,7 +295,7 @@ public class ChatManager
                 }
                 else
                 {
-                    sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
+                    sendOperationResult(clientKey, -1, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
                 }
                 break;
         }
@@ -299,7 +312,7 @@ public class ChatManager
         
         if (!this.chats.containsKey(chatInfo.getChatID()))
         {
-            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
+            sendOperationResult(clientKey, chatInfo.getChatID(), OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
             return;
         }
         
@@ -311,14 +324,14 @@ public class ChatManager
             ChatDAOMySQLImpl.getInstance().delete(chat);
             this.chats.remove(chat.getID());
             
-            sendOperationResult(clientKey, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_CRUD);
+            sendOperationResult(clientKey, chat.getID(), OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_CRUD);
             
-            notifyUsersOfChatUpdate(chat, UpdateChatsPacket.DELETE);
+            notifyUsersOfChatUpdate(clientKey, chat, UpdateChatsPacket.DELETE);
 
         } catch (SQLException e) 
         {
             System.err.println("ChatManager.deleteChat: SQL exception thrown: " + e.getMessage());
-            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
+            sendOperationResult(clientKey, chat.getID(), OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
         }
     }
     
@@ -332,7 +345,7 @@ public class ChatManager
         
         if (!this.chats.containsKey(chatInfo.getChatID()))
         {
-            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
+            sendOperationResult(clientKey, chatInfo.getChatID(), OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
             return;
         }
         
@@ -340,7 +353,7 @@ public class ChatManager
                 
         if (isChatNameTaken(chatInfo.getName()))
         {
-            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
+            sendOperationResult(clientKey, chatInfo.getChatID(), OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
             return;
         }
         
@@ -349,14 +362,14 @@ public class ChatManager
             chat.setName(chatInfo.getName());
             ChatDAOMySQLImpl.getInstance().update(chat);
             
-            sendOperationResult(clientKey, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_CRUD);
+            sendOperationResult(clientKey, chatInfo.getChatID(), OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_CRUD);
             
-            notifyUsersOfChatUpdate(chat, UpdateChatsPacket.UPDATE);
+            notifyUsersOfChatUpdate(clientKey, chat, UpdateChatsPacket.UPDATE);
             
         } catch (SQLException e) 
         {
             System.err.println("ChatManager.updateChat: SQL exception thrown: " + e.getMessage());
-            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
+            sendOperationResult(clientKey, chatInfo.getChatID(), OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
         }
     }
     
@@ -371,7 +384,7 @@ public class ChatManager
         
         if (isChatNameTaken(chatInfo.getName()))
         {
-            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
+            sendOperationResult(clientKey, -1, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
             return;
         }
         
@@ -387,9 +400,9 @@ public class ChatManager
             //Make user admin for chat.
             ChatRoleDAOMySQLImpl.getInstance().addUser(chatID, user.getID(), User.ADMIN);
 
-            sendOperationResult(clientKey, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_CRUD);
+            sendOperationResult(clientKey, chat.getID(), OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_CRUD);
             
-            notifyUsersOfChatUpdate(chat, UpdateChatsPacket.CREATE);
+            notifyUsersOfChatUpdate(clientKey, chat, UpdateChatsPacket.CREATE);
             
             chat.initUser(user);
             
@@ -398,7 +411,7 @@ public class ChatManager
         } catch (SQLException e) 
         {
             System.err.println("ChatManager.createChat: SQL exception thrown: " + e.getMessage());
-            sendOperationResult(clientKey, OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
+            sendOperationResult(clientKey, chatInfo.getChatID(), OperationStatusPacket.FAIL, OperationStatusPacket.OP_CRUD);
         }
     }
     
@@ -429,10 +442,11 @@ public class ChatManager
     
     /**
      * Notifies all users that a particular chat has been updated.
-     * @param chat The chat that's been updated.
-     * @param flag The type of update that happened.
+     * @param initiator The user who initiated the update.
+     * @param chat      The chat that's been updated.
+     * @param flag      The type of update that happened.
      */
-    private void notifyUsersOfChatUpdate(Chat chat, int flag)
+    private void notifyUsersOfChatUpdate(SelectionKey initiator, Chat chat, int flag)
     {
         Set<SelectionKey>           keys;
         keys = this.lobby.keySet();
@@ -441,6 +455,10 @@ public class ChatManager
         
         for (SelectionKey key : keys)
         {
+            // Don't send the packet back to them; we already update in the OperationStatusPacket handler
+            if(key == initiator)
+                continue;
+
             ServerUser user = this.lobby.get(key);
             
             user.notifyClient(notify);
@@ -476,7 +494,7 @@ public class ChatManager
                 user.setSocket((SocketChannel)key.channel());
                 this.lobby.remove(key);
                 this.lobby.put(key, user);
-                sendOperationResult(key, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN); 
+                sendOperationResult(key, -1, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN); 
                 sendListOfChats(key);
             }
             else
@@ -508,7 +526,7 @@ public class ChatManager
             int id = UserDAOMySQLImpl.getInstance().create(user);
             user.setID(id);
             lobby.put(key, user);
-            sendOperationResult(key, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN); 
+            sendOperationResult(key, -1, OperationStatusPacket.SUCCESS, OperationStatusPacket.OP_LOGIN); 
             sendListOfChats(key);
         } catch (SQLException e) {
             System.err.println("ChatManager.login: SQL exception thrown: " + e.getMessage());

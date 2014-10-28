@@ -176,9 +176,9 @@ public class PacketCreator {
      * @param operation A flag for what king of operation took place.
      * @return  a new OperationSuccessPacket.
      */
-    public static OperationStatusPacket createOperationStatus(int userID, int flag, int operation)
+    public static OperationStatusPacket createOperationStatus(int userID, int chatID, int flag, int operation)
     {
-        return new OperationStatusPacket(userID, flag, operation);
+        return new OperationStatusPacket(userID, chatID, flag, operation);
     }
     
     /**

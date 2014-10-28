@@ -8,6 +8,7 @@ package com.lamepancake.chitchat;
 import com.lamepancake.chitchat.packet.JoinLeavePacket;
 import java.awt.Component;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
@@ -28,16 +29,25 @@ import javax.swing.event.ListSelectionListener;
  */
 public class ClientGUI extends javax.swing.JFrame {
 
-    private final Client client;
+    private Client client;
     /**
      * Creates new form test
      */
     public ClientGUI() {        
-        SocketChannel s = Client.parseCmdArgs(new String[] {"localhost", "1500"});
-        client = new Client(this, s);
-        client.start();
+        SocketChannel s = null;
+        try {
+            s = Client.parseCmdArgs(new String[] {"localhost", "1500"});
+        } catch (IOException e) {
+            displayError("Error while connecting to server: " + e.getMessage(), true);
+        }
         
-        showLoginDialog();
+        if(s != null)
+        {
+            client = new Client(this, s);
+            client.start();
+
+            showLoginDialog();
+        }
     }
 
     /**
@@ -597,8 +607,9 @@ public class ClientGUI extends javax.swing.JFrame {
      * Displays an error message.
      * 
      * @param errorStr The string to display in the error message.
+     * @param exitOnClose Whether to exit the program on close.
      */
-    public void displayError(final String errorStr)
+    public final void displayError(final String errorStr, final boolean exitOnClose)
     {
         final javax.swing.JFrame thisFrame = this;
 
@@ -606,6 +617,8 @@ public class ClientGUI extends javax.swing.JFrame {
             @Override
             public void run() {
                 JOptionPane.showMessageDialog(thisFrame, errorStr, "Error", JOptionPane.ERROR_MESSAGE);
+                if(exitOnClose)
+                    System.exit(0);
             }
         });
     }

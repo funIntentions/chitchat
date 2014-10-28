@@ -123,7 +123,7 @@ public class Client {
         } 
         catch(IOException e) 
         {
-            gui.displayError(e.getMessage());
+            gui.displayError(e.getMessage(), false);
         }
     }
     
@@ -136,7 +136,7 @@ public class Client {
     public void sendJoinLeave(int chatID, int joining)
     {
         final JoinLeavePacket j = PacketCreator.createJoinLeave(clientUser.getID(), chatID, joining);
-        waitingOp.clear();
+        // waitingOp.clear();
         // Wait for something else?...
         sendPacket(j);
     }
@@ -158,6 +158,9 @@ public class Client {
         sendPacket(l);
     }
     
+    /**
+     * Requests a chat list from the server.
+     */
     public void sendChatList()
     {
         final ChatListPacket cl = PacketCreator.createChatList(clientUser.getID());
@@ -165,6 +168,7 @@ public class Client {
         waitingOp.put(OperationStatusPacket.CHATLIST, cl);
         sendPacket(cl);
     }
+
     /**
      * Send a packet to request access to the given chat.
      * 
@@ -172,12 +176,22 @@ public class Client {
      */
     public void sendRequestAccess(int chatID)
     {
+        if(waitingOp.size() > 0)
+        {
+            gui.displayError("Another operation is already in progress. Please try again later.", false);
+            return;
+        }
         final RequestAccessPacket ra = PacketCreator.createRequestAccess(this.clientUser.getID(), chatID);
         this.waitingOp.clear();
         this.waitingOp.put(OperationStatusPacket.OP_REQACCESS, ra);
         sendPacket(ra);
     }
     
+    /**
+     * Sends a message to all other online users in the given chat.
+     * @param chatName The name of the to which the message will be sent.
+     * @param message  The message to send.
+     */
     public void sendMessageToChat(String chatName, String message)
     {
         Set<Chat>           chats;
@@ -452,8 +466,9 @@ public class Client {
      * 
      * @param args The command line arguments.
      * @return     A new Client object or null if one or more arguments were incorrect.
+     * @throws IOException when the socket cannot be created.
      */
-    public static SocketChannel parseCmdArgs(String[] args)
+    public static SocketChannel parseCmdArgs(String[] args) throws IOException
     {
         int     portNumber  = 1500;
         String  serverName  = "localhost";
@@ -484,18 +499,7 @@ public class Client {
         }
         // create the Client object
         InetSocketAddress addr = new InetSocketAddress(serverName, portNumber);
-
-        SocketChannel socket = null;
-        try
-        {
-            socket = SocketChannel.open(addr);
-        } 
-        // if it failed not much I can so
-        catch(Exception ec) 
-        {
-//                display("Error connectiong to server:" + ec);
-//                return false;
-        }
+        SocketChannel socket = SocketChannel.open(addr);
         return socket;
     }
     
@@ -607,29 +611,33 @@ public class Client {
         list = selectedChat.getConnectedUsers();
         inChat = selectedChat.getConnectedUsers().keySet();
         
-        // Find the user specified by the UserNotifyPacket and update their status,
-        // creating them if necessary
-        for(User u : inChat)
+        // If has just requested access, create them and add them to the list
+        if(flag == UserNotifyPacket.WAITING)
         {
-            if(u.getID() == p.getUserID())
+            User newUser = new User().setID(p.getUserID()).setName(p.getName()).setRole(User.WAITING);
+            list.put(newUser, true);
+        }
+        // Otherwise, update their status
+        else
+        {
+            for(User u : inChat)
             {
-                switch(flag)
+                if(u.getID() == p.getUserID())
                 {
-                    case UserNotifyPacket.JOINED:
-                        list.put(u, true);
-                        break;
-                    case UserNotifyPacket.LEFT:
-                        list.put(u, false);
-                        break;
-                    case UserNotifyPacket.BOOTED:
-                        list.remove(u);
-                        break;
-                    case UserNotifyPacket.WAITING:
-                        User newUser = new User().setID(p.getUserID()).setName(p.getName()).setRole(User.WAITING);
-                        list.put(newUser, false);
-                        break;
+                    switch(flag)
+                    {
+                        case UserNotifyPacket.JOINED:
+                            list.put(u, true);
+                            break;
+                        case UserNotifyPacket.LEFT:
+                            list.put(u, false);
+                            break;
+                        case UserNotifyPacket.BOOTED:
+                            list.remove(u);
+                            break;
+                    }
+                    break;
                 }
-                break;
             }
         }
         // Tell the gui to update the list of users for the given chat
@@ -802,6 +810,7 @@ public class Client {
         }
     }
     
+    
     private void createChat(ChatNotifyPacket p)
     {
         chatList.put(new Chat(p.getChatName(), p.getChatID()), User.UNSPEC);
@@ -823,7 +832,11 @@ public class Client {
         }
         gui.deleteFromChatList(p.getChatID());
     }
-    
+
+    /**
+     * Serves some badly-defined function...
+     * @param p 
+     */
     private void joinLeaveChat(UserNotifyPacket p)
     {
         if(p.getFlag() == 0 && p.getUserID() == clientUser.getID())
@@ -834,6 +847,7 @@ public class Client {
                 if(c.getID() == p.getChatID())
                 {
                     gui.addTab(c.getName());
+                    break;
                 }
             }
         }
@@ -859,25 +873,12 @@ public class Client {
         {
             case OperationStatusPacket.OP_CRUD:
                 // Operation succeeded
-                if(op.getStatus() == 1)
+                if(op.getStatus() == OperationStatusPacket.SUCCESS)
                 {
                     final int waitingPacketType = p.getType();
                     if(waitingPacketType == Packet.UPDATECHAT)
                     {
-                        UpdateChatsPacket up = (UpdateChatsPacket)p;
-                        final int chatOpType = up.getUpdate();
-                        switch(chatOpType)
-                        {
-                            case UpdateChatsPacket.CREATE:
-                                // call an gui.updateChat method
-                                break;
-                            case UpdateChatsPacket.UPDATE:
-                                // call a gui.createChat method
-                                break;
-                            case UpdateChatsPacket.DELETE:
-                                // call a gui.deleteChat method
-                                break;
-                        }
+                        handleChatCRUD(op, (UpdateChatsPacket)p);
                     }
                     else if(p.getType() == Packet.BOOT)
                     {
@@ -886,7 +887,8 @@ public class Client {
                 }
                 else
                 {
-                    // Display an error message. ClientGUI
+                    gui.displayError("A database operation failed on the server while attempting to " + 
+                            (p.getType() == Packet.UPDATECHAT ? "update a chat." : "boot a user."), false);
                 }
                 break;
             case OperationStatusPacket.OP_LOGIN:
@@ -898,9 +900,63 @@ public class Client {
                 }
                 else
                     gui.loginValid(-1, false);
-                break; 
+                break;
+            case OperationStatusPacket.OP_REQACCESS:
+                Chat chat = null;
+                RequestAccessPacket ra = (RequestAccessPacket)p;
+                final int id = ra.getChatID();
+
+                for(Chat c: chatList.keySet())
+                {
+                    if(id == c.getID())
+                    {
+                        chat = c;
+                        break;
+                    }
+                }
+                
+                if(chat == null)
+                    return;
+
+                if(op.getStatus() == 1)
+                {
+                    gui.updateChatList(ra.getChatID(), id + " " +  chat.getName() + ", Waiting");
+                }
+                else 
+                {
+                    gui.displayError("Request access to chat " + chat.getName() + " failed.", false);
+                }
         }
         waitingOp.clear();
+    }
+    
+    /**
+     * Notifies the GUI of the success or failure of chat CRUD operations and updates
+     * its own list accordingly.
+     * @param op The OperationStatusPacket containing the update status.
+     * @param up The UpdateChatsPacket containing the original information.
+     * @todo Don't hard code the strings quite so much.
+     */
+    private void handleChatCRUD(OperationStatusPacket op, UpdateChatsPacket up)
+    {   
+        final int chatOpType = up.getUpdate();
+        String chatStr = op.getChatID() + " " + up.getName() + ", ";
+        switch(chatOpType)
+        {
+            case UpdateChatsPacket.CREATE:
+                chatStr += "Unspecified";
+                chatList.put(new Chat(up.getName(), op.getChatID()), User.UNSPEC);
+                gui.addChatToList(chatStr);
+                break;
+            case UpdateChatsPacket.UPDATE:
+                chatStr += "Scrum Master";
+                gui.updateChatList(up.getChatID(), chatStr);
+                break;
+            case UpdateChatsPacket.DELETE:
+                chatStr += "Scrum Master";
+                gui.deleteFromChatList(up.getChatID());
+                break;
+        }
     }
     
     /**

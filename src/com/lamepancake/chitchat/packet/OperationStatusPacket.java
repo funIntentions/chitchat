@@ -46,6 +46,11 @@ public class OperationStatusPacket extends Packet
     private final int userID;
     
     /**
+     * The relevant chat ID, if any, for this operation. 
+     */
+    private final int chatID;
+    
+    /**
      * The operation which for which this packet contains the status.
      */
     private final int operation;
@@ -57,10 +62,11 @@ public class OperationStatusPacket extends Packet
      * @param flag      Flag indicating the success/failure of the operation.
      * @param operation The operation that the user attempted.
      */
-    public OperationStatusPacket(int userID, int flag, int operation)
+    public OperationStatusPacket(int userID, int chatID, int flag, int operation)
     {
-        super(OPERATIONSTATUS, 12);
+        super(OPERATIONSTATUS, 16);
         this.userID = userID;
+        this.chatID = chatID;
         this.flag = flag;
         this.operation = operation;
     }
@@ -74,6 +80,7 @@ public class OperationStatusPacket extends Packet
     {
         super(packetHeader);
         this.userID = packetData.getInt();
+        this.chatID = packetData.getInt();
         this.flag = packetData.getInt();
         this.operation = packetData.getInt();
     }
@@ -83,6 +90,7 @@ public class OperationStatusPacket extends Packet
     {
         ByteBuffer buf = super.serialise();
         buf.putInt(this.userID);
+        buf.putInt(this.chatID);
         buf.putInt(this.flag);
         buf.putInt(this.operation);
         
@@ -117,5 +125,14 @@ public class OperationStatusPacket extends Packet
     public int getOperation()
     {
         return this.operation;
+    }
+    
+    /**
+     * Gets the relevant chat ID for this operation.
+     * @return The relevant chat ID for this operation.
+     */
+    public int getChatID()
+    {
+        return this.chatID;
     }
 }
