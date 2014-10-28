@@ -770,6 +770,10 @@ public class ClientGUI extends javax.swing.JFrame {
                     return;
 
                 ((DefaultListModel)ListUsersLists.getModel()).removeAllElements();
+                
+                // If there are no users, just exit
+                if(users == null)
+                    return;
 
                 for(int i = 0; i < users.length; i++)
                 {
