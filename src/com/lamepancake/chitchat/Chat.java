@@ -275,32 +275,58 @@ public class Chat
      * 
      * Note that the ChatManager will notify the user being promoted/demoted of
      * the change, since it is the only object that knows whether a user is
-     * actually connected to the server.
+     * actually connected to the server. The Chat is still responsible for notifying
+     * the sender whether the operation succeeded.
      * @param r 
      */
     private void promoteUser(ChangeRolePacket r)
     {
-        String name = null;
+        OperationStatusPacket opStat;
+        int flag = OperationStatusPacket.SUCCESS;
+        User sender = null;
+        User affected = null;
         
-        try 
+        for (User u : users.keySet())
         {
-            //Make user admin for chat.
-            ChatRoleDAOMySQLImpl.getInstance().updateRole(chatID, r.getUserID(), r.getRole());
-            
-        } catch (SQLException e) 
-        {
-            System.err.println("Chat.promoteUser: SQL exception thrown: " + e.getMessage());
-            return;
-        }        
-        if (name == null)
-        {
-            System.err.println("Chat.promoteUser: name was null... what?");
-            return;
+            if(u.getID() == r.getSenderID())
+            {
+                sender = u;
+            }
+            else if(u.getID() == r.getUserID())
+            {
+                affected = u;
+            }
+            if(sender != null && affected != null)
+                break;
         }
         
-        Packet p = PacketCreator.createUserNotify(name, r.getUserID(), r.getChatID(), r.getRole(), Packet.CHANGEROLE);
+        // This should *never* happen
+        if(sender == null)
+            return;
+        if(affected != null)
+        {
+            try 
+            {
+                // Update the user's role.
+                ChatRoleDAOMySQLImpl.getInstance().updateRole(chatID, r.getUserID(), r.getRole());
+                
+                affected.setRole(r.getRole());
+                // If the SQL statement fails, this will never run, so it's safe to do here
+                Packet p = PacketCreator.createUserNotify(affected.getName(), r.getUserID(), r.getChatID(), r.getRole(), UserNotifyPacket.PROMOTED);
+                broadcast(r.getUserID(), p, false, true);
+
+            } catch (SQLException e) 
+            {
+                System.err.println("Chat.promoteUser: SQL exception thrown: " + e.getMessage());
+                flag = OperationStatusPacket.FAIL;
+            }
+        }
+        else
+            flag = OperationStatusPacket.FAIL;
         
-        broadcast(r.getUserID(), p, false, true);
+        // Send them an OperationStatusPacket no matter what
+        opStat = PacketCreator.createOperationStatus(r.getSenderID(), chatID, flag, OperationStatusPacket.OP_CRUD);
+        ((ServerUser)sender).notifyClient(opStat);
     }
     
     /**
@@ -327,6 +353,8 @@ public class Chat
     
     /**
      * Adds the user to the chat and notifies the other users.
+     * 
+     * If the user is currently waiting to join the chat, 
      * @param sender
      * @param jl 
      */
@@ -352,25 +380,22 @@ public class Chat
             return;
         }
         
-        if (affected.getRole() == User.WAITING)
+        // The rest of the chat has already been notified if a user is waiting;
+        // only notify people when someone who has a role in the chat joins
+        if(affected.getRole() != User.WAITING)
         {
-            System.out.println("Can't join until permissions have been granted.");
-            return;
+            users.remove(affected);
+            users.put(affected, Boolean.TRUE);        
+            notify = PacketCreator.createUserNotify(affected.getName(), jl.getUserID(),
+                                                    this.chatID, affected.getRole(),
+                                                    UserNotifyPacket.JOINED);
+            broadcast(jl.getUserID(), notify, false, true);
         }
         
-        users.remove(affected);
-        users.put(affected, Boolean.TRUE);
-        
+        // Still need to send them a WhoIsIn regardless 
         whoisin = PacketCreator.createWhoIsIn(users, chatID, jl.getUserID());
-
         ((ServerUser)affected).setSocket((SocketChannel)sender.channel());
-        ((ServerUser)affected).notifyClient(whoisin);
-        
-        notify = PacketCreator.createUserNotify(affected.getName(), jl.getUserID(),
-                                                this.chatID, affected.getRole(),
-                                                UserNotifyPacket.JOINED);
-        broadcast(jl.getUserID(), notify, false, true);
-        
+        ((ServerUser)affected).notifyClient(whoisin);       
     }
     
     /**

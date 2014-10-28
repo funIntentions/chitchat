@@ -25,6 +25,8 @@ public class ChangeRolePacket extends Packet {
     
     private final int userID;
     
+    private final int senderID;
+    
     private final int role;
     /**
      * The 
@@ -32,11 +34,12 @@ public class ChangeRolePacket extends Packet {
      * @param user
      * @param role 
      */
-    public ChangeRolePacket(int chat, int user, int role)
+    public ChangeRolePacket(int chat, int user, int sender, int role)
     {
-        super(CHANGEROLE, 12);
+        super(CHANGEROLE, 16);
         this.chatID = chat;
         this.userID = user;
+        this.senderID = sender;
         this.role = role;
     }
 
@@ -46,6 +49,7 @@ public class ChangeRolePacket extends Packet {
         
         this.chatID = packetData.getInt();
         this.userID = packetData.getInt();
+        this.senderID = packetData.getInt();
         this.role = packetData.getInt();
         
     }
@@ -56,6 +60,7 @@ public class ChangeRolePacket extends Packet {
         ByteBuffer buf = super.serialise();
         buf.putInt(this.chatID);
         buf.putInt(this.userID);
+        buf.putInt(this.senderID);
         buf.putInt(this.role);
         
         buf.rewind();
@@ -81,6 +86,19 @@ public class ChangeRolePacket extends Packet {
         return this.userID;
     }
     
+    /**
+     * Returns the ID of original sender.
+     * 
+     * Note that this will be invalid (-1) when the server automatically promotes a
+     * chat creator to admin, and possibly in other cases; always check the
+     * value before using it.
+     * @return 
+     */
+    public int getSenderID()
+    {
+        return this.senderID;
+    }
+
     /**
      * Get user role for the intended user
      * @return the user role

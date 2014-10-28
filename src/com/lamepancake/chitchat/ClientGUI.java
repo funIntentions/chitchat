@@ -367,7 +367,7 @@ public class ClientGUI extends javax.swing.JFrame {
             @Override
             public void run() {
                 JTextArea curChatTextArea = new JTextArea();
-                curChatTextArea.setEditable(true);
+                curChatTextArea.setEditable(false);
                 curChatTextArea.setVisible(true);
                 curChatTextArea.setText("Welcome " + client.getUser().getName() + "!\n");
 
@@ -897,7 +897,7 @@ public class ClientGUI extends javax.swing.JFrame {
                             
                             final String chatInfo = (String)((JList)evt.getSource()).getSelectedValue();
                             final String[] split = chatInfo.split(" ");
-                            final String chatName = split[1].substring(0, split[1].indexOf(','));
+                            final String chatName = split[1].substring(0, split[1].indexOf(","));
                             final String[] usersInChat = client.getUsersAsString(chatName);
                             
                             // Set the current chat to whatever the user selected

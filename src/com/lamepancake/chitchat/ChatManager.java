@@ -406,7 +406,7 @@ public class ChatManager
             
             chat.initUser(user);
             
-            ((ServerUser)user).notifyClient(PacketCreator.createChangeRole(chatID, user.getID(), User.ADMIN));
+            ((ServerUser)user).notifyClient(PacketCreator.createChangeRole(chatID, user.getID(), -1, User.ADMIN));
             
         } catch (SQLException e) 
         {

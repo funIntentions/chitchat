@@ -69,9 +69,9 @@ public class PacketCreator {
      * @param role The new role of the user.
      * @return a new ChangeRolePacket.
      */
-    public static ChangeRolePacket createChangeRole(int chat, int user, int role)      
+    public static ChangeRolePacket createChangeRole(int chat, int user, int sender, int role)      
     {
-        return new ChangeRolePacket(chat, user, role);
+        return new ChangeRolePacket(chat, user, sender, role);
     }
     
     /**

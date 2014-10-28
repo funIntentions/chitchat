@@ -135,9 +135,12 @@ public class Client {
      */
     public void sendJoinLeave(int chatID, int joining)
     {
-        final JoinLeavePacket j = PacketCreator.createJoinLeave(clientUser.getID(), chatID, joining);
-        // waitingOp.clear();
-        // Wait for something else?...
+        final JoinLeavePacket j = PacketCreator.createJoinLeave(clientUser.getID(), chatID, joining);       
+        if(joining == JoinLeavePacket.JOIN && !restrict(chatID, User.USER))
+        {
+            gui.displayError("You cannot join the chat until an admin promotes you.", false);
+            return;
+        }
         sendPacket(j);
     }
     
@@ -265,7 +268,7 @@ public class Client {
         if(!restrict(chatid, User.ADMIN))
             return;
 
-        final ChangeRolePacket cr = PacketCreator.createChangeRole(chatid, userid, role);
+        final ChangeRolePacket cr = PacketCreator.createChangeRole(chatid, userid, clientUser.getID(), role);
         this.waitingOp.clear();
         this.waitingOp.put(OperationStatusPacket.OP_CRUD, cr);
         sendPacket(cr);
@@ -611,11 +614,11 @@ public class Client {
         list = selectedChat.getConnectedUsers();
         inChat = selectedChat.getConnectedUsers().keySet();
         
-        // If has just requested access, create them and add them to the list
+        // If the user has just requested access, create them and add them to the list
         if(flag == UserNotifyPacket.WAITING)
         {
             User newUser = new User().setID(p.getUserID()).setName(p.getName()).setRole(User.WAITING);
-            list.put(newUser, true);
+            list.put(newUser, false);
         }
         // Otherwise, update their status
         else
@@ -626,6 +629,9 @@ public class Client {
                 {
                     switch(flag)
                     {
+                        case UserNotifyPacket.PROMOTED:
+                            u.setRole(p.getUserRole());
+                            break;
                         case UserNotifyPacket.JOINED:
                             list.put(u, true);
                             break;
@@ -880,9 +886,28 @@ public class Client {
                     {
                         handleChatCRUD(op, (UpdateChatsPacket)p);
                     }
-                    else if(p.getType() == Packet.BOOT)
+                    else if(waitingPacketType == Packet.BOOT)
                     {
                         // call a gui.removeUser method
+                    }
+                    else if(waitingPacketType == Packet.CHANGEROLE)
+                    {
+                        User affected = null;
+                        Chat selected = null;
+                        final ChangeRolePacket cr = (ChangeRolePacket)p;
+                        for(Chat c : chatList.keySet())
+                        {
+                            if(c.getID() == cr.getChatID())
+                            {
+                                selected = c;
+                                break;
+                            }
+                        }
+                        if(selected == null || ((affected = selected.findUser(cr.getUserID())) == null))
+                            return;
+
+                        affected.setRole(cr.getRole());
+                        gui.populateUserList(selected.getName(), usersListAsStrings(selected.getConnectedUsers()));
                     }
                 }
                 else
@@ -1014,4 +1039,3 @@ public class Client {
         }
     }
 }
-
