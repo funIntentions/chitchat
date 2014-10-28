@@ -326,9 +326,7 @@ public class Client {
         final String[] users;
         Chat selected = null;
         Map<User, Boolean> inChat;
-        final int size;
-        int i = 0;
-        
+
         for(Chat c: chatList.keySet())
         {
             if(c.getName().equals(chatName))
@@ -341,20 +339,37 @@ public class Client {
         if(selected == null)
             return null;
         
-        inChat = selected.getConnectedUsers();
-        size = inChat.size();
+        inChat = selected.getConnectedUsers();        
+        return usersListAsStrings(inChat);
+    }
+    
+    /**
+     * Converts a map of users to online statuses to a list of strings.
+     * @param users 
+     */
+    private String[] usersListAsStrings(final Map<User, Boolean> users)
+    {
+        final int size = users.size();
+        final String[] ret;
+        int i = 0;
         
-        // If the user hasn't joined, there will be no entries in the user list;
-        // return null for this
         if(size == 0)
             return null;
         
-        users = new String[size];
+        ret = new String[users.size()];
+        
+        for (User u : users.keySet())
+        {
+            final String status;
+            if(u.getRole() == User.WAITING)
+                status = "waiting";
+            else
+                status = users.get(u) ? "online" : "offline";
 
-        for (User u : inChat.keySet())
-            users[i++] = u.getName() + ", " + (inChat.get(u) ? "online" : "offline");
-
-        return users;
+            ret[i++] = u.getName() + ", " + status;
+        }
+        
+        return ret;
     }
     
     /**
@@ -551,43 +566,74 @@ public class Client {
             
             if (u.getRole() == User.WAITING)
             {
-                userInfo = u.getName() + ", " + "waiting";
                 relevantChat.initUser(u);
             }
             else
             {
                 boolean online = users.get(u);
-                userInfo = u.getName() + ", " + (online ? "online" : "offline");
                 relevantChat.initUser(u, online);
             }
-            
-            gui.addUserToList(userInfo);
         }
-        //gui.populateUserList(userListList);
+        
+        gui.populateUserList(usersListAsStrings(users));
     }
     
-    private void processUserWaitingNotify(UserNotifyPacket p)
+    /**
+     * Updates a user's status in a particular chat.
+     * @param p 
+     */
+    private void processUserNotify(UserNotifyPacket p)
     {
         //String userInfo = p.
-        Set<Chat>           chats;
-        chats = this.chatList.keySet();
-        String userInfo;
+        final Set<Chat> chats = this.chatList.keySet();
+        final Set<User> inChat;
+        final int flag = p.getFlag();
+
+        Chat selectedChat = null;
+        Map<User, Boolean> list;
         
         for (Chat chat : chats)
         {
             if (chat.getID() == p.getChatID())
             {
-                User user = new User();
-                user.setID(p.getUserID());
-                user.setName(p.getName());
-                user.setRole(p.getUserRole());
-                chat.initUser(user);
-                userInfo = p.getName() + ", " + "waiting";
-                gui.addUserToList(userInfo);
+                selectedChat = chat;
                 break;
             }
         }
         
+        if(selectedChat == null)
+            return;
+        
+        list = selectedChat.getConnectedUsers();
+        inChat = selectedChat.getConnectedUsers().keySet();
+        
+        // Find the user specified by the UserNotifyPacket and update their status,
+        // creating them if necessary
+        for(User u : inChat)
+        {
+            if(u.getID() == p.getUserID())
+            {
+                switch(flag)
+                {
+                    case UserNotifyPacket.JOINED:
+                        list.put(u, true);
+                        break;
+                    case UserNotifyPacket.LEFT:
+                        list.put(u, false);
+                        break;
+                    case UserNotifyPacket.BOOTED:
+                        list.remove(u);
+                        break;
+                    case UserNotifyPacket.WAITING:
+                        User newUser = new User().setID(p.getUserID()).setName(p.getName()).setRole(User.WAITING);
+                        list.put(newUser, false);
+                        break;
+                }
+                break;
+            }
+        }
+        // Tell the gui to update the list of users for the given chat
+        gui.populateUserList(selectedChat.getName(), usersListAsStrings(list));
     }
     
     /**
@@ -623,23 +669,8 @@ public class Client {
                     // Update the specific chat that we joined or left
                     break;
                 case Packet.USERNOTIFY:
-                    UserNotifyPacket userNotify = (UserNotifyPacket)p;
-                    
-                    switch(userNotify.getFlag())
-                    {
-                        case UserNotifyPacket.BOOTED:
-                            break;
-                        case UserNotifyPacket.JOINED:
-                            break;
-                        case UserNotifyPacket.LEFT:
-                            break;
-                        case UserNotifyPacket.PROMOTED:
-                            break;
-                        case UserNotifyPacket.WAITING:
-                            processUserWaitingNotify(userNotify);
-                            break;
-                    }
-                    
+                    final UserNotifyPacket userNotify = (UserNotifyPacket)p;
+                    processUserNotify(userNotify);
                     break;
                 case Packet.CHATNOTIFY:
                     switch(((ChatNotifyPacket)p).getChangeFlag())

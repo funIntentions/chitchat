@@ -723,20 +723,40 @@ public class ClientGUI extends javax.swing.JFrame {
 
     /**
      * Populates the list of users.
-     * @param users 
+     * @param chatName The name of the chatt to which the users belong.
+     * @param users    The list of users to go in this chat.
      */
-    public void populateUserList(final String[] users)
+    public void populateUserList(final String chatName, final String[] users)
     {
         SwingUtilities.invokeLater(new Runnable() {
             
             @Override
             public void run(){
+                final String currentChatName = (String)ListUsersLists.getClientProperty("whichChat");
+                
+                // If the user list being updated is not the one corresponding to
+                // the currently selected chat, don't do anything
+                if(!currentChatName.equals(chatName))
+                    return;
+
+                ((DefaultListModel)ListUsersLists.getModel()).removeAllElements();
+
                 for(int i = 0; i < users.length; i++)
                 {
-                    ((DefaultListModel)ListChatLists.getModel()).addElement(users[i]);
+                    ((DefaultListModel)ListUsersLists.getModel()).addElement(users[i]);
                 }
             }
         });
+    }
+    
+    /**
+     * Populates the list of users.
+     * @param users 
+     */
+    public void populateUserList(final String[] users)
+    {
+        final String currentChatName = (String)ListUsersLists.getClientProperty("whichChat");
+        populateUserList(currentChatName, users);
     }
     
     /**
@@ -838,30 +858,40 @@ public class ClientGUI extends javax.swing.JFrame {
                     ListChatLists.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
                     ListUsersLists.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
                     
+                    
+                    ListUsersLists.putClientProperty("whichChat", "");
+                    
                     // Whenever the selection is changed in the chatLists, repopulate the
-                    // user list
+                    // user list and cache the name of the selected chat in the user list
                     ListChatLists.addListSelectionListener(new ListSelectionListener() {
                        
                         @Override
                         public void valueChanged(ListSelectionEvent evt)
                         {
-                            // If they somehow selected nothing, then don't try to do anything
+                            final DefaultListModel userModel = (DefaultListModel)ListUsersLists.getModel();
+                            
+                            // Clear the list of all users; it will be repopulated if there
+                            // are users to add, or left blank on error
+                            userModel.removeAllElements();
+
+                            // If they somehow selected nothing, set the current chat in the users list to the
+                            // empty string and exit
                             if(((JList)evt.getSource()).getSelectedIndex() == -1)
+                            {
+                                ListUsersLists.putClientProperty("whichChat", "");
                                 return;
+                            }
                             
                             final String chatInfo = (String)((JList)evt.getSource()).getSelectedValue();
                             final String[] split = chatInfo.split(" ");
                             final String chatName = split[1].substring(0, split[1].indexOf(','));
                             final String[] usersInChat = client.getUsersAsString(chatName);
                             
-                            // If there are no users in the given chat, or the chat couldn't be found, then
-                            // get out of there
+                            // Set the current chat to whatever the user selected
+                            ListUsersLists.putClientProperty("whichChat", chatName);
+                            
                             if(usersInChat == null)
                                 return;
-
-                            final DefaultListModel userModel = (DefaultListModel)ListUsersLists.getModel();
-                            
-                            userModel.removeAllElements();
                             
                             for(String s : usersInChat)
                                 userModel.addElement(s);

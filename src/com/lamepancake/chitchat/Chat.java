@@ -282,7 +282,8 @@ public class Chat
         
         for(User u : users.keySet())
         {
-            if(u.getID() == r.getUserID())
+            // If the user is online, notify them of the change
+            if(u.getID() == r.getUserID() && users.get(u))
             {
                 ((ServerUser)u).notifyClient(r);
                 name = u.getName();
@@ -323,9 +324,15 @@ public class Chat
         
     }
     
+    /**
+     * Adds the user to the chat and notifies the other users.
+     * @param sender
+     * @param jl 
+     */
     private void join(SelectionKey sender, JoinLeavePacket jl)
     {   
         Packet whoisin;
+        Packet notify;
         User affected = null;
         
         for(User u : users.keySet())
@@ -358,8 +365,20 @@ public class Chat
         ((ServerUser)affected).setSocket((SocketChannel)sender.channel());
         ((ServerUser)affected).notifyClient(whoisin);
         
+        notify = PacketCreator.createUserNotify(affected.getName(), jl.getUserID(),
+                                                this.chatID, affected.getRole(),
+                                                UserNotifyPacket.JOINED);
+        broadcast(jl.getUserID(), notify, false);
+        
     }
     
+    /**
+     * Makes a user appear offline in this chat.
+     * 
+     * Sets the online flag to false and notifies all other users that the user
+     * left.
+     * @param jl The JoinLeave packet containing the user's information.
+     */
     private void leave(JoinLeavePacket jl)
     {
         
@@ -379,10 +398,15 @@ public class Chat
         
         users.put(affected, Boolean.FALSE);
         
-        p = PacketCreator.createUserNotify(affected.getName(), jl.getUserID(), this.chatID, affected.getRole(), jl.getFlag());
+        p = PacketCreator.createUserNotify(affected.getName(), jl.getUserID(), this.chatID, affected.getRole(), UserNotifyPacket.LEFT);
         broadcast(jl.getUserID(), p, false);
     }
     
+    /**
+     * Returns a map of users associated with this chat and their online statuses.
+     * 
+     * @return A map of users in the chat to their online statuses.
+     */
     public Map<User, Boolean> getConnectedUsers()
     {
         return users;
