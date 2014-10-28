@@ -713,19 +713,6 @@ public class ClientGUI extends javax.swing.JFrame {
         });
     }
     
-    public void populateUserList(final String[] users)
-    {
-        SwingUtilities.invokeLater(new Runnable() {    
-            @Override
-            public void run(){
-                for(int i = 0; i < users.length; i++)
-                {
-                    ((DefaultListModel)ListUsersLists.getModel()).addElement(users[i]);
-                }
-            }
-        });
-    }
-    
     public void addUserToList(final String user)
     {
          SwingUtilities.invokeLater(new Runnable() {    

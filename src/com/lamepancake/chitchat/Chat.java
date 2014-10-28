@@ -95,6 +95,16 @@ public class Chat
     }
     
     /**
+     * used client side.
+     * @param newUser
+     * @param online 
+     */
+    public void initUser(User newUser, boolean online)
+    {
+        this.users.put(newUser, online);
+    }
+    
+    /**
      * Used on client side.
      * @param userName
      * @return 
@@ -224,6 +234,8 @@ public class Chat
             ChatRoleDAOMySQLImpl.getInstance().addUser(chatID, r.getUserID(), User.WAITING);
             requester = UserDAOMySQLImpl.getInstance().getByID(r.getUserID());
             
+            requester.setRole(User.WAITING);
+            
             this.users.put(requester, Boolean.FALSE);
             
         } catch (SQLException e) 
@@ -253,7 +265,7 @@ public class Chat
         broadcast(r.getUserID(), p, false);
     }
     
-    private void promoteUser(ChangeRolePacket r)
+    private void promoteUser( ChangeRolePacket r)
     {
         String name = null;
         
@@ -329,6 +341,12 @@ public class Chat
         {
             // Error condition
             System.out.println("Already Joined or Doesn't Exist.");
+            return;
+        }
+        
+        if (affected.getRole() == User.WAITING)
+        {
+            System.out.println("Can't join until permissions have been granted.");
             return;
         }
         

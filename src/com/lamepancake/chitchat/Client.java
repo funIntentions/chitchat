@@ -251,7 +251,7 @@ public class Client {
         if(!restrict(chatid, User.ADMIN))
             return;
 
-        final ChangeRolePacket cr = PacketCreator.createChangeRole(userid, chatid, role);
+        final ChangeRolePacket cr = PacketCreator.createChangeRole(chatid, userid, role);
         this.waitingOp.clear();
         this.waitingOp.put(OperationStatusPacket.OP_CRUD, cr);
         sendPacket(cr);
@@ -489,14 +489,38 @@ public class Client {
         Map<User, Boolean> users = p.getUsers();
         Set<User> keys = users.keySet();
         
-        String[] userListList = new String[keys.size()];
-        int i = 0;
+        String userInfo;
+        Chat relevantChat = null;
+        
+        Set<Chat>           chats;
+        chats = this.chatList.keySet();
+                
+        for (Chat chat : chats)
+        {
+            if (chat.getID() == p.getChatID())
+            {
+                relevantChat = chat;
+            }
+        }
+        
+        if (relevantChat == null) return; // chat doesn't exist... what?
         
         for(User u : keys)
         {
-            userListList[i] = u.getName() + ", " + (users.get(u) ? "online" : "offline");
-            gui.addUserToList(userListList[i]);
-            i++;
+            
+            if (u.getRole() == User.WAITING)
+            {
+                userInfo = u.getName() + ", " + "waiting";
+                relevantChat.initUser(u);
+            }
+            else
+            {
+                boolean online = users.get(u);
+                userInfo = u.getName() + ", " + (online ? "online" : "offline");
+                relevantChat.initUser(u, online);
+            }
+            
+            gui.addUserToList(userInfo);
         }
         //gui.populateUserList(userListList);
     }
