@@ -421,6 +421,19 @@ public class Client {
         return null;
     }
     
+    public Chat getChatByName(String chatName)
+    {
+        for(Chat c : chatList.keySet())
+        {
+            if(c.getName().equalsIgnoreCase(chatName))
+            {
+                return c;
+            }
+        }
+        
+        return null;
+    }
+    
     /**
      * Determines if the user has the required access rights for a given task.
      * 
@@ -749,6 +762,7 @@ public class Client {
                     }
                     break;
                 case Packet.BOOT:
+                    getBooted((BootPacket)p);
                     break;
                 case Packet.CHANGEROLE:
                     changeRole((ChangeRolePacket)p);
@@ -757,6 +771,17 @@ public class Client {
                     System.err.println("Invalid packet received.");
                     break;
             }    
+        }
+    }
+    
+    
+    private void getBooted(BootPacket bt)
+    {
+        String name = getChatName(bt.getChatID());
+        if (name != null)
+        {
+            gui.removeTab(name);
+            changeRole(bt.getChatID(), User.UNSPEC);
         }
     }
     
@@ -807,6 +832,36 @@ public class Client {
             {
                 chatList.put(c, p.getRole()); 
                 switch(p.getRole())
+                {
+                    case User.ADMIN:
+                        gui.updateChatList(c.getID(), c.getID() + " " + c.getName() + ", Scrum Master");
+                        break;
+                    case User.USER:
+                        gui.updateChatList(c.getID(), c.getID() + " " + c.getName() + ", Developer");
+                        break;
+                    case User.WAITING:
+                        gui.updateChatList(c.getID(), c.getID() + " " + c.getName() + ", Waiting");
+                        break;
+                    case User.UNSPEC:
+                        gui.updateChatList(c.getID(), c.getID() + " " + c.getName() + ", Unspecified"); 
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            }
+        }
+    }
+    
+    private void changeRole(int chatID, int role)
+    {
+        Set<Chat> keys = chatList.keySet();
+        for(Chat c : keys)
+        {
+            if(c.getID() == chatID)
+            {
+                chatList.put(c, role); 
+                switch(role)
                 {
                     case User.ADMIN:
                         gui.updateChatList(c.getID(), c.getID() + " " + c.getName() + ", Scrum Master");

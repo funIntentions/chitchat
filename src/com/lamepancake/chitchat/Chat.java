@@ -184,7 +184,7 @@ public class Chat
     }
 
     /**
-     * 
+     * TODO: add an operation success packet.
      * @param b 
      */
     private void bootUser(BootPacket b)
@@ -192,26 +192,36 @@ public class Chat
         int affectedUserID = b.getBootedID();
         Packet p;
         String name = null;
+        User bootedUser = null;
         
         // Remove the user from the map
         for(User u: users.keySet())
         {
             if(u.getID() == affectedUserID)
             {
-                users.remove(u);
+                bootedUser = u;
                 name = u.getName();
                 break;
             }
         }
         
-        if (name == null)
+        if (name == null || bootedUser == null)
         {
-            System.err.println("Chat.addWaitingUser: name was null... what?");
+            System.err.println("Chat.addWaitingUser: name or user was null... what?");
             return;
         }
-
-        p = PacketCreator.createUserNotify(name, affectedUserID, this.chatID, User.UNSPEC, Packet.BOOT);
-        broadcast(b.getBooterID(), p, false, true);
+        
+        try 
+        {
+            ChatRoleDAOMySQLImpl.getInstance().removeUser(chatID, affectedUserID);
+            p = PacketCreator.createUserNotify(name, affectedUserID, this.chatID, User.UNSPEC, Packet.BOOT);
+            broadcast(b.getBooterID(), p, false, true);
+            ((ServerUser)bootedUser).notifyClient(b);
+            this.users.remove(bootedUser);
+        } catch (SQLException e) 
+        {
+            System.err.println("ChatManager.bootUser: SQL exception thrown: " + e.getMessage());
+        }
     }
     
     /**
