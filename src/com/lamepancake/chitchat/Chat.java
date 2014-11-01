@@ -214,8 +214,8 @@ public class Chat
         try 
         {
             ChatRoleDAOMySQLImpl.getInstance().removeUser(chatID, affectedUserID);
-            p = PacketCreator.createUserNotify(name, affectedUserID, this.chatID, User.UNSPEC, Packet.BOOT);
-            broadcast(b.getBooterID(), p, false, true);
+            p = PacketCreator.createUserNotify(name, affectedUserID, this.chatID, User.UNSPEC, UserNotifyPacket.BOOTED);
+            broadcast(b.getBooterID(), p, true, true);
             ((ServerUser)bootedUser).notifyClient(b);
             this.users.remove(bootedUser);
         } catch (SQLException e) 

@@ -778,10 +778,14 @@ public class Client {
     private void getBooted(BootPacket bt)
     {
         String name = getChatName(bt.getChatID());
+        Chat chat = getChatByName(name);
+        
         if (name != null)
         {
             gui.removeTab(name);
             changeRole(bt.getChatID(), User.UNSPEC);
+            chat.getConnectedUsers().clear();
+            gui.populateUserList(chat.getName(), usersListAsStrings(chat.getConnectedUsers()));
         }
     }
     
