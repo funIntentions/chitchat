@@ -65,12 +65,28 @@ public class ServerUser extends User {
     }
     
     /**
+     * Get the SokcetChannel associated with this user.
+     * 
+     * @return the ServerUsers socket
+     */
+    public SocketChannel getSocket()
+    {
+        return socket;
+    }
+    
+    /**
      * Sends a packet to the remote user associated with this user.
      * 
      * @param p The packet to send.
      */
     public void notifyClient(Packet p)
     {
+        if (p == null)
+        {
+            System.err.println("ServerUser.notifyClient: packet is null");
+            return;
+        }
+        
         ByteBuffer serialised = p.serialise();
         try {
             socket.write(serialised);

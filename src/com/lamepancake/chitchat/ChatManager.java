@@ -83,6 +83,12 @@ public class ChatManager
      */
     public void handlePacket(SelectionKey clientKey, Packet received)
     {
+        if (received == null)
+        {
+            System.err.println("ChatManager.handlePacket: packet is null");
+            return;
+        }
+        
         int type = received.getType();
         int chatID;
         switch(type)
@@ -542,6 +548,12 @@ public class ChatManager
      */
     public void addClient(SelectionKey key)
     {
+        if (key == null)
+        {
+            System.err.println("ChatManager.addClient: key is null");
+            return;
+        }
+        
         lobby.put(key, null);
     }
     
