@@ -102,6 +102,7 @@ public class ChatManager
                 case Packet.BOOT:
                     chatID = ((BootPacket)received).getChatID();
                     PassPacketToChat(clientKey, chatID, received);
+                    break;
                 case Packet.REQUESTACCESS:
                     chatID = ((RequestAccessPacket)received).getChatID();
                     if(!PassPacketToChat(clientKey, chatID, received))

@@ -31,7 +31,7 @@ public class BootPacket extends Packet{
      */
     public BootPacket(Chat chat, User booted, User booter)
     {
-        super(BOOT, HEADER_SIZE + 8);
+        super(BOOT, HEADER_SIZE + 12);
         this.chatID = chat.getID();
         this.bootedID = booted.getID();
         this.booterID = booter.getID();
@@ -45,7 +45,7 @@ public class BootPacket extends Packet{
      */
     public BootPacket(int chatID, int bootedID, int booterID)
     {
-        super(BOOT, HEADER_SIZE + 8);
+        super(BOOT, HEADER_SIZE + 12);
         this.chatID = chatID;
         this.bootedID = bootedID;
         this.booterID = booterID;
@@ -72,6 +72,8 @@ public class BootPacket extends Packet{
         buf.putInt(this.chatID);
         buf.putInt(this.bootedID);
         buf.putInt(this.booterID);
+        
+        buf.rewind();
         return buf;
     }
     

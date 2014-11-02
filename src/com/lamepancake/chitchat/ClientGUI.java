@@ -399,6 +399,27 @@ public class ClientGUI extends javax.swing.JFrame {
         });
     }
     
+    public void updateTab(final String newChatName, final String oldChatName)
+    {
+         SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                Component[] panes = TabbedPaneChatLog.getComponents();
+                for(int i = 0; i < panes.length; i++)
+                {
+                    if (TabbedPaneChatLog.getComponent(i) instanceof JScrollPane)
+                    {  
+                        if(((JScrollPane)TabbedPaneChatLog.getComponent(i)).getName().equals(oldChatName))
+                        {
+                            TabbedPaneChatLog.setTitleAt(i, newChatName);
+                            ((JScrollPane)TabbedPaneChatLog.getComponent(i)).setName(newChatName);
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
     private void MenuItemDeleteChatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MenuItemDeleteChatActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_MenuItemDeleteChatActionPerformed
