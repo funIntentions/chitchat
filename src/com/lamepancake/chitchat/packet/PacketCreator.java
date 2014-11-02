@@ -10,6 +10,7 @@ import java.util.Map;
 import com.lamepancake.chitchat.Chat;
 import java.util.HashMap;
 import java.util.List;
+import org.junit.runner.RunWith;
 
 /**
  *
