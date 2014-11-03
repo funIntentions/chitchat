@@ -67,7 +67,6 @@ public class ClientGUI extends javax.swing.JFrame {
         else 
         {
             System.exit(0);
-            System.out.println("Login canceled");
         }
     }
     
@@ -166,6 +165,11 @@ public class ClientGUI extends javax.swing.JFrame {
         TextAreaMessage.setColumns(20);
         TextAreaMessage.setLineWrap(true);
         TextAreaMessage.setRows(5);
+        TextAreaMessage.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                TextAreaMessageKeyPressed(evt);
+            }
+        });
         PanelMessageScroll.setViewportView(TextAreaMessage);
 
         ButtonSend.setText("Send");
@@ -354,10 +358,6 @@ public class ClientGUI extends javax.swing.JFrame {
             client.sendCreateChat(chatName, -1);
 
        
-        } 
-        else 
-        {
-            System.out.println("Login canceled");
         }
         
     }//GEN-LAST:event_MenuItemCreateChatMousePressed
@@ -436,10 +436,6 @@ public class ClientGUI extends javax.swing.JFrame {
         {
             String chatName = tfChatName.getText().replace(" ", "_").replace(",", ".");
             client.sendUpdateChat(Integer.parseInt(tfChatID.getText()), chatName);
-        } 
-        else 
-        {
-            System.out.println("Login canceled");
         }
         
     }//GEN-LAST:event_MenuItemUpdateChatMousePressed
@@ -454,10 +450,6 @@ public class ClientGUI extends javax.swing.JFrame {
         if(option == JOptionPane.OK_OPTION)
         {
             client.sendDeleteChat(Integer.parseInt(tfChatID.getText()));
-        } 
-        else 
-        {
-            System.out.println("Login canceled");
         }
         
     }//GEN-LAST:event_MenuItemDeleteChatMousePressed
@@ -571,11 +563,16 @@ public class ClientGUI extends javax.swing.JFrame {
 
     private void ButtonSendMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_ButtonSendMousePressed
         // TODO add your handling code here:
+        sendMessage();
+    }//GEN-LAST:event_ButtonSendMousePressed
+    
+    private void sendMessage()
+    {
         JScrollPane pane = (JScrollPane) TabbedPaneChatLog.getSelectedComponent();
         
         String message = TextAreaMessage.getText();
         
-        if(TextAreaMessage.getText() == null || TextAreaMessage.getText().equals(""))
+        if(TextAreaMessage.getText() == null || TextAreaMessage.getText().isEmpty())
         {
             return;
         }
@@ -606,7 +603,20 @@ public class ClientGUI extends javax.swing.JFrame {
         client.sendMessageToChat(chatName, message);
 
         TextAreaMessage.setText("");
-    }//GEN-LAST:event_ButtonSendMousePressed
+    }
+    
+    private void TextAreaMessageKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TextAreaMessageKeyPressed
+        // TODO add your handling code here:
+        
+        if (evt.isShiftDown() && evt.getKeyChar() == '\n')
+        {
+            TextAreaMessage.setText(TextAreaMessage.getText() + '\n');
+        }
+        else if (!evt.isShiftDown() && evt.getKeyChar() == '\n')
+        {
+            sendMessage();
+        }
+    }//GEN-LAST:event_TextAreaMessageKeyPressed
 
     
     private void showChatOptionsPopupMenu(MouseEvent e, int xOffset) 
