@@ -2,6 +2,7 @@ package com.lamepancake.chitchat.packet;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /**
  * Sent by a user attempting to log in.
@@ -110,5 +111,29 @@ public class LoginPacket extends Packet {
     public String getPassword()
     {
         return this.password;
+    }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!super.equals(o))
+            return false;
+         
+        if(o instanceof LoginPacket)
+        {
+            LoginPacket p = (LoginPacket)o;
+            if(!username.equals(p.getUsername()))
+                return false;
+            return password.equals(p.getPassword());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 29 * hash + Objects.hashCode(this.username);
+        hash = 29 * hash + Objects.hashCode(this.password);
+        return hash;
     }
 }

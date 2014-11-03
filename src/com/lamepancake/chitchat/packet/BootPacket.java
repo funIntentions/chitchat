@@ -103,4 +103,31 @@ public class BootPacket extends Packet{
     {
         return this.booterID;
     }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!super.equals(o))
+            return false;
+        
+        if(o instanceof BootPacket)
+        {
+            BootPacket boot = (BootPacket)o;
+            if(bootedID != boot.getBootedID())
+                return false;
+            if(booterID != boot.getBooterID())
+                return false;
+            return chatID == boot.getChatID();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 67 * hash + this.bootedID;
+        hash = 67 * hash + this.chatID;
+        hash = 67 * hash + this.booterID;
+        return hash;
+    }
 }

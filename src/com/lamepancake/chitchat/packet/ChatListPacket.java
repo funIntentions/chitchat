@@ -5,6 +5,8 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Sent to request or transmit a list of all available chats.
@@ -35,7 +37,7 @@ public class ChatListPacket extends Packet
     /**
      * Creates a new ChatListPacket.
      * 
-     * @param chatRoles  A map of chats to the role that the requesting user has.
+     * @param chatRoles  A map of chats to the rolchatListe that the requesting user has.
      * @param roleLength The number of chats in the list. 
      * @param userID     The ID of the user requesting list.
      */
@@ -86,6 +88,11 @@ public class ChatListPacket extends Packet
         return this.chatList;
     }
     
+    public int getUserID()
+    {
+        return userID;
+    }
+    
     @Override
     public ByteBuffer serialise()
     {
@@ -106,5 +113,68 @@ public class ChatListPacket extends Packet
         buf.rewind();
         
         return buf;
+    }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!super.equals(o))
+            return false;
+        
+        if(o instanceof ChatListPacket)
+        {
+            ChatListPacket p = (ChatListPacket)o;
+            
+            if(chatList != null && p.getChatList() != null)
+            {
+                Set<Chat> chatsSet = chatList.keySet();
+                Set<Chat> pChatsSet = p.getChatList().keySet();
+                if(chatsSet.size() != pChatsSet.size())
+                    return false;
+
+                Object[] chats = chatsSet.toArray();
+                Object[] pChats= pChatsSet.toArray();
+
+                for(int i = 0; i < chats.length; i++)
+                {
+                    if(chats[i] instanceof Chat && pChats[i] instanceof Chat)
+                    {
+                        Chat chat = (Chat)chats[i];
+                        Chat pChat = (Chat)pChats[i];
+
+                        if(!Objects.equals(chat.getID(), pChat.getID()))
+                            return false;
+                        if(!chat.getName().equals(pChat.getName()))
+                            return false;
+                        if(!Objects.equals(chatList.get(chat), p.getChatList().get(pChat)))
+                            return false;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                if(chatList == null && p.getChatList() != null)
+                    return false;
+                if(chatList != null && p.getChatList() == null)
+                    return false;
+            }
+            
+            //if(chatList != p.getChatList())
+                //return false;
+            return userID == p.getUserID();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 67 * hash + Objects.hashCode(this.chatList);
+        hash = 67 * hash + this.userID;
+        return hash;
     }
 }

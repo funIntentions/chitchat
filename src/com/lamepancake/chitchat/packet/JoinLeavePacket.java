@@ -85,4 +85,31 @@ public class JoinLeavePacket extends Packet
     {
         return flag;
     }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!super.equals(o))
+            return false;
+         
+        if(o instanceof JoinLeavePacket)
+        {
+            JoinLeavePacket p = (JoinLeavePacket)o;
+            if(userID != p.getUserID())
+                return false;
+            if(chatID != p.getChatID())
+                return false;
+            return flag == p.getFlag();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 47 * hash + this.userID;
+        hash = 47 * hash + this.chatID;
+        hash = 47 * hash + this.flag;
+        return hash;
+    }
 }

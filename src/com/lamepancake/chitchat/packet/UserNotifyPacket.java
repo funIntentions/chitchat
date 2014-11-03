@@ -7,6 +7,7 @@ package com.lamepancake.chitchat.packet;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /**
  * Sent to all users in a particular chat when another user's status is updated.
@@ -158,5 +159,38 @@ public class UserNotifyPacket extends Packet
     public String getName()
     {
         return userName;
+    }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!super.equals(o))
+            return false;
+        
+        if(o instanceof UserNotifyPacket)
+        {
+            UserNotifyPacket p = (UserNotifyPacket)o;
+            if(chatID != p.getChatID())
+                return false;
+            if(userID != p.getUserID())
+                return false;
+            if(userRole != p.getUserRole())
+                return false;
+            if(flag != p.getFlag())
+                return false;
+            return userName.equals(p.getName());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 23 * hash + this.chatID;
+        hash = 23 * hash + this.userID;
+        hash = 23 * hash + this.userRole;
+        hash = 23 * hash + Objects.hashCode(this.userName);
+        hash = 23 * hash + this.flag;
+        return hash;
     }
 }

@@ -135,4 +135,25 @@ public abstract class Packet {
     {
         return this.length;
     }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(o instanceof Packet)
+        {
+            Packet p = (Packet)o;
+            if(type != p.getType())
+                return false;
+            return length == p.getLength();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 31 * hash + this.type;
+        hash = 31 * hash + this.length;
+        return hash;
+    }
 }

@@ -59,4 +59,28 @@ public class RequestAccessPacket extends Packet
     {
         return chatID;
     }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!super.equals(o))
+            return false;
+        
+        if(o instanceof RequestAccessPacket)
+        {
+            RequestAccessPacket p = (RequestAccessPacket)o;
+            if(userID != p.getUserID())
+                return false;
+            return chatID == p.getChatID();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 59 * hash + this.userID;
+        hash = 59 * hash + this.chatID;
+        return hash;
+    }
 }

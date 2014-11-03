@@ -3,6 +3,7 @@ package com.lamepancake.chitchat.packet;
 import com.lamepancake.chitchat.User;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /**
  * Sent to all users in a chat to notify them of chat status changes.
@@ -71,5 +72,32 @@ public class ChatNotifyPacket extends Packet
     public int getChangeFlag()
     {
         return this.changeFlag;
+    }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+         if(!super.equals(o))
+            return false;
+         
+        if(o instanceof ChatNotifyPacket)
+        {
+            ChatNotifyPacket p = (ChatNotifyPacket)o;
+            if(chatID != p.getChatID())
+                return false;
+            if(!chatName.equals(p.getChatName()))
+                return false;
+            return changeFlag == p.getChangeFlag();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 17 * hash + this.chatID;
+        hash = 17 * hash + Objects.hashCode(this.chatName);
+        hash = 17 * hash + this.changeFlag;
+        return hash;
     }
 }

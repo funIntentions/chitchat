@@ -54,4 +54,25 @@ public class LogoutPacket extends Packet {
     {
         return userID;
     }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!super.equals(o))
+            return false;
+        
+        if(o instanceof LogoutPacket)
+        {
+            LogoutPacket p = (LogoutPacket)o;
+            return userID == p.getID();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 79 * hash + this.userID;
+        return hash;
+    }
 }

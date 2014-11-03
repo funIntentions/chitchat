@@ -135,4 +135,34 @@ public class OperationStatusPacket extends Packet
     {
         return this.chatID;
     }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!super.equals(o))
+            return false;
+        
+        if(o instanceof OperationStatusPacket)
+        {
+            OperationStatusPacket p = (OperationStatusPacket)o;
+            if(userID != p.getUserID())
+                return false;
+            if(chatID != p.getChatID())
+                return false;
+            if(operation != p.getOperation())
+                return false;
+            return flag == p.getStatus();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 53 * hash + this.flag;
+        hash = 53 * hash + this.userID;
+        hash = 53 * hash + this.chatID;
+        hash = 53 * hash + this.operation;
+        return hash;
+    }
 }

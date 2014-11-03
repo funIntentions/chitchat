@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -179,5 +180,32 @@ public class WhoIsInPacket extends Packet {
     public int getUserID()
     {
         return this.userID;
+    }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!super.equals(o))
+            return false;
+        
+        if(o instanceof WhoIsInPacket)
+        {
+            WhoIsInPacket p = (WhoIsInPacket)o;
+            if(users != p.getUsers())
+                return false;
+            if(chatID != p.getChatID())
+                return false;
+            return userID == p.getUserID();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 89 * hash + Objects.hashCode(this.users);
+        hash = 89 * hash + this.chatID;
+        hash = 89 * hash + this.userID;
+        return hash;
     }
 }

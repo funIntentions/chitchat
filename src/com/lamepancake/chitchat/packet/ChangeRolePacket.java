@@ -107,4 +107,34 @@ public class ChangeRolePacket extends Packet {
     {
         return this.role;
     }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!super.equals(o))
+            return false;
+        
+        if(o instanceof ChangeRolePacket)
+        {
+            ChangeRolePacket p = (ChangeRolePacket)o;
+            if(chatID != p.getChatID())
+                return false;
+            if(userID != p.getUserID())
+                return false;
+            if(senderID != p.getSenderID())
+                return false;
+            return role == p.getRole();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 17 * hash + this.chatID;
+        hash = 17 * hash + this.userID;
+        hash = 17 * hash + this.senderID;
+        hash = 17 * hash + this.role;
+        return hash;
+    }
 }

@@ -2,6 +2,7 @@ package com.lamepancake.chitchat.packet;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /**
  * Sent by an admin or user to perform CRUD operations on chats.
@@ -99,5 +100,32 @@ public class UpdateChatsPacket extends Packet {
     public int getUpdate()
     {
         return chatUpdate;
+    }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!super.equals(o))
+            return false;
+        
+        if(o instanceof UpdateChatsPacket)
+        {
+            UpdateChatsPacket p = (UpdateChatsPacket)o;
+            if(!chatName.equals(p.getName()))
+                return false;
+            if(chatID != p.getChatID())
+                return false;
+            return chatUpdate == p.getUpdate();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 79 * hash + Objects.hashCode(this.chatName);
+        hash = 79 * hash + this.chatUpdate;
+        hash = 79 * hash + this.chatID;
+        return hash;
     }
 }
