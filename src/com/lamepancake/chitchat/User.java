@@ -28,7 +28,12 @@ public class User {
      * the object.
      */
     public User()
-    {}
+    {
+        this.name = "";
+        this.password = "";
+        this.id = -1;
+        this.role = -1;
+    }
        
     /**
      * Returns the user's name.

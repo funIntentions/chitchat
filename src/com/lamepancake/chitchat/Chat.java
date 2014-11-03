@@ -80,6 +80,12 @@ public class Chat
      */
     public void initUsers(List<? extends User> initialUsers)
     {
+        if (initialUsers == null)
+        {
+            System.err.println("Chat.initUsers: initialUsers are null");
+            return;
+        }
+        
         for (User user : initialUsers)
         {
             this.users.put(user, Boolean.FALSE);
@@ -157,6 +163,12 @@ public class Chat
      */
     public void handlePacket(SelectionKey sender, Packet received)
     {
+        if (received == null)
+        {
+            System.err.println("Chat.handlePacket: packet is null");
+            return;
+        }
+        
         int type = received.getType();
         switch(type)
         {
@@ -286,7 +298,7 @@ public class Chat
      * Note that the ChatManager will notify the user being promoted/demoted of
      * the change, since it is the only object that knows whether a user is
      * actually connected to the server. The Chat is still responsible for notifying
-     * the sender whether the operation succeeded.
+     * the sender whether the operaton succeeded.
      * @param r 
      */
     private void promoteUser(ChangeRolePacket r)
