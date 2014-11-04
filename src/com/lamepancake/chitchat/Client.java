@@ -4,6 +4,7 @@ import com.lamepancake.chitchat.packet.*;
 import java.net.*;
 import java.io.*;
 import java.nio.channels.SocketChannel;
+import java.sql.SQLException;
 import java.util.*;
 import javax.swing.SwingWorker;
 
@@ -57,6 +58,11 @@ public class Client {
     private final Map<Integer, Packet> waitingOp = new HashMap<>(1);
     
     /**
+     * Stores the id's of chats joined.
+     */
+    private final List<Integer> chatsJoined;
+    
+    /**
      * Stores a list of operation ID's and their associated completion callbacks.
      * 
      * When the client issues a request which requires confirmation (a database
@@ -87,6 +93,8 @@ public class Client {
             chatList = new HashMap<>();
             connected = true;
             logout = false;
+            
+            chatsJoined = new ArrayList<>();
     }
     
     /**
@@ -125,6 +133,28 @@ public class Client {
         {
             gui.displayError(e.getMessage(), false);
         }
+    }
+    
+    public void logout()
+    {
+        for (Integer id : chatsJoined)
+        {
+            sendJoinLeave(id, JoinLeavePacket.LEAVE);
+        }
+        
+        try
+        {
+            socket.close();
+        }
+        catch(IOException e)
+        {
+            System.err.println("IOException thrown: " + e.getMessage());
+        }
+        
+        connected = false;
+        logout = true;
+        
+        System.exit(0);
     }
     
     /**
@@ -732,6 +762,8 @@ public class Client {
                         if (name != null)
                         {
                             gui.addTab(name);
+                            
+                            chatsJoined.add(jl.getChatID());
                         }
                     }
                     else
@@ -740,6 +772,8 @@ public class Client {
                         if (name != null)
                         {
                             gui.removeTab(name);
+                            
+                            chatsJoined.remove(jl.getChatID());
                         }
                     }
                     break;
