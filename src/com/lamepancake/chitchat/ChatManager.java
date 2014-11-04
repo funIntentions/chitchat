@@ -222,7 +222,7 @@ public class ChatManager
         
         try 
         {
-            userRole = ChatRoleDAOMySQLImpl.getInstance().getUserRoleInChat(chatID, user.getID());
+            userRole = ChatRoleDAOMySQLImpl.getInstance().getUserRoleInChat(user.getID(), chatID);
 
         } catch (SQLException e) 
         {
@@ -230,12 +230,7 @@ public class ChatManager
            return false;
         }
         
-        if (userRole != User.ADMIN)
-        {
-            return false;
-        }
-        
-        return true;
+        return userRole == User.ADMIN;
     }
     
     /**
