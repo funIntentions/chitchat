@@ -21,7 +21,7 @@ public class Client {
     /**
      * The socket over which the client sends and receives data.
      */
-    private SocketChannel socket;
+    private final SocketChannel socket;
 
     /**
      * A GUI, if the client has one.
