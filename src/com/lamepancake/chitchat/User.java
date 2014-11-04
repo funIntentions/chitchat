@@ -1,5 +1,7 @@
 package com.lamepancake.chitchat;
 
+import java.util.Objects;
+
 /**
  * Represents a chat user.
  * 
@@ -156,5 +158,25 @@ public class User {
     public static boolean restrict(final int userRole, final int minRole)
     {
         return (minRole - userRole) >= 0;
+    }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        User other;
+        if(!(o instanceof User))
+            return false;
+        
+        other = (User)o;
+        
+        return other.id == this.id && this.name.equals(other.name);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 37 * hash + Objects.hashCode(this.name);
+        hash = 37 * hash + this.id;
+        return hash;
     }
 }
