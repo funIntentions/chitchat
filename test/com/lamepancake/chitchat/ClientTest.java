@@ -197,7 +197,7 @@ public class ClientTest {
         String userName = "Shane";
         int role = 0;
         Client instance = new Client(mockedGUI, mockedChannel);
-        instance.changeUserRole(userName, role);
+        instance.changeUserRole(1,userName, role);
     }
 
     /**
