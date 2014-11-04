@@ -162,6 +162,9 @@ public class ClientGUI extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
+        PanelMessageScroll.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        PanelMessageScroll.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+
         TextAreaMessage.setColumns(20);
         TextAreaMessage.setLineWrap(true);
         TextAreaMessage.setRows(5);
@@ -185,7 +188,7 @@ public class ClientGUI extends javax.swing.JFrame {
             PanelMessageLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(PanelMessageLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(PanelMessageScroll, javax.swing.GroupLayout.PREFERRED_SIZE, 370, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(PanelMessageScroll, javax.swing.GroupLayout.PREFERRED_SIZE, 404, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(ButtonSend)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -193,10 +196,11 @@ public class ClientGUI extends javax.swing.JFrame {
         PanelMessageLayout.setVerticalGroup(
             PanelMessageLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(PanelMessageLayout.createSequentialGroup()
-                .addGroup(PanelMessageLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(ButtonSend)
-                    .addComponent(PanelMessageScroll, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addGap(0, 24, Short.MAX_VALUE)
+                .addComponent(ButtonSend))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, PanelMessageLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(PanelMessageScroll, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
         );
 
         TabbedPaneChatLog.setName("Chats"); // NOI18N
@@ -205,18 +209,21 @@ public class ClientGUI extends javax.swing.JFrame {
         PanelChatLog.setLayout(PanelChatLogLayout);
         PanelChatLogLayout.setHorizontalGroup(
             PanelChatLogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(TabbedPaneChatLog, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
+            .addComponent(TabbedPaneChatLog, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
         );
         PanelChatLogLayout.setVerticalGroup(
             PanelChatLogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(TabbedPaneChatLog, javax.swing.GroupLayout.Alignment.TRAILING)
+            .addGroup(PanelChatLogLayout.createSequentialGroup()
+                .addComponent(TabbedPaneChatLog, javax.swing.GroupLayout.PREFERRED_SIZE, 545, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
 
         TabbedPaneChatLog.getAccessibleContext().setAccessibleName("Cat");
 
         PanelLists.setBorder(null);
 
-        TabbedPanelLists.setBorder(null);
+        TabbedPanelLists.setForeground(new java.awt.Color(254, 254, 254));
+        TabbedPanelLists.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
 
         ListChatLists.setModel(new javax.swing.AbstractListModel() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -250,11 +257,11 @@ public class ClientGUI extends javax.swing.JFrame {
         PanelLists.setLayout(PanelListsLayout);
         PanelListsLayout.setHorizontalGroup(
             PanelListsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(TabbedPanelLists, javax.swing.GroupLayout.DEFAULT_SIZE, 204, Short.MAX_VALUE)
+            .addComponent(TabbedPanelLists, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 198, Short.MAX_VALUE)
         );
         PanelListsLayout.setVerticalGroup(
             PanelListsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(TabbedPanelLists, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 468, Short.MAX_VALUE)
+            .addComponent(TabbedPanelLists, javax.swing.GroupLayout.Alignment.TRAILING)
         );
 
         TabbedPanelLists.getAccessibleContext().setAccessibleDescription("");
@@ -558,6 +565,7 @@ public class ClientGUI extends javax.swing.JFrame {
         // TODO add your handling code here:
         // currently not set to a chat ID
         //client.sendMessage(0, TextAreaMessage.getText());
+        client.logout();
         
     }//GEN-LAST:event_MenuItemLogoutMousePressed
 
