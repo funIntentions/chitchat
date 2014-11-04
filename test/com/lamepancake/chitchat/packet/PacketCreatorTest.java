@@ -26,7 +26,7 @@ public class PacketCreatorTest {
     
     public PacketCreatorTest() {
     }
-    
+
     /**
      * Test of createWhoIsIn method, of class PacketCreator.
      */
