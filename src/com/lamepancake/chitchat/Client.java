@@ -258,7 +258,7 @@ public class Client {
         }
     }
     
-    public void changeUserRole(String userName, int role)
+    public void changeUserRole(int chatID, String userName, int role)
     {
         Set<Chat>           chats;
         chats = this.chatList.keySet();
@@ -266,7 +266,7 @@ public class Client {
                 
         for (Chat chat : chats)
         {
-            if ((foundUser = chat.findUser(userName)) != null)
+            if ((chat.getID() == chatID) && ((foundUser = chat.findUser(userName)) != null))
             {
                 sendChangeRole(foundUser.getID(), chat.getID(), role);
             }

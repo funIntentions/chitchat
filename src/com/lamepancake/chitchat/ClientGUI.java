@@ -521,7 +521,7 @@ public class ClientGUI extends javax.swing.JFrame {
 
     private void jMenuItemUserRoleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemUserRoleActionPerformed
         // TODO add your handling code here:
-        if (ListUsersLists.getSelectedIndex() != -1)
+        if (ListUsersLists.getSelectedIndex() != -1 && ListChatLists.getSelectedIndex() != -1)
         {
             String userInfo = ListUsersLists.getSelectedValue().toString();
             
@@ -529,13 +529,19 @@ public class ClientGUI extends javax.swing.JFrame {
             
             String userName = info[0];
             
-            client.changeUserRole(userName, User.USER);
+            String chatInfo = ListChatLists.getSelectedValue().toString();
+            
+            String[] cinfo = chatInfo.split(" ");
+            
+            int chatId = Integer.parseInt(cinfo[0]);
+            
+            client.changeUserRole(chatId, userName, User.USER);
         }
     }//GEN-LAST:event_jMenuItemUserRoleActionPerformed
 
     private void jMenuItemAdminRoleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAdminRoleActionPerformed
         // TODO add your handling code here:
-        if (ListUsersLists.getSelectedIndex() != -1)
+        if (ListUsersLists.getSelectedIndex() != -1 && ListChatLists.getSelectedIndex() != -1)
         {
             String userInfo = ListUsersLists.getSelectedValue().toString();
             
@@ -543,7 +549,13 @@ public class ClientGUI extends javax.swing.JFrame {
             
             String userName = info[0];
             
-            client.changeUserRole(userName, User.ADMIN);
+            String chatInfo = ListChatLists.getSelectedValue().toString();
+            
+            String[] cinfo = chatInfo.split(" ");
+            
+            int chatId = Integer.parseInt(cinfo[0]);
+            
+            client.changeUserRole(chatId, userName, User.ADMIN);
         }
     }//GEN-LAST:event_jMenuItemAdminRoleActionPerformed
 
