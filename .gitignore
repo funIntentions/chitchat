@@ -1,5 +1,4 @@
-/nbproject/*
-build.xml
+/nbproject/private/*
 manifest.mf
 *.*~
 *.class
