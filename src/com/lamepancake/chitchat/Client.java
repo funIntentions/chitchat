@@ -263,7 +263,7 @@ public class Client {
         Set<Chat>           chats;
         chats = this.chatList.keySet();
         User foundUser;
-                
+        
         for (Chat chat : chats)
         {
             if ((chat.getID() == chatID) && ((foundUser = chat.findUser(userName)) != null))
