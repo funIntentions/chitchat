@@ -68,6 +68,10 @@ public class UserNotifyPacket extends Packet
     */
     private final String userName;
     
+    /**
+     * The ID of the organization.
+     */
+    private final int organizationID;
     
     /**
      * Indicates whether the user joined(0), left(1), or promoted(2).
@@ -75,7 +79,7 @@ public class UserNotifyPacket extends Packet
     private final int flag;
 
     
-    public UserNotifyPacket(String userName, int userid, int chatid, int role, int flag)
+    public UserNotifyPacket(String userName, int userid, int chatid, int role, int flag, int organizationid)
     {
         super(USERNOTIFY, 16 + (userName.length() * 2) + 4);
         this.userID = userid;
@@ -83,6 +87,7 @@ public class UserNotifyPacket extends Packet
         this.userRole = role;
         this.flag = flag;
         this.userName = userName;
+        this.organizationID = organizationid;
     }
 
     public UserNotifyPacket(ByteBuffer packetHeader, ByteBuffer packetData)
@@ -97,6 +102,7 @@ public class UserNotifyPacket extends Packet
         byte[]  rawName  = new byte[nameLen];
         packetData.get(rawName);
         this.userName = new String(rawName, StandardCharsets.UTF_16LE);
+        this.organizationID = packetData.getInt();
     }
     
     @Override
@@ -110,6 +116,7 @@ public class UserNotifyPacket extends Packet
         
         buf.putInt(this.userName.length() * 2);
         buf.put(this.userName.getBytes(StandardCharsets.UTF_16LE));
+        buf.putInt(this.organizationID);
         
         buf.rewind();
         
@@ -161,6 +168,15 @@ public class UserNotifyPacket extends Packet
         return userName;
     }
     
+    /**
+     * Gets the organization ID of the chat.
+     * @return The ID of the organization.
+     */
+    public int getOrganizationID()
+    {
+        return organizationID;
+    }
+    
     @Override
     public boolean equals(Object o)
     {
@@ -178,6 +194,8 @@ public class UserNotifyPacket extends Packet
                 return false;
             if(flag != p.getFlag())
                 return false;
+            if(organizationID != p.getOrganizationID())
+                return false;
             return userName.equals(p.getName());
         }
         return false;
@@ -185,12 +203,15 @@ public class UserNotifyPacket extends Packet
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 23 * hash + this.chatID;
-        hash = 23 * hash + this.userID;
-        hash = 23 * hash + this.userRole;
-        hash = 23 * hash + Objects.hashCode(this.userName);
-        hash = 23 * hash + this.flag;
+        int hash = 3;
+        hash = 67 * hash + this.chatID;
+        hash = 67 * hash + this.userID;
+        hash = 67 * hash + this.userRole;
+        hash = 67 * hash + Objects.hashCode(this.userName);
+        hash = 67 * hash + this.organizationID;
+        hash = 67 * hash + this.flag;
         return hash;
     }
+
+
 }

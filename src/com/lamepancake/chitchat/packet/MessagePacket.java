@@ -19,6 +19,7 @@ public class MessagePacket extends Packet {
     private final String message;
     private int          userID;
     private final int    chatID;
+    private final int    organizationID;
 
     /**
      * Constructs a MessagePacket with the given message and userID.
@@ -26,11 +27,12 @@ public class MessagePacket extends Packet {
      * @param message The message to send.
      * @param userID  The ID of the user sending the message.
      */
-    public MessagePacket(String message, int userID, int chatID) {
+    public MessagePacket(String message, int userID, int chatID, int organizationID) {
         super(Packet.MESSAGE, 8 + message.length() * 2);
         this.message = message;
         this.userID = userID;
         this.chatID = chatID;
+        this.organizationID = organizationID;
     }
 
     /**
@@ -47,6 +49,7 @@ public class MessagePacket extends Packet {
         this.chatID = data.getInt();
         data.get(rawMessage);
         this.message = new String(rawMessage, StandardCharsets.UTF_16LE);
+        this.organizationID = data.getInt();
     }
 
     @Override
@@ -56,6 +59,7 @@ public class MessagePacket extends Packet {
         buf.putInt(this.userID);
         buf.putInt(this.chatID);
         buf.put(this.message.getBytes(StandardCharsets.UTF_16LE));
+        buf.putInt(this.organizationID);
         buf.rewind();
 
         return buf;
@@ -100,6 +104,11 @@ public class MessagePacket extends Packet {
         return this.chatID;
     }
     
+    public int getOrganizationID()
+    {
+        return this.organizationID;
+    }
+    
     @Override
     public boolean equals(Object o)
     {
@@ -113,6 +122,8 @@ public class MessagePacket extends Packet {
                 return false;
             if(chatID != p.getChatID())
                 return false;
+            if(organizationID != p.getOrganizationID())
+                return false;
             return userID == p.getUserID();
         }
         return false;
@@ -121,10 +132,13 @@ public class MessagePacket extends Packet {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 73 * hash + Objects.hashCode(this.message);
-        hash = 73 * hash + this.userID;
-        hash = 73 * hash + this.chatID;
+        hash = 37 * hash + Objects.hashCode(this.message);
+        hash = 37 * hash + this.userID;
+        hash = 37 * hash + this.chatID;
+        hash = 37 * hash + this.organizationID;
         return hash;
     }
+
+
 }
 

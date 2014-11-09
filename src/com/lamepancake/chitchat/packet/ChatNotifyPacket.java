@@ -22,13 +22,16 @@ public class ChatNotifyPacket extends Packet
     
     private int changeFlag;
     
-    public ChatNotifyPacket(int chat, String name, int flag)
+    private int organizationID;
+    
+    public ChatNotifyPacket(int chat, String name, int flag, int organization)
     {
-        super(CHATNOTIFY, 4 + name.length() * 2 + 4 + 4);
+        super(CHATNOTIFY, 4 + name.length() * 2 + 4 + 4 + 4);
         
         chatID = chat;
         chatName = name;
         changeFlag = flag;
+        organizationID = organization;
     }
 
     public ChatNotifyPacket(ByteBuffer packetHeader, ByteBuffer packetData) 
@@ -41,6 +44,7 @@ public class ChatNotifyPacket extends Packet
         byte[]  rawName  = new byte[nameLen];
         packetData.get(rawName);
         chatName = new String(rawName, StandardCharsets.UTF_16LE);
+        this.organizationID = packetData.getInt();
     }
     
     @Override
@@ -53,6 +57,7 @@ public class ChatNotifyPacket extends Packet
         // Structure is: {chatID}{changeFlag}{chatNameLength}{chatName}
         buf.putInt(chatName.length() * 2);
         buf.put(chatName.getBytes(StandardCharsets.UTF_16LE));
+        buf.putInt(this.organizationID);
         
         buf.rewind();
         
@@ -74,6 +79,11 @@ public class ChatNotifyPacket extends Packet
         return this.changeFlag;
     }
     
+    public int getOrganizationID()
+    {
+        return this.organizationID;
+    }
+    
     @Override
     public boolean equals(Object o)
     {
@@ -87,6 +97,8 @@ public class ChatNotifyPacket extends Packet
                 return false;
             if(!chatName.equals(p.getChatName()))
                 return false;
+            if(organizationID != p.getOrganizationID())
+                return false;
             return changeFlag == p.getChangeFlag();
         }
         return false;
@@ -95,9 +107,12 @@ public class ChatNotifyPacket extends Packet
     @Override
     public int hashCode() {
         int hash = 3;
-        hash = 17 * hash + this.chatID;
-        hash = 17 * hash + Objects.hashCode(this.chatName);
-        hash = 17 * hash + this.changeFlag;
+        hash = 71 * hash + this.chatID;
+        hash = 71 * hash + Objects.hashCode(this.chatName);
+        hash = 71 * hash + this.changeFlag;
+        hash = 71 * hash + this.organizationID;
         return hash;
     }
+
+
 }

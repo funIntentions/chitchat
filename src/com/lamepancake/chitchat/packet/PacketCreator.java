@@ -19,7 +19,7 @@ public class PacketCreator {
     private PacketCreator()
     {}
     
-    /**
+    /*
      * Creates a WhoIsInPacket from the given information.
      * 
      * @param chatUsers The users in the chat and their online statuses.

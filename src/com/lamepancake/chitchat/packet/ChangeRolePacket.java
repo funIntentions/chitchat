@@ -28,19 +28,23 @@ public class ChangeRolePacket extends Packet {
     private final int senderID;
     
     private final int role;
+    
+    private final int organizationID;
     /**
      * The 
      * @param chat
      * @param user
      * @param role 
+     * @param organization
      */
-    public ChangeRolePacket(int chat, int user, int sender, int role)
+    public ChangeRolePacket(int chat, int user, int sender, int role, int organization)
     {
-        super(CHANGEROLE, 16);
+        super(CHANGEROLE, 20);
         this.chatID = chat;
         this.userID = user;
         this.senderID = sender;
         this.role = role;
+        this.organizationID = organization;
     }
 
     public ChangeRolePacket(ByteBuffer packetHeader, ByteBuffer packetData) 
@@ -51,7 +55,7 @@ public class ChangeRolePacket extends Packet {
         this.userID = packetData.getInt();
         this.senderID = packetData.getInt();
         this.role = packetData.getInt();
-        
+        this.organizationID = packetData.getInt();
     }
     
     @Override
@@ -62,6 +66,7 @@ public class ChangeRolePacket extends Packet {
         buf.putInt(this.userID);
         buf.putInt(this.senderID);
         buf.putInt(this.role);
+        buf.putInt(this.organizationID);
         
         buf.rewind();
         
@@ -108,6 +113,15 @@ public class ChangeRolePacket extends Packet {
         return this.role;
     }
     
+    /**
+     * Get organization ID of the chat passed in
+     * @return the organization id
+     */
+    public int getOrganizationID()
+    {
+        return this.organizationID;
+    }
+    
     @Override
     public boolean equals(Object o)
     {
@@ -123,6 +137,8 @@ public class ChangeRolePacket extends Packet {
                 return false;
             if(senderID != p.getSenderID())
                 return false;
+            if(organizationID != p.getOrganizationID())
+                return false;
             return role == p.getRole();
         }
         return false;
@@ -131,10 +147,11 @@ public class ChangeRolePacket extends Packet {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 17 * hash + this.chatID;
-        hash = 17 * hash + this.userID;
-        hash = 17 * hash + this.senderID;
-        hash = 17 * hash + this.role;
+        hash = 29 * hash + this.chatID;
+        hash = 29 * hash + this.userID;
+        hash = 29 * hash + this.senderID;
+        hash = 29 * hash + this.role;
+        hash = 29 * hash + this.organizationID;
         return hash;
     }
 }

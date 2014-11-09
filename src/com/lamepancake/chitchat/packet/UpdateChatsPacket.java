@@ -23,6 +23,7 @@ public class UpdateChatsPacket extends Packet {
     private final String chatName;
     private final int chatUpdate;
     private final int chatID;
+    private final int organizationID;
     
     /**
      * Construct a new UpdateChatsPacket, specifying the type of operation and
@@ -32,12 +33,13 @@ public class UpdateChatsPacket extends Packet {
      * @param id     The ID of the chat to update, create or delete.
      * @param update The operation to perform (UpdateChatsPacket.DELETE, CREATE, UPDATE).
      */
-    public UpdateChatsPacket(String name, int id, int update)
+    public UpdateChatsPacket(String name, int id, int update, int organizationid)
     {
         super(Packet.UPDATECHAT, (name.length() * 2) + 12);
         chatName = name;
         chatID = id;
         chatUpdate = update;
+        organizationID = organizationid;
     }
     
     /**
@@ -55,6 +57,7 @@ public class UpdateChatsPacket extends Packet {
         chatName = new String(rawName, StandardCharsets.UTF_16LE);
         chatID = data.getInt();
         chatUpdate = data.getInt();
+        organizationID = data.getInt();
     }
     
     @Override
@@ -66,7 +69,7 @@ public class UpdateChatsPacket extends Packet {
         buf.put(chatName.getBytes(StandardCharsets.UTF_16LE));
         buf.putInt(chatID);
         buf.putInt(chatUpdate);
-       
+        buf.putInt(organizationID);
         
         buf.rewind();
         return buf;
@@ -102,6 +105,15 @@ public class UpdateChatsPacket extends Packet {
         return chatUpdate;
     }
     
+    /**
+     * Get the ID of the organization.
+     * @return 
+     */
+    public int getOrganizationID()
+    {
+        return organizationID;
+    }
+    
     @Override
     public boolean equals(Object o)
     {
@@ -115,6 +127,8 @@ public class UpdateChatsPacket extends Packet {
                 return false;
             if(chatID != p.getChatID())
                 return false;
+            if(organizationID != p.getOrganizationID())
+                return false;
             return chatUpdate == p.getUpdate();
         }
         return false;
@@ -122,10 +136,12 @@ public class UpdateChatsPacket extends Packet {
 
     @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 79 * hash + Objects.hashCode(this.chatName);
-        hash = 79 * hash + this.chatUpdate;
-        hash = 79 * hash + this.chatID;
+        int hash = 7;
+        hash = 41 * hash + Objects.hashCode(this.chatName);
+        hash = 41 * hash + this.chatUpdate;
+        hash = 41 * hash + this.chatID;
+        hash = 41 * hash + this.organizationID;
         return hash;
     }
+
 }

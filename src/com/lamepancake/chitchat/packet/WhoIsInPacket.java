@@ -53,15 +53,20 @@ public class WhoIsInPacket extends Packet {
     private final int userID;
     
     /**
+     * ID of the organization the chat belongs to.
+     */
+    private final int organizationID;
+    
+    /**
      * Construct a WhoIsInPacket to be sent to the server.
      * 
      * @param chatID The ID of the chat from which to get the list of users.
      * @param userID The user requesting the list.
      */
-    public WhoIsInPacket(int chatID, int userID)
+    public WhoIsInPacket(int chatID, int userID, int organizationID)
     {
         // The 4 is already added in the other constructor, so don't repeat it here
-        this(null, 0, chatID, userID);
+        this(null, 4, chatID, userID, organizationID);
     }
     
     /**
@@ -73,12 +78,13 @@ public class WhoIsInPacket extends Packet {
      * @param chatID The ID of the chat containing the user list.
      * @param userID The ID of the user requesting or receiving the list.
      */
-    public WhoIsInPacket(Map<User, Boolean> users, int length, int chatID, int userID)
+    public WhoIsInPacket(Map<User, Boolean> users, int length, int chatID, int userID, int organizationID)
     {
         super(WHOISIN, length);
         this.users = users;
         this.chatID = chatID;
         this.userID = userID;
+        this.organizationID = organizationID;
     }
     
     /**
@@ -117,6 +123,7 @@ public class WhoIsInPacket extends Packet {
                 users.put(new User().setName(username).setRole(role).setID(id), onlineStatus == 1); 
             }
         }
+        this.organizationID = data.getInt();
     }
     
     /**
@@ -158,6 +165,7 @@ public class WhoIsInPacket extends Packet {
             buf.putInt(u.getID());
             buf.put(users.get(u) ? (byte)1 : (byte)0);
         }
+        buf.putInt(this.organizationID);
         
         buf.rewind();
         
@@ -182,6 +190,15 @@ public class WhoIsInPacket extends Packet {
         return this.userID;
     }
     
+    /**
+     * Gets the ID of the organization the chats belong to.
+     * @return the organization ID.
+     */
+    public int getOrganizationID()
+    {
+        return this.organizationID;
+    }
+    
     @Override
     public boolean equals(Object o)
     {
@@ -195,6 +212,8 @@ public class WhoIsInPacket extends Packet {
                 return false;
             if(chatID != p.getChatID())
                 return false;
+            if(organizationID != p.getOrganizationID())
+                return false;
             return userID == p.getUserID();
         }
         return false;
@@ -203,9 +222,12 @@ public class WhoIsInPacket extends Packet {
     @Override
     public int hashCode() {
         int hash = 3;
-        hash = 89 * hash + Objects.hashCode(this.users);
-        hash = 89 * hash + this.chatID;
-        hash = 89 * hash + this.userID;
+        hash = 53 * hash + Objects.hashCode(this.users);
+        hash = 53 * hash + this.chatID;
+        hash = 53 * hash + this.userID;
+        hash = 53 * hash + this.organizationID;
         return hash;
     }
+
+
 }

@@ -27,15 +27,17 @@ public class JoinLeavePacket extends Packet
     private final int userID;
     private final int chatID;
     private final int flag;
+    private final int organizationID;
     public static final int JOIN = 0;
     public static final int LEAVE = 1;
     
-    public JoinLeavePacket(int userid, int chatid, int flag)
+    public JoinLeavePacket(int userid, int chatid, int flag, int organizationid)
     {
         super(JOINLEAVE, 12);
         this.userID = userid;
         this.chatID = chatid;
         this.flag = flag;
+        this.organizationID = organizationid;
     }
 
     public JoinLeavePacket(ByteBuffer packetHeader, ByteBuffer packetData) 
@@ -44,6 +46,7 @@ public class JoinLeavePacket extends Packet
         this.userID = packetData.getInt();
         this.chatID = packetData.getInt();
         this.flag = packetData.getInt();
+        this.organizationID = packetData.getInt();
     }
     
     @Override
@@ -53,6 +56,7 @@ public class JoinLeavePacket extends Packet
         buf.putInt(this.userID);
         buf.putInt(this.chatID);
         buf.putInt(this.flag);
+        buf.putInt(this.organizationID);
         
         buf.rewind();
         
@@ -86,6 +90,11 @@ public class JoinLeavePacket extends Packet
         return flag;
     }
     
+    public int getOrganizationID()
+    {
+        return organizationID;
+    }
+    
     @Override
     public boolean equals(Object o)
     {
@@ -99,6 +108,8 @@ public class JoinLeavePacket extends Packet
                 return false;
             if(chatID != p.getChatID())
                 return false;
+            if(organizationID != p.getOrganizationID())
+                return false;
             return flag == p.getFlag();
         }
         return false;
@@ -107,9 +118,12 @@ public class JoinLeavePacket extends Packet
     @Override
     public int hashCode() {
         int hash = 3;
-        hash = 47 * hash + this.userID;
-        hash = 47 * hash + this.chatID;
-        hash = 47 * hash + this.flag;
+        hash = 89 * hash + this.userID;
+        hash = 89 * hash + this.chatID;
+        hash = 89 * hash + this.flag;
+        hash = 89 * hash + this.organizationID;
         return hash;
     }
+
+
 }

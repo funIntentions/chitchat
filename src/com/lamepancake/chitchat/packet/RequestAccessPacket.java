@@ -15,12 +15,14 @@ public class RequestAccessPacket extends Packet
 {
     private final int userID;
     private final int chatID;
+    private final int organizationID;
 
-    public RequestAccessPacket(int userid, int chatid)
+    public RequestAccessPacket(int userid, int chatid, int organizationid)
     {
-        super(REQUESTACCESS, 8);
+        super(REQUESTACCESS, 12);
         this.userID = userid;
         this.chatID = chatid;
+        this.organizationID = organizationid;
     }
 
     public RequestAccessPacket(ByteBuffer packetHeader, ByteBuffer packetData)
@@ -28,6 +30,7 @@ public class RequestAccessPacket extends Packet
         super(packetHeader);
         this.userID = packetData.getInt();
         this.chatID = packetData.getInt();
+        this.organizationID = packetData.getInt();
     }
     
     @Override
@@ -36,6 +39,7 @@ public class RequestAccessPacket extends Packet
         ByteBuffer buf = super.serialise();
         buf.putInt(this.userID);
         buf.putInt(this.chatID);
+        buf.putInt(this.organizationID);
         
         buf.rewind();
         
@@ -60,6 +64,15 @@ public class RequestAccessPacket extends Packet
         return chatID;
     }
     
+    /**
+     * Get organization ID of the chat.
+     * @return The organization ID.
+     */
+    public int getOrganizationID()
+    {
+        return organizationID;
+    }
+    
     @Override
     public boolean equals(Object o)
     {
@@ -71,6 +84,8 @@ public class RequestAccessPacket extends Packet
             RequestAccessPacket p = (RequestAccessPacket)o;
             if(userID != p.getUserID())
                 return false;
+            if(organizationID != p.getOrganizationID())
+                return false;
             return chatID == p.getChatID();
         }
         return false;
@@ -78,9 +93,10 @@ public class RequestAccessPacket extends Packet
 
     @Override
     public int hashCode() {
-        int hash = 3;
-        hash = 59 * hash + this.userID;
-        hash = 59 * hash + this.chatID;
+        int hash = 7;
+        hash = 23 * hash + this.userID;
+        hash = 23 * hash + this.chatID;
+        hash = 23 * hash + this.organizationID;
         return hash;
     }
 }

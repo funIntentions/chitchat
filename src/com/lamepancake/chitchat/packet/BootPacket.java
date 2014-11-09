@@ -22,6 +22,7 @@ public class BootPacket extends Packet{
     private final int bootedID;
     private final int chatID;
     private final int booterID;
+    private final int organizationID;
     
     /**
      * Construct a new BootPacket to boot the specified user from the chat.
@@ -29,12 +30,13 @@ public class BootPacket extends Packet{
      * @param chat   The chat from which to boot the user.
      * @param booted The user being booted from the chat.
      */
-    public BootPacket(Chat chat, User booted, User booter)
+    public BootPacket(Chat chat, User booted, User booter, Organization organization)
     {
-        super(BOOT, HEADER_SIZE + 12);
+        super(BOOT, HEADER_SIZE + 16);
         this.chatID = chat.getID();
         this.bootedID = booted.getID();
         this.booterID = booter.getID();
+        this.organizationID = organization.getID();
     }
      
     /**
@@ -43,12 +45,13 @@ public class BootPacket extends Packet{
      * @param chatID   The ID of the chat from which to boot the user.
      * @param bootedID The ID of the user being booted from the chat. 
      */
-    public BootPacket(int chatID, int bootedID, int booterID)
+    public BootPacket(int chatID, int bootedID, int booterID, int organizationID)
     {
-        super(BOOT, HEADER_SIZE + 12);
+        super(BOOT, HEADER_SIZE + 16);
         this.chatID = chatID;
         this.bootedID = bootedID;
         this.booterID = booterID;
+        this.organizationID = organizationID;
     }
     
     /**
@@ -63,6 +66,7 @@ public class BootPacket extends Packet{
         this.chatID = data.getInt();
         this.bootedID = data.getInt();
         this.booterID = data.getInt();
+        this.organizationID = data.getInt();
     }
     
     @Override
@@ -72,6 +76,7 @@ public class BootPacket extends Packet{
         buf.putInt(this.chatID);
         buf.putInt(this.bootedID);
         buf.putInt(this.booterID);
+        buf.putInt(this.organizationID);
         
         buf.rewind();
         return buf;
@@ -104,6 +109,15 @@ public class BootPacket extends Packet{
         return this.booterID;
     }
     
+    /**
+     * The ID of the organization the chat belongs to
+     * @return the ID of the organization related to the chat.
+     */
+    public int getOrganizationID()
+    {
+        return this.organizationID;
+    }
+    
     @Override
     public boolean equals(Object o)
     {
@@ -117,6 +131,8 @@ public class BootPacket extends Packet{
                 return false;
             if(booterID != boot.getBooterID())
                 return false;
+            if(organizationID != boot.getOrganizationID())
+                return false;
             return chatID == boot.getChatID();
         }
         return false;
@@ -125,9 +141,10 @@ public class BootPacket extends Packet{
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 67 * hash + this.bootedID;
-        hash = 67 * hash + this.chatID;
-        hash = 67 * hash + this.booterID;
+        hash = 37 * hash + this.bootedID;
+        hash = 37 * hash + this.chatID;
+        hash = 37 * hash + this.booterID;
+        hash = 37 * hash + this.organizationID;
         return hash;
     }
 }
