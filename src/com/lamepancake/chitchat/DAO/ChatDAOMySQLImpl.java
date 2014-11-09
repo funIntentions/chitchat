@@ -29,8 +29,10 @@ public class ChatDAOMySQLImpl extends MySQLDAOBase implements ChatDAO {
     {
         final String initTable = "CREATE TABLE IF NOT EXISTS `chat` (" +
                                  "  `chatId` smallint(5) unsigned NOT NULL AUTO_INCREMENT," +
+                                 "  `organizationId` smallint(5) unsigned NOT NULL," +
                                  "  `name` varchar(30) NOT NULL," +
-                                 "  PRIMARY KEY (`chatId`)" +
+                                 "  PRIMARY KEY (`organizationId`, `chatId`)" +
+                                 "  CONSTRAINT `fk_organization` FOREIGN KEY (`organizationId`) REFERENCES `organization` (`organizationId`) ON DELETE CASCADE," +
                                  ") ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=latin1";
         if(inst != null)
             throw new UnsupportedOperationException("The ChatDAO has already been initialised.");
