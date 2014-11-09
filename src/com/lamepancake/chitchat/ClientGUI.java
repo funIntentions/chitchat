@@ -107,10 +107,6 @@ public class ClientGUI extends javax.swing.JFrame {
         MenuItemCreateChat = new javax.swing.JMenuItem();
         MenuItemUpdateChat = new javax.swing.JMenuItem();
         MenuItemDeleteChat = new javax.swing.JMenuItem();
-        MenuOrganization = new javax.swing.JMenu();
-        MenuItemCreateOrganization = new javax.swing.JMenuItem();
-        MenuItemUpdateOrganization = new javax.swing.JMenuItem();
-        MenuItemDeleteOrganization = new javax.swing.JMenuItem();
 
         jMenuItemJoin.setText("Join Chat");
         jMenuItemJoin.addActionListener(new java.awt.event.ActionListener() {
@@ -319,29 +315,6 @@ public class ClientGUI extends javax.swing.JFrame {
         MenuChat.add(MenuItemDeleteChat);
 
         MenuBarTop.add(MenuChat);
-
-        MenuOrganization.setText("Organization");
-
-        MenuItemCreateOrganization.setText("Create Organization");
-        MenuItemCreateOrganization.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                MenuItemCreateOrganizationActionPerformed(evt);
-            }
-        });
-        MenuOrganization.add(MenuItemCreateOrganization);
-
-        MenuItemUpdateOrganization.setText("Update Organization");
-        MenuItemUpdateOrganization.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                MenuItemUpdateOrganizationActionPerformed(evt);
-            }
-        });
-        MenuOrganization.add(MenuItemUpdateOrganization);
-
-        MenuItemDeleteOrganization.setText("Delete Organization");
-        MenuOrganization.add(MenuItemDeleteOrganization);
-
-        MenuBarTop.add(MenuOrganization);
 
         setJMenuBar(MenuBarTop);
 
@@ -664,14 +637,6 @@ public class ClientGUI extends javax.swing.JFrame {
             sendMessage();
         }
     }//GEN-LAST:event_TextAreaMessageKeyPressed
-
-    private void MenuItemCreateOrganizationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MenuItemCreateOrganizationActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_MenuItemCreateOrganizationActionPerformed
-
-    private void MenuItemUpdateOrganizationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MenuItemUpdateOrganizationActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_MenuItemUpdateOrganizationActionPerformed
 
     
     private void showChatOptionsPopupMenu(MouseEvent e, int xOffset) 
@@ -1034,13 +999,9 @@ public class ClientGUI extends javax.swing.JFrame {
     private javax.swing.JMenu MenuChat;
     private javax.swing.JMenu MenuFile;
     private javax.swing.JMenuItem MenuItemCreateChat;
-    private javax.swing.JMenuItem MenuItemCreateOrganization;
     private javax.swing.JMenuItem MenuItemDeleteChat;
-    private javax.swing.JMenuItem MenuItemDeleteOrganization;
     private javax.swing.JMenuItem MenuItemLogout;
     private javax.swing.JMenuItem MenuItemUpdateChat;
-    private javax.swing.JMenuItem MenuItemUpdateOrganization;
-    private javax.swing.JMenu MenuOrganization;
     private javax.swing.JPanel PanelChatLog;
     private javax.swing.JPanel PanelLists;
     private javax.swing.JPanel PanelMessage;
