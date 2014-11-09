@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -571,5 +572,24 @@ public class Chat
                 ((ServerUser)u).notifyClient(p);
             }
         }
+    }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!(o instanceof Chat))
+            return false;
+        
+        Chat c = (Chat)o;
+        return this.chatID == c.chatID && this.chatName.equals(c.chatName) && this.users.equals(c.users);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 29 * hash + this.chatID;
+        hash = 29 * hash + this.chatName.hashCode();
+        hash = 29 * hash + this.users.hashCode();
+        return hash;
     }
 }
