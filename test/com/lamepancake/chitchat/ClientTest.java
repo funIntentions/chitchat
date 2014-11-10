@@ -19,6 +19,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -36,13 +37,14 @@ import static org.mockito.Mockito.*;
 public class ClientTest {
 
     // The mocked client GUI
-    ClientGUI     mockedGUI;
-    SocketChannel mockedChannel;
-    Client        testClient;
-    User          fakeUser;
-    User          fakeUser2;
-    Chat          fakeChat;
-    Chat          fakeChat2;
+    ClientGUI               mockedGUI;
+    SocketChannel           mockedChannel;
+    Map<Integer, Packet>    waitingOp;
+    Client                  testClient;
+    User                    fakeUser;
+    User                    fakeUser2;
+    Chat                    fakeChat;
+    Chat                    fakeChat2;
     
     public ClientTest() {
     }
@@ -61,7 +63,8 @@ public class ClientTest {
         HashMap<Chat, Integer> fakeChats = new HashMap<>(2);
         mockedGUI     = Mockito.mock(ClientGUI.class);
         mockedChannel = Mockito.mock(SocketChannel.class);
-        testClient = new Client(mockedGUI, mockedChannel);
+        waitingOp     = new HashMap<Integer, Packet>(1);
+        testClient    = new Client(mockedGUI, mockedChannel);
         
         fakeUser = new User().setID(0).setName("Shane");
         fakeUser2 = new User().setID(2).setName("Test");
@@ -92,7 +95,7 @@ public class ClientTest {
             guiVect.set((Window)mockedGUI, new Vector<WeakReference<Window>>());
             fakeClientChats.set(testClient, fakeChats);
             fakeClientUser.set(testClient, new User().setID(0).setName("Shane"));
-            fakeClientWaiting.set(testClient, new HashMap<Integer, Packet>(1));
+            fakeClientWaiting.set(testClient, waitingOp);
             
         } catch(NoSuchFieldException | IllegalAccessException n){
             System.out.println("Shit " + n.getMessage());
@@ -170,6 +173,7 @@ public class ClientTest {
         testClient.sendLogin(uname, pass);
         
         try{verify(mockedChannel).write(expected.serialise()); } catch(IOException i) {}
+        waitingOp.clear();
     }
 
     /**
@@ -194,6 +198,7 @@ public class ClientTest {
         testClient.sendRequestAccess(chatID);
         
         try { verify(mockedChannel).write(req.serialise()); } catch (IOException i){}
+        waitingOp.clear();
     }
 
     /**
@@ -227,6 +232,7 @@ public class ClientTest {
         System.out.println("sendBoot Without Privileges");
         testClient.sendBoot(fakeChat2.getName(), fakeUser2.getName());
         verify(mockedGUI).displayError("Insufficient privileges to boot users from this chat.", false);
+        waitingOp.clear();
         
     }
 
@@ -240,6 +246,7 @@ public class ClientTest {
         
         testClient.sendChangeRole(fakeChat.getID(), fakeUser2.getName(), User.ADMIN);
         try{verify(mockedChannel).write(expected.serialise());}catch(IOException i){}
+        waitingOp.clear();
     }
 
     /**
@@ -267,7 +274,10 @@ public class ClientTest {
         String chatname = "NewChat";
         Packet expected = PacketCreator.createUpdateChats(chatname, chatid, UpdateChatsPacket.UPDATE);
         
+        testClient.sendUpdateChat(chatid, chatname);
+        
         try{verify(mockedChannel).write(expected.serialise());}catch(IOException i){}
+        waitingOp.clear();
     }
 
     /**
@@ -277,10 +287,12 @@ public class ClientTest {
     public void testSendDeleteChat() {
         System.out.println("sendUpdateChat");
         int chatid = fakeChat.getID();
-        String chatname = "NewChat";
-        Packet expected = PacketCreator.createUpdateChats(chatname, chatid, UpdateChatsPacket.DELETE);
+        Packet expected = PacketCreator.createUpdateChats("", chatid, UpdateChatsPacket.DELETE);
+        
+        testClient.sendDeleteChat(chatid);
         
         try{verify(mockedChannel).write(expected.serialise());}catch(IOException i){}
+        waitingOp.clear();
     }
 
     /**

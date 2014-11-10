@@ -216,8 +216,6 @@ public class Client {
     public void sendChatList()
     {
         final ChatListPacket cl = PacketCreator.createChatList(clientUser.getID());
-        waitingOp.clear();
-        waitingOp.put(OperationStatusPacket.CHATLIST, cl);
         sendPacket(cl);
     }
 
@@ -290,6 +288,12 @@ public class Client {
         if(!restrict(chatID, User.ADMIN))
             return;
         
+        if(this.waitingOp.size() == 1)
+        {
+            gui.displayError("Another operation is already in progress. Please try again later.", false);
+            return;
+        }
+        
         if(foundChat == null)
         {
             gui.displayError("Could not find chat with ID " + chatID + ".", false);
@@ -318,6 +322,11 @@ public class Client {
     public void sendCreateChat(String chatname, int id)
     {
         final UpdateChatsPacket uc = PacketCreator.createUpdateChats(chatname, id, UpdateChatsPacket.CREATE);
+        if(this.waitingOp.size() == 1)
+        {
+            gui.displayError("Another operation is already in progress. Please try again later.", false);
+            return;
+        }
         this.waitingOp.clear();
         this.waitingOp.put(OperationStatusPacket.OP_CRUD, uc);
         sendPacket(uc);
@@ -334,6 +343,12 @@ public class Client {
         if(!restrict(chatid, User.ADMIN))
             return;
 
+        if(this.waitingOp.size() == 1)
+        {
+            gui.displayError("Another operation is already in progress. Please try again later.", false);
+            return;
+        }
+        
         final UpdateChatsPacket uc = PacketCreator.createUpdateChats(chatname, chatid, UpdateChatsPacket.UPDATE);
         this.waitingOp.clear();
         this.waitingOp.put(OperationStatusPacket.OP_CRUD, uc);
@@ -347,10 +362,17 @@ public class Client {
      */
     public void sendDeleteChat(int chatid)
     {
+        final UpdateChatsPacket uc;
         if(!restrict(chatid, User.ADMIN))
             return;
 
-        final UpdateChatsPacket uc = PacketCreator.createUpdateChats("", chatid, UpdateChatsPacket.DELETE);
+        if(this.waitingOp.size() == 1)
+        {
+            gui.displayError("Another operation is already in progress. Please try again later.", false);
+            return;
+        }
+
+        uc = PacketCreator.createUpdateChats("", chatid, UpdateChatsPacket.DELETE);
         this.waitingOp.clear();
         this.waitingOp.put(OperationStatusPacket.OP_CRUD, uc);
         sendPacket(uc);
