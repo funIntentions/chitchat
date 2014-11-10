@@ -58,6 +58,10 @@ public class ClientTest {
         fakeUser = new User().setID(0).setName("Shane");
         fakeChat = new Chat("fakeChat", 0);
         
+        HashMap<Chat, Integer> fakeChats = new HashMap<>(2);
+        fakeChats.put(new Chat("fakeChat", 0), User.ADMIN);
+        fakeChats.put(new Chat("fakeChat2", 1), User.USER);
+        
         // Set the private fields in the client
         try {
             Field fakeClientChats = fakeClient.getClass().getDeclaredField("chatList");
@@ -66,7 +70,7 @@ public class ClientTest {
             fakeClientChats.setAccessible(true);
             fakeClientUser.setAccessible(true);
             
-            fakeClientChats.set(fakeClient, new HashMap<Chat, Integer>().put(new Chat("fakeChat", 0), User.ADMIN));
+            fakeClientChats.set(fakeClient, fakeChats);
             fakeClientUser.set(fakeClient, new User().setID(0).setName("Shane"));
             
         } catch(NoSuchFieldException | IllegalAccessException n){
