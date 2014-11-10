@@ -1,6 +1,7 @@
 package com.lamepancake.chitchat.packet;
 
 import com.lamepancake.chitchat.Chat;
+import com.lamepancake.chitchat.Organization;
 import com.lamepancake.chitchat.User;
 import java.nio.ByteBuffer;
 

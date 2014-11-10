@@ -67,7 +67,7 @@ public class OperationStatusPacket extends Packet
      * @param flag      Flag indicating the success/failure of the operation.
      * @param operation The operation that the user attempted.
      */
-    public OperationStatusPacket(int userID, int chatID, int flag, int operation, int orgnizationID)
+    public OperationStatusPacket(int userID, int chatID, int flag, int operation, int organizationID)
     {
         super(OPERATIONSTATUS, 16);
         this.userID = userID;
