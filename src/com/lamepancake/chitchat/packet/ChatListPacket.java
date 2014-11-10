@@ -100,16 +100,22 @@ public class ChatListPacket extends Packet
         
         // Structure is: {userID}{numChats}[{namelength}{chatName}{chatID}{role}]
         buf.putInt(this.userID);
-        buf.putInt(this.chatList.size());
-        for(Chat c : this.chatList.keySet())
+        if(this.chatList != null)
         {
-            String chatname = c.getName();
+            buf.putInt(this.chatList.size());
+            for(Chat c : this.chatList.keySet())
+            {
+                String chatname = c.getName();
 
-            buf.putInt(chatname.length() * 2);
-            buf.put(chatname.getBytes(StandardCharsets.UTF_16LE));
-            buf.putInt(c.getID());
-            buf.putInt(chatList.get(c));
+                buf.putInt(chatname.length() * 2);
+                buf.put(chatname.getBytes(StandardCharsets.UTF_16LE));
+                buf.putInt(c.getID());
+                buf.putInt(chatList.get(c));
+            }   
         }
+        else
+            buf.putInt(0);
+
         buf.rewind();
         
         return buf;

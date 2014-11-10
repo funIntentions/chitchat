@@ -7,8 +7,10 @@ package com.lamepancake.chitchat;
 
 import com.lamepancake.chitchat.packet.JoinLeavePacket;
 import java.awt.Component;
+import java.awt.Window;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.channels.SocketChannel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
@@ -509,13 +511,18 @@ public class ClientGUI extends javax.swing.JFrame {
         // TODO add your handling code here:
         if (ListUsersLists.getSelectedIndex() != -1)
         {
-            String userInfo = ListUsersLists.getSelectedValue().toString();
+            String selectedUser = ListUsersLists.getSelectedValue().toString();
+            String selectedChat = ListChatLists.getSelectedValue().toString();
+            String[] chatInfo = selectedChat.split(",");
+            String[] userInfo = selectedUser.split(",");
+            String userName = userInfo[0];
             
-            String[] info = userInfo.split(",");
+            int len = chatInfo.length - 1;
+            StringBuilder chatName = new StringBuilder(chatInfo[1]);
+            for(int i = 2; i < len; i++)
+                chatName.append(chatInfo[i]);
             
-            String userName = info[0];
-            
-            client.bootUser(userName);
+            client.sendBoot(chatName.toString(), userName);
         }
     }//GEN-LAST:event_jMenuItemBootUserActionPerformed
 
@@ -535,7 +542,7 @@ public class ClientGUI extends javax.swing.JFrame {
             
             int chatId = Integer.parseInt(cinfo[0]);
             
-            client.changeUserRole(chatId, userName, User.USER);
+            client.sendChangeRole(chatId, userName, User.USER);
         }
     }//GEN-LAST:event_jMenuItemUserRoleActionPerformed
 
@@ -555,7 +562,7 @@ public class ClientGUI extends javax.swing.JFrame {
             
             int chatId = Integer.parseInt(cinfo[0]);
             
-            client.changeUserRole(chatId, userName, User.ADMIN);
+            client.sendChangeRole(chatId, userName, User.ADMIN);
         }
     }//GEN-LAST:event_jMenuItemAdminRoleActionPerformed
 
@@ -620,7 +627,7 @@ public class ClientGUI extends javax.swing.JFrame {
 
         displayUserMessage(message, user.getName(), chatName);
 
-        client.sendMessageToChat(chatName, message);
+        client.sendMessage(chatName, message);
 
         TextAreaMessage.setText("");
     }
@@ -652,7 +659,7 @@ public class ClientGUI extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-
+        
         /* Create and display the form */
         try {
             javax.swing.UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
@@ -679,7 +686,7 @@ public class ClientGUI extends javax.swing.JFrame {
      * @param errorStr The string to display in the error message.
      * @param exitOnClose Whether to exit the program on close.
      */
-    public final void displayError(final String errorStr, final boolean exitOnClose)
+    public void displayError(final String errorStr, final boolean exitOnClose)
     {
         final javax.swing.JFrame thisFrame = this;
 

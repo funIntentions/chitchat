@@ -5,17 +5,21 @@
  */
 package com.lamepancake.chitchat;
 
-import com.lamepancake.chitchat.packet.ChatListPacket;
 import com.lamepancake.chitchat.packet.JoinLeavePacket;
-import com.lamepancake.chitchat.packet.MessagePacket;
+import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.PacketCreator;
 import com.lamepancake.chitchat.packet.RequestAccessPacket;
+import com.lamepancake.chitchat.packet.UpdateChatsPacket;
+import java.awt.ComponentOrientation;
+import java.awt.Window;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Vector;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -34,9 +38,11 @@ public class ClientTest {
     // The mocked client GUI
     ClientGUI     mockedGUI;
     SocketChannel mockedChannel;
-    Client        fakeClient;
+    Client        testClient;
     User          fakeUser;
+    User          fakeUser2;
     Chat          fakeChat;
+    Chat          fakeChat2;
     
     public ClientTest() {
     }
@@ -52,26 +58,41 @@ public class ClientTest {
 
     @Before
     public void setUp() {
+        HashMap<Chat, Integer> fakeChats = new HashMap<>(2);
         mockedGUI     = Mockito.mock(ClientGUI.class);
         mockedChannel = Mockito.mock(SocketChannel.class);
-        fakeClient = new Client(mockedGUI, mockedChannel);
-        fakeUser = new User().setID(0).setName("Shane");
-        fakeChat = new Chat("fakeChat", 0);
+        testClient = new Client(mockedGUI, mockedChannel);
         
-        HashMap<Chat, Integer> fakeChats = new HashMap<>(2);
-        fakeChats.put(new Chat("fakeChat", 0), User.ADMIN);
-        fakeChats.put(new Chat("fakeChat2", 1), User.USER);
+        fakeUser = new User().setID(0).setName("Shane");
+        fakeUser2 = new User().setID(2).setName("Test");
+        fakeChat = new Chat("fakeChat", 0);
+        fakeChat2 = new Chat("fakeChat2", 1);
+        
+        fakeChat.initUser(new User().setName(fakeUser.getName()).setID(fakeUser.getID()).setRole(User.ADMIN), true);
+        fakeChat.initUser(new User().setName(fakeUser2.getName()).setID(fakeUser2.getID()).setRole(User.USER), true);
+        fakeChat2.initUser(new User().setName(fakeUser2.getName()).setID(fakeUser2.getID()).setRole(User.ADMIN), true);
+        fakeChat2.initUser(new User().setName(fakeUser.getName()).setID(fakeUser.getID()).setRole(User.USER), true);
+        
+        fakeChats.put(fakeChat, User.ADMIN);
+        fakeChats.put(fakeChat2, User.USER);
         
         // Set the private fields in the client
         try {
-            Field fakeClientChats = fakeClient.getClass().getDeclaredField("chatList");
-            Field fakeClientUser = fakeClient.getClass().getDeclaredField("clientUser");
             
+            Field guiVect = Window.class.getDeclaredField("ownedWindowList");
+            Field fakeClientChats = testClient.getClass().getDeclaredField("chatList");
+            Field fakeClientUser = testClient.getClass().getDeclaredField("clientUser");
+            Field fakeClientWaiting = testClient.getClass().getDeclaredField("waitingOp");
+            
+            guiVect.setAccessible(true);
             fakeClientChats.setAccessible(true);
             fakeClientUser.setAccessible(true);
+            fakeClientWaiting.setAccessible(true);
             
-            fakeClientChats.set(fakeClient, fakeChats);
-            fakeClientUser.set(fakeClient, new User().setID(0).setName("Shane"));
+            guiVect.set((Window)mockedGUI, new Vector<WeakReference<Window>>());
+            fakeClientChats.set(testClient, fakeChats);
+            fakeClientUser.set(testClient, new User().setID(0).setName("Shane"));
+            fakeClientWaiting.set(testClient, new HashMap<Integer, Packet>(1));
             
         } catch(NoSuchFieldException | IllegalAccessException n){
             System.out.println("Shit " + n.getMessage());
@@ -104,7 +125,7 @@ public class ClientTest {
 
         System.out.println("getUser");
         User expResult = fakeUser;
-        User result = fakeClient.getUser();
+        User result = testClient.getUser();
 
         assertEquals(expResult, result);
     }
@@ -122,18 +143,18 @@ public class ClientTest {
         // Test sending with LEAVE flag
         System.out.println("sendJoinLeave with LEAVE");
         testJLLeave = PacketCreator.createJoinLeave(0, chatID, JoinLeavePacket.LEAVE).serialise();
-        fakeClient.sendJoinLeave(chatID, JoinLeavePacket.LEAVE);
+        testClient.sendJoinLeave(chatID, JoinLeavePacket.LEAVE);
         try { verify(mockedChannel).write(testJLLeave); } catch(IOException i){}
         
         // Test sending with JOIN flag
         System.out.println("sendJoinLeave with JOIN");
         testJLJoin = PacketCreator.createJoinLeave(0, chatID, JoinLeavePacket.JOIN).serialise();
-        fakeClient.sendJoinLeave(chatID, JoinLeavePacket.JOIN);
+        testClient.sendJoinLeave(chatID, JoinLeavePacket.JOIN);
         try{ verify(mockedChannel).write(testJLJoin); } catch(IOException i){}
         
         // Test sending with bad chat ID
         System.out.println("sendJoinLeave with bad chat");
-        fakeClient.sendJoinLeave(-1, JoinLeavePacket.LEAVE);
+        testClient.sendJoinLeave(-1, JoinLeavePacket.LEAVE);
         verify(mockedGUI).displayError("Error in leaving chat: chat with ID -1 does not exist.", false);
     }
  
@@ -145,9 +166,10 @@ public class ClientTest {
         System.out.println("sendLogin");
         String uname = "Shane";
         String pass = "Spoor";
-        fakeClient.sendLogin(uname, pass);
+        Packet expected = PacketCreator.createLogin(uname, pass);
+        testClient.sendLogin(uname, pass);
         
-        try{ verify(mockedChannel).write(PacketCreator.createLogin(uname, pass).serialise()); } catch(IOException i) {}
+        try{verify(mockedChannel).write(expected.serialise()); } catch(IOException i) {}
     }
 
     /**
@@ -156,9 +178,8 @@ public class ClientTest {
     @Test
     public void testSendChatList() {
         System.out.println("sendChatList");
-        Client instance = new Client(mockedGUI, mockedChannel);
-        ChatListPacket toSend = PacketCreator.createChatList(0);
-        fakeClient.sendChatList();
+        Packet toSend = PacketCreator.createChatList(fakeUser.getID());
+        testClient.sendChatList();
         try{ verify(mockedChannel).write(toSend.serialise()); } catch (IOException i){}
     }
 
@@ -170,7 +191,7 @@ public class ClientTest {
         System.out.println("sendRequestAccess");
         int chatID = 0;
         RequestAccessPacket req = PacketCreator.createRequestAccess(0, chatID);
-        fakeClient.sendRequestAccess(chatID);
+        testClient.sendRequestAccess(chatID);
         
         try { verify(mockedChannel).write(req.serialise()); } catch (IOException i){}
     }
@@ -179,40 +200,17 @@ public class ClientTest {
      * Test of sendMessageToChat method, of class Client.
      */
     @Test
-    public void testSendMessageToChat() {
-        System.out.println("sendMessageToChat");
-        MessagePacket msg;
+    public void testSendMessage() {
+        System.out.println("sendMessage");
+        Packet msg;
         String chatName = fakeChat.getName();
         String message = "Hello";
         
         msg = PacketCreator.createMessage(message, fakeUser.getID(), fakeChat.getID());
-        fakeClient.sendMessageToChat(chatName, message);
+        testClient.sendMessage(chatName, message);
         
         try{verify(mockedChannel).write(msg.serialise());} catch(IOException i) {}
         
-    }
-
-    /**
-     * Test of changeUserRole method, of class Client.
-     */
-    @Test
-    public void testChangeUserRole() {
-        System.out.println("changeUserRole");
-        String userName = "Shane";
-        int role = 0;
-        Client instance = new Client(mockedGUI, mockedChannel);
-        instance.changeUserRole(1,userName, role);
-    }
-
-    /**
-     * Test of bootUser method, of class Client.
-     */
-    @Test
-    public void testBootUser() {
-        System.out.println("bootUser");
-        String userName = "";
-        Client instance = new Client(mockedGUI, mockedChannel);
-        instance.bootUser(userName);
     }
 
     /**
@@ -220,11 +218,16 @@ public class ClientTest {
      */
     @Test
     public void testSendBoot() {
-        System.out.println("sendBoot");
-        Chat chat = null;
-        User user = null;
-        Client instance = new Client(mockedGUI, mockedChannel);
-        instance.sendBoot(chat, user);
+        System.out.println("sendBoot With Privileges");
+        Packet expected = PacketCreator.createBoot(fakeChat, fakeUser2, fakeUser);
+        testClient.sendBoot(fakeChat.getName(), fakeUser2.getName());
+        
+        try{verify(mockedChannel).write(expected.serialise());}catch(IOException i){}
+        
+        System.out.println("sendBoot Without Privileges");
+        testClient.sendBoot(fakeChat2.getName(), fakeUser2.getName());
+        verify(mockedGUI).displayError("Insufficient privileges to boot users from this chat.", false);
+        
     }
 
     /**
@@ -232,12 +235,11 @@ public class ClientTest {
      */
     @Test
     public void testSendChangeRole() {
-        System.out.println("sendChangeRole");
-        int userid = 0;
-        int chatid = 0;
-        int role = 0;
-        Client instance = new Client(mockedGUI, mockedChannel);
-        instance.sendChangeRole(userid, chatid, role);
+        System.out.println("sendUserRole");
+        Packet expected = PacketCreator.createChangeRole(fakeChat.getID(), fakeUser2.getID(), fakeUser.getID(), User.ADMIN);
+        
+        testClient.sendChangeRole(fakeChat.getID(), fakeUser2.getName(), User.ADMIN);
+        try{verify(mockedChannel).write(expected.serialise());}catch(IOException i){}
     }
 
     /**
@@ -246,10 +248,13 @@ public class ClientTest {
     @Test
     public void testSendCreateChat() {
         System.out.println("sendCreateChat");
-        String chatname = "";
-        int id = 0;
-        Client instance = new Client(mockedGUI, mockedChannel);
-        instance.sendCreateChat(chatname, id);
+        
+        final String newChatName = "Test2";
+        final UpdateChatsPacket expected = PacketCreator.createUpdateChats(newChatName, -1, UpdateChatsPacket.CREATE);
+        
+        testClient.sendCreateChat(newChatName, -1);
+        
+        try{verify(mockedChannel).write(expected.serialise());}catch(IOException i){}
     }
 
     /**
@@ -258,10 +263,11 @@ public class ClientTest {
     @Test
     public void testSendUpdateChat() {
         System.out.println("sendUpdateChat");
-        int chatid = 0;
-        String chatname = "";
-        Client instance = new Client(mockedGUI, mockedChannel);
-        instance.sendUpdateChat(chatid, chatname);
+        int chatid = fakeChat.getID();
+        String chatname = "NewChat";
+        Packet expected = PacketCreator.createUpdateChats(chatname, chatid, UpdateChatsPacket.UPDATE);
+        
+        try{verify(mockedChannel).write(expected.serialise());}catch(IOException i){}
     }
 
     /**
@@ -269,22 +275,12 @@ public class ClientTest {
      */
     @Test
     public void testSendDeleteChat() {
-        System.out.println("sendDeleteChat");
-        int chatid = 0;
-        Client instance = new Client(mockedGUI, mockedChannel);
-        instance.sendDeleteChat(chatid);
-    }
-
-    /**
-     * Test of sendMessage method, of class Client.
-     */
-    @Test
-    public void testSendMessage() {
-        System.out.println("sendMessage");
-        int chatID = 0;
-        String msg = "";
-        Client instance = new Client(mockedGUI, mockedChannel);
-        instance.sendMessage(chatID, msg);
+        System.out.println("sendUpdateChat");
+        int chatid = fakeChat.getID();
+        String chatname = "NewChat";
+        Packet expected = PacketCreator.createUpdateChats(chatname, chatid, UpdateChatsPacket.DELETE);
+        
+        try{verify(mockedChannel).write(expected.serialise());}catch(IOException i){}
     }
 
     /**
@@ -293,23 +289,26 @@ public class ClientTest {
     @Test
     public void testGetUsersAsString() {
         System.out.println("getUsersAsString");
-        String chatName = "";
-        Client instance = new Client(mockedGUI, mockedChannel);
-        String[] expResult = null;
-        String[] result = instance.getUsersAsString(chatName);
+        String chatName = fakeChat.getName();
+        String[] expResult = new String[] {fakeUser.getName() + ", online", fakeUser2.getName() + ", online" };
+        String[] result = testClient.getUsersAsString(chatName);
+        
+        Arrays.sort(result);
+        Arrays.sort(expResult);
         assertArrayEquals(expResult, result);
+        
     }
 
     /**
      * Test of getChatName method, of class Client.
      */
     @Test
-    public void testGetChatName() {
+    public void testGetChatByID() {
         System.out.println("getChatName");
-        int chatID = 0;
-        String expResult = "fakeChat";
-        String result = fakeClient.getChatName(chatID);
-        assertEquals(expResult, result);
+        int chatID = fakeChat.getID();
+        Chat result = testClient.getChatByID(chatID);
+        
+        assertEquals(fakeChat, result);
     }
 
     /**
@@ -318,10 +317,10 @@ public class ClientTest {
     @Test
     public void testGetChatByName() {
         System.out.println("getChatByName");
-        String chatName = "";
-        Client instance = new Client(mockedGUI, mockedChannel);
-        Chat expResult = null;
-        Chat result = instance.getChatByName(chatName);
+        String chatName = fakeChat2.getName();
+        Chat expResult = fakeChat2;
+        Chat result = testClient.getChatByName(chatName);
+
         assertEquals(expResult, result);
     }
 }

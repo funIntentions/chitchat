@@ -240,66 +240,36 @@ public class Client {
     }
     
     /**
-     * Sends a message to all other online users in the given chat.
-     * @param chatName The name of the to which the message will be sent.
-     * @param message  The message to send.
-     */
-    public void sendMessageToChat(String chatName, String message)
-    {
-        Set<Chat>           chats;
-        chats = this.chatList.keySet();
-                
-        for (Chat chat : chats)
-        {
-            if (chat.getName().equalsIgnoreCase(chatName))
-            {
-                sendMessage(chat.getID(), message);
-            }
-        }
-    }
-    
-    public void changeUserRole(int chatID, String userName, int role)
-    {
-        Set<Chat>           chats;
-        chats = this.chatList.keySet();
-        User foundUser;
-                
-        for (Chat chat : chats)
-        {
-            if ((chat.getID() == chatID) && ((foundUser = chat.findUser(userName)) != null))
-            {
-                sendChangeRole(foundUser.getID(), chat.getID(), role);
-            }
-        }
-    }
-    
-    public void bootUser(String userName)
-    {
-        Set<Chat>           chats;
-        chats = this.chatList.keySet();
-        User foundUser;
-                
-        for (Chat chat : chats)
-        {
-            if ((foundUser = chat.findUser(userName)) != null)
-            {
-                sendBoot(chat, foundUser);
-            }
-        }
-    }
-    
-    /**
      * If we are an admin in the given chat, sends a boot packet to boot the
      * specified user.
-     * @param chat The chat from which to boot a user.
-     * @param user The user to boot.
+     * @param chatName The chat from which to boot a user.
+     * @param userName The user to boot.
      */
-    public void sendBoot(Chat chat, User user)
+    public void sendBoot(final String chatName, final String userName)
     {
-        if(!restrict(chat.getID(), User.ADMIN))
+        User foundUser = null;
+        Chat foundChat = getChatByName(chatName);
+        
+        if(foundChat == null)
+        {
+            gui.displayError("Could not find chat with name " + chatName + ".", false);
             return;
-
-        final BootPacket b = PacketCreator.createBoot(chat, user, clientUser);
+        }
+        
+        if(!restrict(foundChat.getID(), User.ADMIN))
+        {
+            gui.displayError("Insufficient privileges to boot users from this chat.", false);
+            return;
+        }
+                   
+        foundUser = foundChat.findUser(userName);     
+        if(foundUser == null)
+        {
+            gui.displayError("Could not find user " + userName + " in chat " + chatName, false);
+            return;
+        }
+        
+        final BootPacket b = PacketCreator.createBoot(foundChat, foundUser, clientUser);
         this.waitingOp.clear();
         this.waitingOp.put(OperationStatusPacket.OP_CRUD, b);
         sendPacket(b);
@@ -308,16 +278,32 @@ public class Client {
     /**
      * Tells the server to change the given user's role in the specified chat
      * to a new role.
-     * @param userid The User whose role is to be changed.
-     * @param chatid The Chat where the new role will be applied.
+     * @param userName The User whose role is to be changed.
+     * @param chatID The Chat where the new role will be applied.
      * @param role   The role to assign to the User.
      */
-    public void sendChangeRole(int userid, int chatid, int role)
+    public void sendChangeRole(final int chatID, final String userName, final int role)
     {
-        if(!restrict(chatid, User.ADMIN))
-            return;
+        User foundUser;
+        Chat foundChat = getChatByID(chatID);
 
-        final ChangeRolePacket cr = PacketCreator.createChangeRole(chatid, userid, clientUser.getID(), role);
+        if(!restrict(chatID, User.ADMIN))
+            return;
+        
+        if(foundChat == null)
+        {
+            gui.displayError("Could not find chat with ID " + chatID + ".", false);
+            return;
+        }
+        
+        foundUser = foundChat.findUser(userName);
+        if(foundUser == null)
+        {
+            gui.displayError("Could not find user with name " + userName + " in chat " + foundChat.getName() + ".", false);
+            return;
+        }
+        
+        final ChangeRolePacket cr = PacketCreator.createChangeRole(chatID, foundUser.getID(), clientUser.getID(), role);
         this.waitingOp.clear();
         this.waitingOp.put(OperationStatusPacket.OP_CRUD, cr);
         sendPacket(cr);
@@ -373,12 +359,16 @@ public class Client {
     /**
      * Sends a message to other users in the given chat.
      * 
-     * @param chatID The ID of the chat.
-     * @param msg    The message to send.
+     * @param chatName The name of the chat.
+     * @param msg      The message to send.
      */
-    public void sendMessage(int chatID, String msg)
+    public void sendMessage(final String chatName, final String msg)
     {
-        sendPacket(PacketCreator.createMessage(msg, this.clientUser.getID(), chatID));
+        Chat found = getChatByName(chatName);
+        if(found == null)
+            return;
+
+        sendPacket(PacketCreator.createMessage(msg, this.clientUser.getID(), found.getID()));
     }
     
     /**
@@ -438,13 +428,13 @@ public class Client {
         return ret;
     }
     
-    public String getChatName(int chatID)
+    public Chat getChatByID(int chatID)
     {
         for(Chat c : chatList.keySet())
         {
             if(c.getID() == chatID)
             {
-                return c.getName();
+                return c;
             }
         }
         
@@ -455,7 +445,7 @@ public class Client {
     {
         for(Chat c : chatList.keySet())
         {
-            if(c.getName().equalsIgnoreCase(chatName))
+            if(c.getName().equals(chatName))
             {
                 return c;
             }
@@ -758,20 +748,19 @@ public class Client {
                     JoinLeavePacket jl = (JoinLeavePacket)p;
                     if (jl.getFlag() == JoinLeavePacket.JOIN)
                     {
-                        String name = getChatName(jl.getChatID());
-                        if (name != null)
+                        Chat c = getChatByID(jl.getChatID());
+                        if (c != null)
                         {
-                            gui.addTab(name);
-                            
+                            gui.addTab(c.getName());
                             chatsJoined.add(jl.getChatID());
                         }
                     }
                     else
                     {
-                        String name = getChatName(jl.getChatID());
-                        if (name != null)
+                        Chat c = getChatByID(jl.getChatID());
+                        if (c != null)
                         {
-                            gui.removeTab(name);
+                            gui.removeTab(c.getName());
                             
                             chatsJoined.remove(jl.getChatID());
                         }
@@ -808,15 +797,18 @@ public class Client {
         }
     }
     
-    
+    /**
+     * Updates the user list of a given chat to show that a user was booted.
+     * @param bt The boot packet specifying the booted user and the chat from
+     *           which they were booted.
+     */
     private void getBooted(BootPacket bt)
     {
-        String name = getChatName(bt.getChatID());
-        Chat chat = getChatByName(name);
+        Chat chat = getChatByID(bt.getChatID());
         
-        if (name != null)
+        if (chat != null)
         {
-            gui.removeTab(name);
+            gui.removeTab(chat.getName());
             changeRole(bt.getChatID(), User.UNSPEC);
             chat.getConnectedUsers().clear();
             gui.populateUserList(chat.getName(), usersListAsStrings(chat.getConnectedUsers()));
