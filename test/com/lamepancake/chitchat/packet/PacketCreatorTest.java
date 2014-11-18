@@ -6,6 +6,7 @@
 package com.lamepancake.chitchat.packet;
 
 import com.lamepancake.chitchat.Chat;
+import com.lamepancake.chitchat.Organization;
 import com.lamepancake.chitchat.User;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,10 +53,11 @@ public class PacketCreatorTest {
                 
         int chatID = 54;
         int userID = 32;
+        int orgID = 69;
         
         int dataLen = 24 + 12 + 2 + ("Trevor".length() * 2) + ("Harold".length() * 2);
-        WhoIsInPacket expResult = new WhoIsInPacket(chatUsers, dataLen, chatID, userID);
-        WhoIsInPacket result = PacketCreator.createWhoIsIn(chatUsers, chatID, userID);
+        WhoIsInPacket expResult = new WhoIsInPacket(chatUsers, dataLen, chatID, userID, orgID);
+        WhoIsInPacket result = PacketCreator.createWhoIsIn(chatUsers, chatID, userID, orgID);
         assertEquals(expResult, result);
     }
 
@@ -80,8 +82,10 @@ public class PacketCreatorTest {
         booter.setPassword("Yes");
         booter.setRole(User.ADMIN);
         
-        BootPacket expResult = new BootPacket(chat, booted, booter);
-        BootPacket result = PacketCreator.createBoot(chat, booted, booter);
+        Organization o = new Organization("Hello", booter);
+        
+        BootPacket expResult = new BootPacket(chat, booted, booter, o);
+        BootPacket result = PacketCreator.createBoot(chat, booted, booter, o);
         assertEquals(expResult, result);
     }
 
@@ -95,8 +99,10 @@ public class PacketCreatorTest {
         int user = 1;
         int sender = 7;
         int role = User.ADMIN;
-        ChangeRolePacket expResult = new ChangeRolePacket(chat, user, sender, role);
-        ChangeRolePacket result = PacketCreator.createChangeRole(chat, user, sender, role);
+        int orgID = 8;
+        
+        ChangeRolePacket expResult = new ChangeRolePacket(chat, user, sender, role, orgID);
+        ChangeRolePacket result = PacketCreator.createChangeRole(chat, user, sender, role, orgID);
         assertEquals(expResult, result);
     }
 
@@ -148,8 +154,10 @@ public class PacketCreatorTest {
         }
         
         int userid = 2;
-        ChatListPacket expResult = new ChatListPacket(chatList, dataLen, userid);
-        ChatListPacket result = PacketCreator.createChatList(chats, roles, userid);
+        int orgID = 33;
+        
+        ChatListPacket expResult = new ChatListPacket(chatList, dataLen, userid, orgID);
+        ChatListPacket result = PacketCreator.createChatList(chats, roles, userid, orgID);
         assertEquals(expResult, result);
     }
 
@@ -160,8 +168,9 @@ public class PacketCreatorTest {
     public void testCreateChatList_int() {
         System.out.println("createChatList");
         int userID = 9;
-        ChatListPacket expResult = new ChatListPacket(userID);
-        ChatListPacket result = PacketCreator.createChatList(userID);
+        int orgID = 33;
+        ChatListPacket expResult = new ChatListPacket(userID, orgID);
+        ChatListPacket result = PacketCreator.createChatList(userID, orgID);
         assertEquals(expResult, result);
     }
 
@@ -174,8 +183,10 @@ public class PacketCreatorTest {
         int chat = 7;
         String name = "Trevor";
         int flag = 0;
-        ChatNotifyPacket expResult = new ChatNotifyPacket(chat, name, flag);
-        ChatNotifyPacket result = PacketCreator.createChatNotify(chat, name, flag);
+        int orgID = 5;
+        
+        ChatNotifyPacket expResult = new ChatNotifyPacket(chat, name, flag, orgID);
+        ChatNotifyPacket result = PacketCreator.createChatNotify(chat, name, flag, orgID);
         assertEquals(expResult, result);
     }
 
@@ -188,8 +199,10 @@ public class PacketCreatorTest {
         int userid = 69;
         int chatid = 86;
         int flag = JoinLeavePacket.JOIN;
-        JoinLeavePacket expResult = new JoinLeavePacket(userid, chatid, flag);
-        JoinLeavePacket result = PacketCreator.createJoinLeave(userid, chatid, flag);
+        int orgID = 49;
+        
+        JoinLeavePacket expResult = new JoinLeavePacket(userid, chatid, flag, orgID);
+        JoinLeavePacket result = PacketCreator.createJoinLeave(userid, chatid, flag, orgID);
         assertEquals(expResult, result);
     }
 
@@ -227,8 +240,10 @@ public class PacketCreatorTest {
         String message = "This is a test.";
         int userID = 79;
         int chatID = 32;
-        MessagePacket expResult = new MessagePacket(message, userID, chatID);
-        MessagePacket result = PacketCreator.createMessage(message, userID, chatID);
+        int orgID = 43;
+        
+        MessagePacket expResult = new MessagePacket(message, userID, chatID, orgID);
+        MessagePacket result = PacketCreator.createMessage(message, userID, chatID, orgID);
         assertEquals(expResult, result);
     }
 
@@ -242,8 +257,10 @@ public class PacketCreatorTest {
         int chatID = 45;
         int flag = OperationStatusPacket.OP_LOGIN;
         int operation = 0;
-        OperationStatusPacket expResult = new OperationStatusPacket(userID, chatID, flag, operation);
-        OperationStatusPacket result = PacketCreator.createOperationStatus(userID, chatID, flag, operation);
+        int orgID = 32;
+        
+        OperationStatusPacket expResult = new OperationStatusPacket(userID, chatID, flag, operation, orgID);
+        OperationStatusPacket result = PacketCreator.createOperationStatus(userID, chatID, flag, operation, orgID);
         assertEquals(expResult, result);
     }
 
@@ -255,8 +272,10 @@ public class PacketCreatorTest {
         System.out.println("createRequestAccess");
         int userid = 54;
         int chatid = 4657687;
-        RequestAccessPacket expResult = new RequestAccessPacket(userid, chatid);
-        RequestAccessPacket result = PacketCreator.createRequestAccess(userid, chatid);
+        int orgID = 324;
+        
+        RequestAccessPacket expResult = new RequestAccessPacket(userid, chatid, orgID);
+        RequestAccessPacket result = PacketCreator.createRequestAccess(userid, chatid, orgID);
         assertEquals(expResult, result);
     }
 
@@ -269,8 +288,10 @@ public class PacketCreatorTest {
         String name = "Chats suck guys";
         int id = 435;
         int update = 432;
-        UpdateChatsPacket expResult = new UpdateChatsPacket(name, id, update);
-        UpdateChatsPacket result = PacketCreator.createUpdateChats(name, id, update);
+        int orgID = 321;
+        
+        UpdateChatsPacket expResult = new UpdateChatsPacket(name, id, update, 321);
+        UpdateChatsPacket result = PacketCreator.createUpdateChats(name, id, update, 321);
         assertEquals(expResult, result);
     }
 
@@ -285,8 +306,10 @@ public class PacketCreatorTest {
         int chatid = 573;
         int role = User.WAITING;
         int flag = UserNotifyPacket.BOOTED;
-        UserNotifyPacket expResult = new UserNotifyPacket(userName, userid, chatid, role, flag);
-        UserNotifyPacket result = PacketCreator.createUserNotify(userName, userid, chatid, role, flag);
+        int orgID = 3245;
+        
+        UserNotifyPacket expResult = new UserNotifyPacket(userName, userid, chatid, role, flag, orgID);
+        UserNotifyPacket result = PacketCreator.createUserNotify(userName, userid, chatid, role, flag, orgID);
         assertEquals(expResult, result);
     }
     

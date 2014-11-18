@@ -14,11 +14,31 @@ import java.util.List;
  */
 public class Organization {
     
-    private int organizationID;
-    private String organizationName;
-    private User founder;
-    private List<Chat> chats;
+    /**
+     * The id number of the organization.
+     */
+    private final int organizationID;
     
+    /**
+     * The name of the organization.
+     */
+    private final String organizationName;
+    
+    /**
+     * The founder of the organization.
+     */
+    private final User founder;
+    
+    /**
+     * List of Chats associated with the organization.
+     */
+    private final List<Chat> chats;
+    
+    /**
+     * Constructor of an organization
+     * @param name The name of the organization.
+     * @param u The founder of the organization.
+     */
     public Organization(String name, User u)
     {
         this.organizationName = name;
@@ -27,6 +47,12 @@ public class Organization {
         this.founder = u;
     }
     
+    /**
+     * Constructor for the organization.
+     * @param name The name of the organization.
+     * @param id The unique id of the organization.
+     * @param u The founder of the organization.
+     */
     public Organization(String name, int id, User u)
     {
         this.organizationName = name;
@@ -35,26 +61,46 @@ public class Organization {
         this.founder = u;
     }
     
+    /**
+     * Gets the name of the organization.
+     * @return the name of the organization.
+     */
     public String getName()
     {
         return organizationName;
     }
     
+    /**
+     * Gets the id of the organization.
+     * @return the id of the organization.
+     */
     public int getID()
     {
         return organizationID;
     }
     
+    /**
+     * Gets the founder of the organization.
+     * @return the founder of the organization.
+     */
     public User getFounder()
     {
         return founder;
     }
     
+    /**
+     * Adds a chat to the list of associated chats to that organization.
+     * @param c the chat to add to the list.
+     */
     public void addChat(Chat c)
     {
        chats.add(c);
     }
     
+    /**
+     * Deletes a particular chat from the list of chats.
+     * @param c the particular chat to delete from the list.
+     */
     public void deleteChat(Chat c)
     {
         for(Chat chat : chats)
@@ -67,6 +113,10 @@ public class Organization {
         }
     }
     
+    /**
+     * Updates a particular chat in the list of chats.
+     * @param c the chat to update.
+     */
     public void updateChat(Chat c)
     {
         for(Chat chat : chats)
@@ -80,11 +130,20 @@ public class Organization {
         }
     }
     
+    /**
+     * Gets the list of chats.
+     * @return the list of chats.
+     */
     public List<Chat> getChats()
     {
         return chats;
     }
     
+    /**
+     * Gets a particular chat.
+     * @param chatid the id of the desired chat.
+     * @return the chat from the list.
+     */
     public Chat getChat(int chatid)
     {
         Chat temp = new Chat("default", -1);

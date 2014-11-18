@@ -69,7 +69,7 @@ public class OperationStatusPacket extends Packet
      */
     public OperationStatusPacket(int userID, int chatID, int flag, int operation, int organizationID)
     {
-        super(OPERATIONSTATUS, 16);
+        super(OPERATIONSTATUS, 20);
         this.userID = userID;
         this.chatID = chatID;
         this.flag = flag;
@@ -168,7 +168,7 @@ public class OperationStatusPacket extends Packet
                 return false;
             if(operation != p.getOperation())
                 return false;
-            if(organizationID != p.getOperation())
+            if(organizationID != p.getOrganizationID())
                 return false;
             return flag == p.getStatus();
         }

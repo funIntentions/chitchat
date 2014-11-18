@@ -12,56 +12,62 @@ import java.util.List;
 
 /**
  *
- * @author shane
+ * @author Trevor
  */
 public interface OrganizationDAO {
         /**
-     * Gets a Chat with the specified ID.
+     * Gets a Organization with the specified ID.
      * 
-     * @param id The ID of the chat to get.
-     * @return A Chat object containing the information if the chat exists, or null otherwise.
+     * @param id The ID of the organization to get.
+     * @return A organization object containing the information if the chat exists, or null otherwise.
      * @throws SQLException When a database error occurs.
      */
     Organization getByID(int id) throws SQLException;
     
     /**
-     * Gets a chat with the specified name.
+     * Gets a Organization with the specified name.
      * 
-     * @param name The name of the chat for which to search.
-     * @return A Chat object containing the chat's information or null if the chat doesn't exist.
+     * @param name The name of the organization for which to search.
+     * @return A organization object containing the organization's information or null if the organization doesn't exist.
      * @throws SQLException When a database error occurs.
      */
     Organization getByName(String name) throws SQLException;
     
     /**
-     * Gets a list of all chats.
+     * Gets a list of all organizations.
      * 
-     * @return The list of chats.
+     * @return The list of organization.
      * @throws SQLException When a database error occurs.
      */
     List<Organization> getAllOrganizations() throws SQLException;
     
     /**
-     * Writes the chat's details to the database.
-     * @param o The Chat to be saved.
-     * @return The ID of the newly created chat.
+     * Writes the Organization's details to the database.
+     * @param o The organization to be saved.
+     * @return The ID of the newly created organization.
      * @throws SQLException When a database error occurs.
      */
     int create(Organization o)throws SQLException;
     
     /**
-     * Writes the chat's details to the database.
-     * @param o The Chat to be saved.
+     * Writes the Organization's details to the database.
+     * @param o The organization to be saved.
      * @throws SQLException When a database error occurs.
      */
     void update(Organization o) throws SQLException;
     
     /**
-     * Deletes a chat from the database
-     * @param o The chat to be deleted.
+     * Deletes a Organization from the database
+     * @param o The organization to be deleted.
      * @throws SQLException 
      */
     void delete(Organization o) throws SQLException;
     
+    /**
+     * Gets all of the chats associated with the particular organization.
+     * @param o the organization to get the list of chats.
+     * @return the list of chats that is associated with the organizations.
+     * @throws SQLException 
+     */
     List<Chat> getChats(Organization o) throws SQLException;
 }
