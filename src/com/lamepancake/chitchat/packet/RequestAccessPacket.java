@@ -15,14 +15,17 @@ public class RequestAccessPacket extends Packet
 {
     private final int userID;
     private final int chatID;
-    private final int GroupID;
+    private final int groupID;
+    //private final int flag;
+    //public static final int CHATREQUEST = 0;
+    //public static final int GROUPREQUEST = 1;
 
     public RequestAccessPacket(int userid, int chatid, int Groupid)
     {
         super(REQUESTACCESS, 12);
         this.userID = userid;
         this.chatID = chatid;
-        this.GroupID = Groupid;
+        this.groupID = Groupid;
     }
 
     public RequestAccessPacket(ByteBuffer packetHeader, ByteBuffer packetData)
@@ -30,7 +33,7 @@ public class RequestAccessPacket extends Packet
         super(packetHeader);
         this.userID = packetData.getInt();
         this.chatID = packetData.getInt();
-        this.GroupID = packetData.getInt();
+        this.groupID = packetData.getInt();
     }
     
     @Override
@@ -39,7 +42,7 @@ public class RequestAccessPacket extends Packet
         ByteBuffer buf = super.serialise();
         buf.putInt(this.userID);
         buf.putInt(this.chatID);
-        buf.putInt(this.GroupID);
+        buf.putInt(this.groupID);
         
         buf.rewind();
         
@@ -68,9 +71,9 @@ public class RequestAccessPacket extends Packet
      * Get Group ID of the chat.
      * @return The Group ID.
      */
-    public int getGroupID()
+    public int getgroupID()
     {
-        return GroupID;
+        return groupID;
     }
     
     @Override
@@ -84,7 +87,7 @@ public class RequestAccessPacket extends Packet
             RequestAccessPacket p = (RequestAccessPacket)o;
             if(userID != p.getUserID())
                 return false;
-            if(GroupID != p.getGroupID())
+            if(groupID != p.getgroupID())
                 return false;
             return chatID == p.getChatID();
         }
@@ -96,7 +99,7 @@ public class RequestAccessPacket extends Packet
         int hash = 7;
         hash = 23 * hash + this.userID;
         hash = 23 * hash + this.chatID;
-        hash = 23 * hash + this.GroupID;
+        hash = 23 * hash + this.groupID;
         return hash;
     }
 }

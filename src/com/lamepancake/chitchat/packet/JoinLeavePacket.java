@@ -27,17 +27,19 @@ public class JoinLeavePacket extends Packet
     private final int userID;
     private final int chatID;
     private final int flag;
-    private final int GroupID;
-    public static final int JOIN = 0;
-    public static final int LEAVE = 1;
+    private final int groupID;
+    public static final int CHATJOIN = 0;
+    public static final int CHATLEAVE = 1;
+    public static final int GROUPJOIN = 2;
+    public static final int GROUPLEAVE = 3;
     
-    public JoinLeavePacket(int userid, int chatid, int flag, int Groupid)
+    public JoinLeavePacket(int userid, int chatid, int flag, int groupid)
     {
         super(JOINLEAVE, 12);
         this.userID = userid;
         this.chatID = chatid;
         this.flag = flag;
-        this.GroupID = Groupid;
+        this.groupID = groupid;
     }
 
     public JoinLeavePacket(ByteBuffer packetHeader, ByteBuffer packetData) 
@@ -46,7 +48,7 @@ public class JoinLeavePacket extends Packet
         this.userID = packetData.getInt();
         this.chatID = packetData.getInt();
         this.flag = packetData.getInt();
-        this.GroupID = packetData.getInt();
+        this.groupID = packetData.getInt();
     }
     
     @Override
@@ -56,7 +58,7 @@ public class JoinLeavePacket extends Packet
         buf.putInt(this.userID);
         buf.putInt(this.chatID);
         buf.putInt(this.flag);
-        buf.putInt(this.GroupID);
+        buf.putInt(this.groupID);
         
         buf.rewind();
         
@@ -90,9 +92,9 @@ public class JoinLeavePacket extends Packet
         return flag;
     }
     
-    public int getGroupID()
+    public int getgroupID()
     {
-        return GroupID;
+        return groupID;
     }
     
     @Override
@@ -108,7 +110,7 @@ public class JoinLeavePacket extends Packet
                 return false;
             if(chatID != p.getChatID())
                 return false;
-            if(GroupID != p.getGroupID())
+            if(groupID != p.getgroupID())
                 return false;
             return flag == p.getFlag();
         }
@@ -121,7 +123,7 @@ public class JoinLeavePacket extends Packet
         hash = 89 * hash + this.userID;
         hash = 89 * hash + this.chatID;
         hash = 89 * hash + this.flag;
-        hash = 89 * hash + this.GroupID;
+        hash = 89 * hash + this.groupID;
         return hash;
     }
 
