@@ -12,76 +12,76 @@ import java.util.List;
  *
  * @author tware
  */
-public class Organization {
+public class Group {
     
     /**
-     * The id number of the organization.
+     * The id number of the group.
      */
-    private final int organizationID;
+    private final int groupID;
     
     /**
-     * The name of the organization.
+     * The name of the group.
      */
-    private final String organizationName;
+    private final String groupName;
     
     /**
-     * The founder of the organization.
+     * The founder of the group.
      */
     private final User founder;
     
     /**
-     * List of Chats associated with the organization.
+     * List of Chats associated with the group.
      */
     private final List<Chat> chats;
     
     /**
-     * Constructor of an organization
-     * @param name The name of the organization.
-     * @param u The founder of the organization.
+     * Constructor of an group
+     * @param name The name of the group.
+     * @param u The founder of the group.
      */
-    public Organization(String name, User u)
+    public Group(String name, User u)
     {
-        this.organizationName = name;
-        this.organizationID = -1;
+        this.groupName = name;
+        this.groupID = -1;
         this.chats = new ArrayList();
         this.founder = u;
     }
     
     /**
-     * Constructor for the organization.
-     * @param name The name of the organization.
-     * @param id The unique id of the organization.
-     * @param u The founder of the organization.
+     * Constructor for the group.
+     * @param name The name of the group.
+     * @param id The unique id of the group.
+     * @param u The founder of the group.
      */
-    public Organization(String name, int id, User u)
+    public Group(String name, int id, User u)
     {
-        this.organizationName = name;
-        this.organizationID = id;
+        this.groupName = name;
+        this.groupID = id;
         this.chats = new ArrayList();
         this.founder = u;
     }
     
     /**
-     * Gets the name of the organization.
-     * @return the name of the organization.
+     * Gets the name of the group.
+     * @return the name of the group.
      */
     public String getName()
     {
-        return organizationName;
+        return groupName;
     }
     
     /**
-     * Gets the id of the organization.
-     * @return the id of the organization.
+     * Gets the id of the group.
+     * @return the id of the group.
      */
     public int getID()
     {
-        return organizationID;
+        return groupID;
     }
     
     /**
-     * Gets the founder of the organization.
-     * @return the founder of the organization.
+     * Gets the founder of the group.
+     * @return the founder of the group.
      */
     public User getFounder()
     {
@@ -89,7 +89,7 @@ public class Organization {
     }
     
     /**
-     * Adds a chat to the list of associated chats to that organization.
+     * Adds a chat to the list of associated chats to that group.
      * @param c the chat to add to the list.
      */
     public void addChat(Chat c)
