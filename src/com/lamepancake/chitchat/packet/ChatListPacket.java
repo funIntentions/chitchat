@@ -24,15 +24,15 @@ public class ChatListPacket extends Packet
 {
     private Map<Chat, Integer> chatList;
     private final int userID;
-    private final int organizationID;
+    private final int GroupID;
     
     /**
      * Creates a client-side ChatListPacket.
      * @param userid THe ID of the user requesting the chat.
      */
-    public ChatListPacket(final int userid, final int organizationid)
+    public ChatListPacket(final int userid, final int Groupid)
     {
-        this(null, 12, userid, organizationid);
+        this(null, 12, userid, Groupid);
     }
     
     /**
@@ -42,12 +42,12 @@ public class ChatListPacket extends Packet
      * @param roleLength The number of chats in the list. 
      * @param userID     The ID of the user requesting list.
      */
-    public ChatListPacket(Map<Chat, Integer> chatRoles, int roleLength, int userID, int organizationID)
+    public ChatListPacket(Map<Chat, Integer> chatRoles, int roleLength, int userID, int GroupID)
     {
         super(CHATLIST, roleLength);
         this.chatList = chatRoles;
         this.userID = userID;
-        this.organizationID = organizationID;
+        this.GroupID = GroupID;
     }
     
     /**
@@ -83,7 +83,7 @@ public class ChatListPacket extends Packet
                 chatList.put(new Chat(chatName, id), role);            
             }
         }
-        this.organizationID = data.getInt();
+        this.GroupID = data.getInt();
     }
     
     public Map<Chat, Integer> getChatList()
@@ -96,9 +96,9 @@ public class ChatListPacket extends Packet
         return userID;
     }
     
-    public int getOrganizationID()
+    public int getGroupID()
     {
-        return organizationID;
+        return GroupID;
     }
     
     @Override
@@ -118,7 +118,7 @@ public class ChatListPacket extends Packet
             buf.putInt(c.getID());
             buf.putInt(chatList.get(c));
         }
-        buf.putInt(organizationID);
+        buf.putInt(GroupID);
         buf.rewind();
         
         return buf;
@@ -174,7 +174,7 @@ public class ChatListPacket extends Packet
             
             //if(chatList != p.getChatList())
                 //return false;
-            if(organizationID != p.getOrganizationID())
+            if(GroupID != p.getGroupID())
                 return false;
             return userID == p.getUserID();
         }
@@ -186,7 +186,7 @@ public class ChatListPacket extends Packet
         int hash = 5;
         hash = 71 * hash + Objects.hashCode(this.chatList);
         hash = 71 * hash + this.userID;
-        hash = 71 * hash + this.organizationID;
+        hash = 71 * hash + this.GroupID;
         return hash;
     }
 

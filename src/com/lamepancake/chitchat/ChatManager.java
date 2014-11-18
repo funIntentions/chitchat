@@ -59,7 +59,7 @@ public class ChatManager
         UserDAOMySQLImpl.init(uname, password);
         ChatDAOMySQLImpl.init(uname, password);
         ChatRoleDAOMySQLImpl.init(uname, password);
-        OrganizationDAOMySQLImpl.init(uname, password);
+        GroupDAOMySQLImpl.init(uname, password);
         
         this.lobby = new HashMap<>();
         this.chats = new HashMap<>();

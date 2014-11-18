@@ -15,14 +15,14 @@ public class RequestAccessPacket extends Packet
 {
     private final int userID;
     private final int chatID;
-    private final int organizationID;
+    private final int GroupID;
 
-    public RequestAccessPacket(int userid, int chatid, int organizationid)
+    public RequestAccessPacket(int userid, int chatid, int Groupid)
     {
         super(REQUESTACCESS, 12);
         this.userID = userid;
         this.chatID = chatid;
-        this.organizationID = organizationid;
+        this.GroupID = Groupid;
     }
 
     public RequestAccessPacket(ByteBuffer packetHeader, ByteBuffer packetData)
@@ -30,7 +30,7 @@ public class RequestAccessPacket extends Packet
         super(packetHeader);
         this.userID = packetData.getInt();
         this.chatID = packetData.getInt();
-        this.organizationID = packetData.getInt();
+        this.GroupID = packetData.getInt();
     }
     
     @Override
@@ -39,7 +39,7 @@ public class RequestAccessPacket extends Packet
         ByteBuffer buf = super.serialise();
         buf.putInt(this.userID);
         buf.putInt(this.chatID);
-        buf.putInt(this.organizationID);
+        buf.putInt(this.GroupID);
         
         buf.rewind();
         
@@ -65,12 +65,12 @@ public class RequestAccessPacket extends Packet
     }
     
     /**
-     * Get organization ID of the chat.
-     * @return The organization ID.
+     * Get Group ID of the chat.
+     * @return The Group ID.
      */
-    public int getOrganizationID()
+    public int getGroupID()
     {
-        return organizationID;
+        return GroupID;
     }
     
     @Override
@@ -84,7 +84,7 @@ public class RequestAccessPacket extends Packet
             RequestAccessPacket p = (RequestAccessPacket)o;
             if(userID != p.getUserID())
                 return false;
-            if(organizationID != p.getOrganizationID())
+            if(GroupID != p.getGroupID())
                 return false;
             return chatID == p.getChatID();
         }
@@ -96,7 +96,7 @@ public class RequestAccessPacket extends Packet
         int hash = 7;
         hash = 23 * hash + this.userID;
         hash = 23 * hash + this.chatID;
-        hash = 23 * hash + this.organizationID;
+        hash = 23 * hash + this.GroupID;
         return hash;
     }
 }

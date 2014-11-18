@@ -56,9 +56,9 @@ public class OperationStatusPacket extends Packet
     private final int operation;
     
     /**
-     * The ID of the organization that the chat belongs to.
+     * The ID of the group that the chat belongs to.
      */
-    private final int organizationID;
+    private final int groupID;
     
     /**
      * Creates a new OperationStatusPacket with the specified user ID, flag and
@@ -67,14 +67,14 @@ public class OperationStatusPacket extends Packet
      * @param flag      Flag indicating the success/failure of the operation.
      * @param operation The operation that the user attempted.
      */
-    public OperationStatusPacket(int userID, int chatID, int flag, int operation, int organizationID)
+    public OperationStatusPacket(int userID, int chatID, int flag, int operation, int groupID)
     {
         super(OPERATIONSTATUS, 20);
         this.userID = userID;
         this.chatID = chatID;
         this.flag = flag;
         this.operation = operation;
-        this.organizationID = organizationID;
+        this.groupID = groupID;
     }
 
     /**
@@ -89,7 +89,7 @@ public class OperationStatusPacket extends Packet
         this.chatID = packetData.getInt();
         this.flag = packetData.getInt();
         this.operation = packetData.getInt();
-        this.organizationID = packetData.getInt();
+        this.groupID = packetData.getInt();
     }
     
     @Override
@@ -100,7 +100,7 @@ public class OperationStatusPacket extends Packet
         buf.putInt(this.chatID);
         buf.putInt(this.flag);
         buf.putInt(this.operation);
-        buf.putInt(this.organizationID);
+        buf.putInt(this.groupID);
         
         buf.rewind();
         
@@ -145,12 +145,12 @@ public class OperationStatusPacket extends Packet
     }
     
     /**
-     * Get the organization ID for this chat.
-     * @return the id of the organization.
+     * Get the group ID for this chat.
+     * @return the id of the group.
      */
-    public int getOrganizationID()
+    public int getgroupID()
     {
-        return this.organizationID;
+        return this.groupID;
     }
     
     @Override
@@ -168,7 +168,7 @@ public class OperationStatusPacket extends Packet
                 return false;
             if(operation != p.getOperation())
                 return false;
-            if(organizationID != p.getOrganizationID())
+            if(groupID != p.getgroupID())
                 return false;
             return flag == p.getStatus();
         }
@@ -182,7 +182,7 @@ public class OperationStatusPacket extends Packet
         hash = 67 * hash + this.userID;
         hash = 67 * hash + this.chatID;
         hash = 67 * hash + this.operation;
-        hash = 67 * hash + this.organizationID;
+        hash = 67 * hash + this.groupID;
         return hash;
     }
 }

@@ -29,22 +29,22 @@ public class ChangeRolePacket extends Packet {
     
     private final int role;
     
-    private final int organizationID;
+    private final int GroupID;
     /**
      * The 
      * @param chat
      * @param user
      * @param role 
-     * @param organization
+     * @param Group
      */
-    public ChangeRolePacket(int chat, int user, int sender, int role, int organization)
+    public ChangeRolePacket(int chat, int user, int sender, int role, int Group)
     {
         super(CHANGEROLE, 20);
         this.chatID = chat;
         this.userID = user;
         this.senderID = sender;
         this.role = role;
-        this.organizationID = organization;
+        this.GroupID = Group;
     }
 
     public ChangeRolePacket(ByteBuffer packetHeader, ByteBuffer packetData) 
@@ -55,7 +55,7 @@ public class ChangeRolePacket extends Packet {
         this.userID = packetData.getInt();
         this.senderID = packetData.getInt();
         this.role = packetData.getInt();
-        this.organizationID = packetData.getInt();
+        this.GroupID = packetData.getInt();
     }
     
     @Override
@@ -66,7 +66,7 @@ public class ChangeRolePacket extends Packet {
         buf.putInt(this.userID);
         buf.putInt(this.senderID);
         buf.putInt(this.role);
-        buf.putInt(this.organizationID);
+        buf.putInt(this.GroupID);
         
         buf.rewind();
         
@@ -114,12 +114,12 @@ public class ChangeRolePacket extends Packet {
     }
     
     /**
-     * Get organization ID of the chat passed in
-     * @return the organization id
+     * Get Group ID of the chat passed in
+     * @return the Group id
      */
-    public int getOrganizationID()
+    public int getGroupID()
     {
-        return this.organizationID;
+        return this.GroupID;
     }
     
     @Override
@@ -137,7 +137,7 @@ public class ChangeRolePacket extends Packet {
                 return false;
             if(senderID != p.getSenderID())
                 return false;
-            if(organizationID != p.getOrganizationID())
+            if(GroupID != p.getGroupID())
                 return false;
             return role == p.getRole();
         }
@@ -151,7 +151,7 @@ public class ChangeRolePacket extends Packet {
         hash = 29 * hash + this.userID;
         hash = 29 * hash + this.senderID;
         hash = 29 * hash + this.role;
-        hash = 29 * hash + this.organizationID;
+        hash = 29 * hash + this.GroupID;
         return hash;
     }
 }

@@ -6,7 +6,7 @@
 package com.lamepancake.chitchat.packet;
 
 import com.lamepancake.chitchat.Chat;
-import com.lamepancake.chitchat.Organization;
+import com.lamepancake.chitchat.Group;
 import com.lamepancake.chitchat.User;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,7 +82,7 @@ public class PacketCreatorTest {
         booter.setPassword("Yes");
         booter.setRole(User.ADMIN);
         
-        Organization o = new Organization("Hello", booter);
+        Group o = new Group("Hello", booter);
         
         BootPacket expResult = new BootPacket(chat, booted, booter, o);
         BootPacket result = PacketCreator.createBoot(chat, booted, booter, o);

@@ -19,7 +19,7 @@ public class MessagePacket extends Packet {
     private final String message;
     private int          userID;
     private final int    chatID;
-    private final int    organizationID;
+    private final int    GroupID;
 
     /**
      * Constructs a MessagePacket with the given message and userID.
@@ -27,12 +27,12 @@ public class MessagePacket extends Packet {
      * @param message The message to send.
      * @param userID  The ID of the user sending the message.
      */
-    public MessagePacket(String message, int userID, int chatID, int organizationID) {
+    public MessagePacket(String message, int userID, int chatID, int GroupID) {
         super(Packet.MESSAGE, 8 + message.length() * 2);
         this.message = message;
         this.userID = userID;
         this.chatID = chatID;
-        this.organizationID = organizationID;
+        this.GroupID = GroupID;
     }
 
     /**
@@ -49,7 +49,7 @@ public class MessagePacket extends Packet {
         this.chatID = data.getInt();
         data.get(rawMessage);
         this.message = new String(rawMessage, StandardCharsets.UTF_16LE);
-        this.organizationID = data.getInt();
+        this.GroupID = data.getInt();
     }
 
     @Override
@@ -59,7 +59,7 @@ public class MessagePacket extends Packet {
         buf.putInt(this.userID);
         buf.putInt(this.chatID);
         buf.put(this.message.getBytes(StandardCharsets.UTF_16LE));
-        buf.putInt(this.organizationID);
+        buf.putInt(this.GroupID);
         buf.rewind();
 
         return buf;
@@ -104,9 +104,9 @@ public class MessagePacket extends Packet {
         return this.chatID;
     }
     
-    public int getOrganizationID()
+    public int getGroupID()
     {
-        return this.organizationID;
+        return this.GroupID;
     }
     
     @Override
@@ -122,7 +122,7 @@ public class MessagePacket extends Packet {
                 return false;
             if(chatID != p.getChatID())
                 return false;
-            if(organizationID != p.getOrganizationID())
+            if(GroupID != p.getGroupID())
                 return false;
             return userID == p.getUserID();
         }
@@ -135,7 +135,7 @@ public class MessagePacket extends Packet {
         hash = 37 * hash + Objects.hashCode(this.message);
         hash = 37 * hash + this.userID;
         hash = 37 * hash + this.chatID;
-        hash = 37 * hash + this.organizationID;
+        hash = 37 * hash + this.GroupID;
         return hash;
     }
 

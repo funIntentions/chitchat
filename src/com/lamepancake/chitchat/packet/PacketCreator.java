@@ -8,7 +8,7 @@ package com.lamepancake.chitchat.packet;
 import com.lamepancake.chitchat.User;
 import java.util.Map;
 import com.lamepancake.chitchat.Chat;
-import com.lamepancake.chitchat.Organization;
+import com.lamepancake.chitchat.Group;
 import java.util.HashMap;
 import java.util.List;
 
@@ -28,13 +28,13 @@ public class PacketCreator {
      * @param userID    The ID of the user requesting the packet.
      * @return          The WhoIsInPacket to be transmitted to the client.
      */
-    public static WhoIsInPacket createWhoIsIn(Map<User, Boolean> chatUsers, int chatID, int userID, int orgID)
+    public static WhoIsInPacket createWhoIsIn(Map<User, Boolean> chatUsers, int chatID, int userID, int groupID)
     {
         int dataLen;
 
         // The client is creating a request packet, so there is no list
         if(chatUsers == null)
-            return new WhoIsInPacket(chatID, userID, orgID);
+            return new WhoIsInPacket(chatID, userID, groupID);
         
         // Each boolean in the map is one byte, so set the length to this size initially
         dataLen = chatUsers.size();
@@ -49,7 +49,7 @@ public class PacketCreator {
             dataLen += 12;
         }
         
-        return new WhoIsInPacket(chatUsers, dataLen, chatID, userID, orgID);
+        return new WhoIsInPacket(chatUsers, dataLen, chatID, userID, groupID);
     }
     
     /**
@@ -58,9 +58,9 @@ public class PacketCreator {
      * @param booted THe user who is being booted.
      * @return a new BootPacket
      */
-    public static BootPacket createBoot(Chat chat, User booted, User booter, Organization org)      
+    public static BootPacket createBoot(Chat chat, User booted, User booter, Group group)      
     {
-        return new BootPacket(chat, booted, booter, org);
+        return new BootPacket(chat, booted, booter, group);
     }
     
     /**
@@ -70,9 +70,9 @@ public class PacketCreator {
      * @param role The new role of the user.
      * @return a new ChangeRolePacket.
      */
-    public static ChangeRolePacket createChangeRole(int chat, int user, int sender, int role, int orgID)      
+    public static ChangeRolePacket createChangeRole(int chat, int user, int sender, int role, int groupID)      
     {
-        return new ChangeRolePacket(chat, user, sender, role, orgID);
+        return new ChangeRolePacket(chat, user, sender, role, groupID);
     }
     
     /**
@@ -82,7 +82,7 @@ public class PacketCreator {
      * @param userid The id of the user.
      * @return a new ChatListPacket.
      */
-    public static ChatListPacket createChatList(List<Chat> chats, Map<Integer, Integer> roles, int userid, int orgID)
+    public static ChatListPacket createChatList(List<Chat> chats, Map<Integer, Integer> roles, int userid, int groupID)
     {
         int dataLen = (chats.size() * 8) + 8; // Space for chat IDs, roles, the number of chats, and the user ID
         Map<Chat, Integer> chatList = new HashMap<>();
@@ -105,12 +105,12 @@ public class PacketCreator {
             dataLen += 4; //legnth of the name
         }
         
-        return new ChatListPacket(chatList, dataLen, userid, orgID);
+        return new ChatListPacket(chatList, dataLen, userid, groupID);
     }
     
-    public static ChatListPacket createChatList(int userID, int orgID)
+    public static ChatListPacket createChatList(int userID, int groupID)
     {
-        return new ChatListPacket(userID, orgID);
+        return new ChatListPacket(userID, groupID);
     }
     
     /**
@@ -120,9 +120,9 @@ public class PacketCreator {
      * @param flag Determines what operation occurred on the chat.
      * @return a new ChatNotifyPacket
      */
-    public static ChatNotifyPacket createChatNotify(int chat, String name, int flag, int orgID)
+    public static ChatNotifyPacket createChatNotify(int chat, String name, int flag, int groupID)
     {
-        return new ChatNotifyPacket(chat, name, flag, orgID);
+        return new ChatNotifyPacket(chat, name, flag, groupID);
     }
     
     /**
@@ -132,9 +132,9 @@ public class PacketCreator {
      * @param flag
      * @return a new JoinLeavePacket.
      */
-    public static JoinLeavePacket createJoinLeave(int userid, int chatid, int flag, int orgID)
+    public static JoinLeavePacket createJoinLeave(int userid, int chatid, int flag, int groupID)
     {
-        return new JoinLeavePacket(userid, chatid, flag, orgID);
+        return new JoinLeavePacket(userid, chatid, flag, groupID);
     }
     
     /**
@@ -165,9 +165,9 @@ public class PacketCreator {
      * @param chatID the id of the chat it is going to.
      * @return a new MessagePacket.
      */
-    public static MessagePacket createMessage(String message, int userID, int chatID, int orgID)
+    public static MessagePacket createMessage(String message, int userID, int chatID, int groupID)
     {
-        return new MessagePacket(message, userID, chatID, orgID);
+        return new MessagePacket(message, userID, chatID, groupID);
     }
     
     /**
@@ -177,9 +177,9 @@ public class PacketCreator {
      * @param operation A flag for what king of operation took place.
      * @return  a new OperationSuccessPacket.
      */
-    public static OperationStatusPacket createOperationStatus(int userID, int chatID, int flag, int operation, int orgID)
+    public static OperationStatusPacket createOperationStatus(int userID, int chatID, int flag, int operation, int groupID)
     {
-        return new OperationStatusPacket(userID, chatID, flag, operation, orgID);
+        return new OperationStatusPacket(userID, chatID, flag, operation, groupID);
     }
     
     /**
@@ -188,9 +188,9 @@ public class PacketCreator {
      * @param chatid The id of the chat that they are requesting access to.
      * @return a new RequestAccessPacket.
      */
-    public static RequestAccessPacket createRequestAccess(int userid, int chatid, int orgID)
+    public static RequestAccessPacket createRequestAccess(int userid, int chatid, int groupID)
     {
-        return new RequestAccessPacket(userid, chatid, orgID);
+        return new RequestAccessPacket(userid, chatid, groupID);
     }
     
     /**
@@ -200,9 +200,9 @@ public class PacketCreator {
      * @param update A flag to tell what kind of update occurred.
      * @return  a new UpdateChatsPacket.
      */
-    public static UpdateChatsPacket createUpdateChats(String name, int id, int update, int orgID)
+    public static UpdateChatsPacket createUpdateChats(String name, int id, int update, int groupID)
     {
-        return new UpdateChatsPacket(name, id, update, orgID);
+        return new UpdateChatsPacket(name, id, update, groupID);
     }
     
     /**
@@ -214,8 +214,8 @@ public class PacketCreator {
      * @param flag A flag to know what the notify was for.
      * @return a new UserNotifyPacket.
      */
-    public static UserNotifyPacket createUserNotify(String userName, int userid, int chatid, int role, int flag, int orgID)
+    public static UserNotifyPacket createUserNotify(String userName, int userid, int chatid, int role, int flag, int groupID)
     {
-        return new UserNotifyPacket(userName, userid, chatid, role, flag, orgID);
+        return new UserNotifyPacket(userName, userid, chatid, role, flag, groupID);
     }
 }

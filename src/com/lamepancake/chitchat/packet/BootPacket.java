@@ -1,7 +1,7 @@
 package com.lamepancake.chitchat.packet;
 
 import com.lamepancake.chitchat.Chat;
-import com.lamepancake.chitchat.Organization;
+import com.lamepancake.chitchat.Group;
 import com.lamepancake.chitchat.User;
 import java.nio.ByteBuffer;
 
@@ -23,7 +23,7 @@ public class BootPacket extends Packet{
     private final int bootedID;
     private final int chatID;
     private final int booterID;
-    private final int organizationID;
+    private final int groupID;
     
     /**
      * Construct a new BootPacket to boot the specified user from the chat.
@@ -31,13 +31,13 @@ public class BootPacket extends Packet{
      * @param chat   The chat from which to boot the user.
      * @param booted The user being booted from the chat.
      */
-    public BootPacket(Chat chat, User booted, User booter, Organization organization)
+    public BootPacket(Chat chat, User booted, User booter, Group group)
     {
         super(BOOT, HEADER_SIZE + 16);
         this.chatID = chat.getID();
         this.bootedID = booted.getID();
         this.booterID = booter.getID();
-        this.organizationID = organization.getID();
+        this.groupID = group.getID();
     }
      
     /**
@@ -46,13 +46,13 @@ public class BootPacket extends Packet{
      * @param chatID   The ID of the chat from which to boot the user.
      * @param bootedID The ID of the user being booted from the chat. 
      */
-    public BootPacket(int chatID, int bootedID, int booterID, int organizationID)
+    public BootPacket(int chatID, int bootedID, int booterID, int groupID)
     {
         super(BOOT, HEADER_SIZE + 16);
         this.chatID = chatID;
         this.bootedID = bootedID;
         this.booterID = booterID;
-        this.organizationID = organizationID;
+        this.groupID = groupID;
     }
     
     /**
@@ -67,7 +67,7 @@ public class BootPacket extends Packet{
         this.chatID = data.getInt();
         this.bootedID = data.getInt();
         this.booterID = data.getInt();
-        this.organizationID = data.getInt();
+        this.groupID = data.getInt();
     }
     
     @Override
@@ -77,7 +77,7 @@ public class BootPacket extends Packet{
         buf.putInt(this.chatID);
         buf.putInt(this.bootedID);
         buf.putInt(this.booterID);
-        buf.putInt(this.organizationID);
+        buf.putInt(this.groupID);
         
         buf.rewind();
         return buf;
@@ -111,12 +111,12 @@ public class BootPacket extends Packet{
     }
     
     /**
-     * The ID of the organization the chat belongs to
-     * @return the ID of the organization related to the chat.
+     * The ID of the group the chat belongs to
+     * @return the ID of the group related to the chat.
      */
-    public int getOrganizationID()
+    public int getGroupID()
     {
-        return this.organizationID;
+        return this.groupID;
     }
     
     @Override
@@ -132,7 +132,7 @@ public class BootPacket extends Packet{
                 return false;
             if(booterID != boot.getBooterID())
                 return false;
-            if(organizationID != boot.getOrganizationID())
+            if(groupID != boot.getGroupID())
                 return false;
             return chatID == boot.getChatID();
         }
@@ -145,7 +145,7 @@ public class BootPacket extends Packet{
         hash = 37 * hash + this.bootedID;
         hash = 37 * hash + this.chatID;
         hash = 37 * hash + this.booterID;
-        hash = 37 * hash + this.organizationID;
+        hash = 37 * hash + this.groupID;
         return hash;
     }
 }

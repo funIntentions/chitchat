@@ -53,9 +53,9 @@ public class WhoIsInPacket extends Packet {
     private final int userID;
     
     /**
-     * ID of the organization the chat belongs to.
+     * ID of the Group the chat belongs to.
      */
-    private final int organizationID;
+    private final int groupID;
     
     /**
      * Construct a WhoIsInPacket to be sent to the server.
@@ -63,10 +63,10 @@ public class WhoIsInPacket extends Packet {
      * @param chatID The ID of the chat from which to get the list of users.
      * @param userID The user requesting the list.
      */
-    public WhoIsInPacket(int chatID, int userID, int organizationID)
+    public WhoIsInPacket(int chatID, int userID, int groupID)
     {
         // The 4 is already added in the other constructor, so don't repeat it here
-        this(null, 4, chatID, userID, organizationID);
+        this(null, 4, chatID, userID, groupID);
     }
     
     /**
@@ -78,13 +78,13 @@ public class WhoIsInPacket extends Packet {
      * @param chatID The ID of the chat containing the user list.
      * @param userID The ID of the user requesting or receiving the list.
      */
-    public WhoIsInPacket(Map<User, Boolean> users, int length, int chatID, int userID, int organizationID)
+    public WhoIsInPacket(Map<User, Boolean> users, int length, int chatID, int userID, int groupID)
     {
         super(WHOISIN, length);
         this.users = users;
         this.chatID = chatID;
         this.userID = userID;
-        this.organizationID = organizationID;
+        this.groupID = groupID;
     }
     
     /**
@@ -123,7 +123,7 @@ public class WhoIsInPacket extends Packet {
                 users.put(new User().setName(username).setRole(role).setID(id), onlineStatus == 1); 
             }
         }
-        this.organizationID = data.getInt();
+        this.groupID = data.getInt();
     }
     
     /**
@@ -165,7 +165,7 @@ public class WhoIsInPacket extends Packet {
             buf.putInt(u.getID());
             buf.put(users.get(u) ? (byte)1 : (byte)0);
         }
-        buf.putInt(this.organizationID);
+        buf.putInt(this.groupID);
         
         buf.rewind();
         
@@ -191,12 +191,12 @@ public class WhoIsInPacket extends Packet {
     }
     
     /**
-     * Gets the ID of the organization the chats belong to.
-     * @return the organization ID.
+     * Gets the ID of the Group the chats belong to.
+     * @return the Group ID.
      */
-    public int getOrganizationID()
+    public int getGroupID()
     {
-        return this.organizationID;
+        return this.groupID;
     }
     
     @Override
@@ -212,7 +212,7 @@ public class WhoIsInPacket extends Packet {
                 return false;
             if(chatID != p.getChatID())
                 return false;
-            if(organizationID != p.getOrganizationID())
+            if(groupID != p.getGroupID())
                 return false;
             return userID == p.getUserID();
         }
@@ -225,7 +225,7 @@ public class WhoIsInPacket extends Packet {
         hash = 53 * hash + Objects.hashCode(this.users);
         hash = 53 * hash + this.chatID;
         hash = 53 * hash + this.userID;
-        hash = 53 * hash + this.organizationID;
+        hash = 53 * hash + this.groupID;
         return hash;
     }
 

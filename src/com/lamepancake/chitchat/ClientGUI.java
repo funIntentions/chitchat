@@ -96,8 +96,8 @@ public class ClientGUI extends javax.swing.JFrame {
         TabbedPaneChatLog = new javax.swing.JTabbedPane();
         PanelLists = new javax.swing.JPanel();
         TabbedPanelLists = new javax.swing.JTabbedPane();
-        ScrollPaneOrganizationLists = new javax.swing.JScrollPane();
-        ListOrganizationLists = new javax.swing.JList();
+        ScrollPaneGroupLists = new javax.swing.JScrollPane();
+        ListGroupLists = new javax.swing.JList();
         ScrollPanelChatLists = new javax.swing.JScrollPane();
         ListChatLists = new javax.swing.JList();
         ScrollPaneUsersLists = new javax.swing.JScrollPane();
@@ -109,10 +109,10 @@ public class ClientGUI extends javax.swing.JFrame {
         MenuItemCreateChat = new javax.swing.JMenuItem();
         MenuItemUpdateChat = new javax.swing.JMenuItem();
         MenuItemDeleteChat = new javax.swing.JMenuItem();
-        MenuOrganization = new javax.swing.JMenu();
-        MenuItemCreateOrganization = new javax.swing.JMenuItem();
-        MenuItemUpdateOrganization = new javax.swing.JMenuItem();
-        MenuItemDeleteOrganization = new javax.swing.JMenuItem();
+        MenuGroup = new javax.swing.JMenu();
+        MenuItemCreateGroup = new javax.swing.JMenuItem();
+        MenuItemUpdateGroup = new javax.swing.JMenuItem();
+        MenuItemDeleteGroup = new javax.swing.JMenuItem();
 
         jMenuItemJoin.setText("Join Chat");
         jMenuItemJoin.addActionListener(new java.awt.event.ActionListener() {
@@ -231,14 +231,14 @@ public class ClientGUI extends javax.swing.JFrame {
         TabbedPanelLists.setForeground(new java.awt.Color(254, 254, 254));
         TabbedPanelLists.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
 
-        ListOrganizationLists.setModel(new javax.swing.AbstractListModel() {
+        ListGroupLists.setModel(new javax.swing.AbstractListModel() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
             public Object getElementAt(int i) { return strings[i]; }
         });
-        ScrollPaneOrganizationLists.setViewportView(ListOrganizationLists);
+        ScrollPaneGroupLists.setViewportView(ListGroupLists);
 
-        TabbedPanelLists.addTab("Organization", ScrollPaneOrganizationLists);
+        TabbedPanelLists.addTab("Group", ScrollPaneGroupLists);
 
         ListChatLists.setModel(new javax.swing.AbstractListModel() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -331,42 +331,42 @@ public class ClientGUI extends javax.swing.JFrame {
 
         MenuBarTop.add(MenuChat);
 
-        MenuOrganization.setText("Organizations");
+        MenuGroup.setText("Groups");
 
-        MenuItemCreateOrganization.setText("Create Organization");
-        MenuItemCreateOrganization.addActionListener(new java.awt.event.ActionListener() {
+        MenuItemCreateGroup.setText("Create Group");
+        MenuItemCreateGroup.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                MenuItemCreateOrganizationActionPerformed(evt);
+                MenuItemCreateGroupActionPerformed(evt);
             }
         });
-        MenuItemCreateOrganization.addMenuKeyListener(new javax.swing.event.MenuKeyListener() {
+        MenuItemCreateGroup.addMenuKeyListener(new javax.swing.event.MenuKeyListener() {
             public void menuKeyPressed(javax.swing.event.MenuKeyEvent evt) {
-                MenuItemCreateOrganizationMenuKeyPressed(evt);
+                MenuItemCreateGroupMenuKeyPressed(evt);
             }
             public void menuKeyReleased(javax.swing.event.MenuKeyEvent evt) {
             }
             public void menuKeyTyped(javax.swing.event.MenuKeyEvent evt) {
             }
         });
-        MenuOrganization.add(MenuItemCreateOrganization);
+        MenuGroup.add(MenuItemCreateGroup);
 
-        MenuItemUpdateOrganization.setText("Update Organization");
-        MenuItemUpdateOrganization.addMouseListener(new java.awt.event.MouseAdapter() {
+        MenuItemUpdateGroup.setText("Update Group");
+        MenuItemUpdateGroup.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent evt) {
-                MenuItemUpdateOrganizationMousePressed(evt);
+                MenuItemUpdateGroupMousePressed(evt);
             }
         });
-        MenuOrganization.add(MenuItemUpdateOrganization);
+        MenuGroup.add(MenuItemUpdateGroup);
 
-        MenuItemDeleteOrganization.setText("Delete Organization");
-        MenuItemDeleteOrganization.addMouseListener(new java.awt.event.MouseAdapter() {
+        MenuItemDeleteGroup.setText("Delete Group");
+        MenuItemDeleteGroup.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent evt) {
-                MenuItemDeleteOrganizationMousePressed(evt);
+                MenuItemDeleteGroupMousePressed(evt);
             }
         });
-        MenuOrganization.add(MenuItemDeleteOrganization);
+        MenuGroup.add(MenuItemDeleteGroup);
 
-        MenuBarTop.add(MenuOrganization);
+        MenuBarTop.add(MenuGroup);
 
         setJMenuBar(MenuBarTop);
 
@@ -690,21 +690,21 @@ public class ClientGUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_TextAreaMessageKeyPressed
 
-    private void MenuItemCreateOrganizationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MenuItemCreateOrganizationActionPerformed
+    private void MenuItemCreateGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MenuItemCreateGroupActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_MenuItemCreateOrganizationActionPerformed
+    }//GEN-LAST:event_MenuItemCreateGroupActionPerformed
 
-    private void MenuItemDeleteOrganizationMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_MenuItemDeleteOrganizationMousePressed
+    private void MenuItemDeleteGroupMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_MenuItemDeleteGroupMousePressed
         // TODO add your handling code here:
-    }//GEN-LAST:event_MenuItemDeleteOrganizationMousePressed
+    }//GEN-LAST:event_MenuItemDeleteGroupMousePressed
 
-    private void MenuItemUpdateOrganizationMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_MenuItemUpdateOrganizationMousePressed
+    private void MenuItemUpdateGroupMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_MenuItemUpdateGroupMousePressed
         // TODO add your handling code here:
-    }//GEN-LAST:event_MenuItemUpdateOrganizationMousePressed
+    }//GEN-LAST:event_MenuItemUpdateGroupMousePressed
 
-    private void MenuItemCreateOrganizationMenuKeyPressed(javax.swing.event.MenuKeyEvent evt) {//GEN-FIRST:event_MenuItemCreateOrganizationMenuKeyPressed
+    private void MenuItemCreateGroupMenuKeyPressed(javax.swing.event.MenuKeyEvent evt) {//GEN-FIRST:event_MenuItemCreateGroupMenuKeyPressed
         // TODO add your handling code here:
-    }//GEN-LAST:event_MenuItemCreateOrganizationMenuKeyPressed
+    }//GEN-LAST:event_MenuItemCreateGroupMenuKeyPressed
 
     
     private void showChatOptionsPopupMenu(MouseEvent e, int xOffset) 
@@ -1062,24 +1062,24 @@ public class ClientGUI extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton ButtonSend;
     private javax.swing.JList ListChatLists;
-    private javax.swing.JList ListOrganizationLists;
+    private javax.swing.JList ListGroupLists;
     private javax.swing.JList ListUsersLists;
     private javax.swing.JMenuBar MenuBarTop;
     private javax.swing.JMenu MenuChat;
     private javax.swing.JMenu MenuFile;
     private javax.swing.JMenuItem MenuItemCreateChat;
-    private javax.swing.JMenuItem MenuItemCreateOrganization;
+    private javax.swing.JMenuItem MenuItemCreateGroup;
     private javax.swing.JMenuItem MenuItemDeleteChat;
-    private javax.swing.JMenuItem MenuItemDeleteOrganization;
+    private javax.swing.JMenuItem MenuItemDeleteGroup;
     private javax.swing.JMenuItem MenuItemLogout;
     private javax.swing.JMenuItem MenuItemUpdateChat;
-    private javax.swing.JMenuItem MenuItemUpdateOrganization;
-    private javax.swing.JMenu MenuOrganization;
+    private javax.swing.JMenuItem MenuItemUpdateGroup;
+    private javax.swing.JMenu MenuGroup;
     private javax.swing.JPanel PanelChatLog;
     private javax.swing.JPanel PanelLists;
     private javax.swing.JPanel PanelMessage;
     private javax.swing.JScrollPane PanelMessageScroll;
-    private javax.swing.JScrollPane ScrollPaneOrganizationLists;
+    private javax.swing.JScrollPane ScrollPaneGroupLists;
     private javax.swing.JScrollPane ScrollPaneUsersLists;
     private javax.swing.JScrollPane ScrollPanelChatLists;
     private javax.swing.JTabbedPane TabbedPaneChatLog;
