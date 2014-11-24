@@ -10,7 +10,6 @@ import com.lamepancake.chitchat.packet.Packet;
 import com.lamepancake.chitchat.packet.PacketCreator;
 import com.lamepancake.chitchat.packet.RequestAccessPacket;
 import com.lamepancake.chitchat.packet.UpdateChatsPacket;
-import java.awt.ComponentOrientation;
 import java.awt.Window;
 import java.io.IOException;
 import java.lang.ref.WeakReference;

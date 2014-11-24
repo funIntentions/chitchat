@@ -62,20 +62,20 @@ public class ChatManagerTest {
     /**
      * Test of addClient method, of class ChatManager.
      */
-    @Test
-    public void testAddClient() {
-        System.out.println("addClient");
-        SelectionKey key = null;
-        
-        try
-        {
-            ChatManager instance = new ChatManager("test", "test");
-            instance.addClient(key);
-        }
-        catch (SQLException e)
-        {
-            System.out.println("SQLException: " + e.getMessage());
-        }
-    }
+//    @Test
+//    public void testAddClient() {
+//        System.out.println("addClient");
+//        SelectionKey key = null;
+//        
+//        try
+//        {
+//            ChatManager instance = new ChatManager("test", "test");
+//            instance.addClient(key);
+//        }
+//        catch (SQLException e)
+//        {
+//            System.out.println("SQLException: " + e.getMessage());
+//        }
+//    }
     
 }
